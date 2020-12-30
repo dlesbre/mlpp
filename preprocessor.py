@@ -19,20 +19,13 @@ class CommandError(Exception):
 		self.line = line
 		self.msg = msg
 
-class PreFunction():
-
-	def __init__(self, function, parse_args = True, recursive = True):
-		self.function = function
-		self.parse_args = parse_args
-		self.recursive = recursive
-
 def define(processor, args_string):
 	match = re.match(REGEX_IDENTIFIER, args_string)
 	if match is None:
 		raise CommandError(processor.current_pos, "Define has no valid command name")
 	identifier = match.group()
 
-define = PreFunction(define, parse_args = False, recursive = True)
+	return ""
 
 class Preproccesor():
 
@@ -50,6 +43,7 @@ class Preproccesor():
 	# functions and blocks
 	functions = dict()
 	blocks = dict()
+	post_actions = []
 
 	def send_error(self, error):
 		pass
@@ -61,7 +55,7 @@ class Preproccesor():
 		pass
 
 	def find_matching_pair(self, tokens):
-		"""find the first innermort OPEN CLOSE pair in tokens
+		"""find the first innermost OPEN CLOSE pair in tokens
 		Inputs:
 		  tokens - list of tuples containing 4 elements
 		    tokens[i][3] should be a boolean indicating
