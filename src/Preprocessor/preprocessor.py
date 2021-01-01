@@ -81,7 +81,7 @@ class Preprocessor:
 		Returns:
 			tuple str, str - identifier, rest_of_string
 		  returns ("","") if None found"""
-		match_opt = re.match(r"\s*({})({}*.)".format(self.token_ident, self.token_ident_end), string)
+		match_opt = re.match(r"\s*({})({}.*)".format(self.token_ident, self.token_ident_end), string)
 		if match_opt == None:
 			return "", ""
 		match = cast(re.Match, match_opt)
@@ -115,7 +115,6 @@ class Preprocessor:
       the first index i such that tokens[i][3] == True and tokens[i+1][3] == False
       -1 if no such index exists
 		"""
-		print(tokens)
 		len_tokens = len(tokens)
 		token_index = 0
 		while (
