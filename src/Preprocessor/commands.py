@@ -6,6 +6,9 @@ from datetime import datetime
 
 from .preprocessor import Preprocessor
 
+# ============================================================
+# def/undef
+# ============================================================
 
 def define(preprocessor: Preprocessor, args_string : str) -> str:
 	ident, text = preprocessor.get_identifier_name(args_string)
@@ -54,10 +57,57 @@ def undef(preprocessor: Preprocessor, args_string: str) -> str:
 		preprocessor.send_error("can't undefine \"{}\", it aldready undefined")
 	return ""
 
+# ============================================================
+# begin/end
+# ============================================================
+
+def begin(preprocessor: Preprocessor, args_string: str) -> str:
+	"""The begin command, inserts token_begin
+	usage: begin [uint]
+	  begin -> token_begin
+		begin 0 -> token_begin
+		begin <number> -> token_begin begin <number-1> token_end"""
+	args_string = args_string.strip()
+	level = 0
+	if args_string != "":
+		if args_string.isnumeric():
+			level = int(args_string)
+		else:
+			preprocessor.send_error("invalid argument: usage begin [uint]")
+		if level < 0:
+			preprocessor.send_error("invalid argument: usage begin [uint]")
+	if level == 0:
+		return preprocessor.token_begin_repr
+	else:
+		return preprocessor.token_begin_repr + "begin " + str(level-1) + preprocessor.token_end_repr
+
+def end(preprocessor: Preprocessor, args_string: str) -> str:
+	"""The end command, inserts token_end
+	usage: end [uint]
+	  end -> token_end
+		end 0 -> token_end
+		end <number> -> token_end end <number-1> token_end"""
+	args_string = args_string.strip()
+	level = 0
+	if args_string != "":
+		if args_string.isnumeric():
+			level = int(args_string)
+		else:
+			preprocessor.send_error("invalid argument: usage end [uint]")
+		if level < 0:
+			preprocessor.send_error("invalid argument: usage end [uint]")
+	if level == 0:
+		return preprocessor.token_end_repr
+	else:
+		return preprocessor.token_begin_repr + "end " + str(level-1) + preprocessor.token_end_repr
+
+
 def date(p: Preprocessor, s: str) -> str:
 	x = datetime.now()
 	return "{:04}-{:02}-{:02}".format(x.year, x.month, x.day)
 
 Preprocessor.commands["def"] = define
 Preprocessor.commands["undef"] = undef
+Preprocessor.commands["begin"] = begin
+Preprocessor.commands["end"] = end
 Preprocessor.commands["date"] = date

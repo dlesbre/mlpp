@@ -18,3 +18,14 @@ class TestCommands:
 		]
 		for in_str, out_str in test:
 			assert self.pre.parse(in_str) == out_str
+
+	def test_begin_end(self):
+		test = [
+			("{% begin %}", "{% "),
+			("{% end %}", " %}"),
+			("{% begin 12 %}", "{% begin 11 %}"),
+			("{% def hello {% begin 1 %} %}{% hello %}", "{% "),
+			("{% def foo bar %}{% def hello {% begin %}foo{% end %} %}{% hello %}", "bar"),
+		]
+		for in_str, out_str in test:
+			assert self.pre.parse(in_str) == out_str

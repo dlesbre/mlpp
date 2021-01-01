@@ -16,6 +16,8 @@ class Preprocessor:
 
 	# constants
 	max_recursion_depth: int = 20
+	token_begin_repr: str = "{% "
+	token_end_repr: str = " %}"
 	token_begin: str = re.escape("{% ")
 	token_end: str = re.escape(" %}")
 	token_endblock: str = re.escape("end")
