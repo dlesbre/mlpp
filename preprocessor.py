@@ -1,35 +1,28 @@
 #!/usr/bin/python3
 import re
-from enum import Enum
+from enum import Enum, IntEnum
+from sys import stderr
+from typing import Dict, Callable, List
 
-REGEX_IDENTIFIER = "[_a-zA-Z][_a-zA-Z0-9]*"
-REGEX_STRING = '""|".*?[^\\\\]"'
+REGEX_IDENTIFIER: str = "[_a-zA-Z][_a-zA-Z0-9]*"
+REGEX_STRING: str = '""|".*?[^\\\\]"'
 
 
 class Position:
-	file = "stdin"
-	line = 0
-	char = 0
+	file: str = "stdin"
+	line: int = 0
+	char: int = 0
 
-	def __init__(self, file, line, char):
+	def __init__(self: "Position", file: str, line: int, char: int) -> None:
 		self.file = file
 		self.line = line
 		self.char = char
 
 
 class CommandError(Exception):
-	def __init__(self, position, msg):
-		self.pos = position
-		self.msg = msg
-
-
-def define(processor, args_string):
-	match = re.match(REGEX_IDENTIFIER, args_string)
-	if match is None:
-		raise CommandError(processor.current_pos, "Define has no valid command name")
-	identifier = match.group()
-
-	return ""
+	def __init__(self: "CommandError", position: Position, msg: str) -> None:
+		self.pos: Position = position
+		self.msg: str = msg
 
 
 class WarningMode(Enum):
@@ -39,37 +32,38 @@ class WarningMode(Enum):
 	AS_ERROR = 4
 
 
-class TokenMatch(Enum):
-	OPEN = 1
-	CLOSE = 2
+class TokenMatch(IntEnum):
+	OPEN = 0
+	CLOSE = 1
 
 
 class Preprocessor:
 
 	# constants
-	max_recursion_depth = 20
-	token_begin = re.escape("{% ")
-	token_end = re.escape(" %}")
-	token_endblock = re.escape("end")
-	re_flags = re.MULTILINE
+	max_recursion_depth: int = 20
+	token_begin: str = re.escape("{% ")
+	token_end: str = re.escape(" %}")
+	token_endblock: str = re.escape("end")
+	re_flags: int = re.MULTILINE
+	exit_code: int = 2
 
 	# if False raises an error
 	# if True print to stderr and exit
-	exit_on_error = True
+	exit_on_error: bool = True
 
 	# if True, handle warnings as errors
-	warning_mode = WarningMode.PRINT
+	warning_mode: WarningMode = WarningMode.PRINT
 
 	# private attributes
-	_recursion_depth = 0
-	_context = []
+	_recursion_depth: int = 0
+	_context: List[str] = []
 
 	# functions and blocks
-	functions = dict()
-	blocks = dict()
-	post_actions = []
+	functions: Dict[str, Callable[["Preprocessor", str], str]] = dict()
+	blocks: Dict[str, Callable[["Preprocessor", str, str], str]] = dict()
+	post_actions: List[Callable[["Preprocessor", str], str]] = []
 
-	def send_error(self, error_msg):
+	def send_error(self: "Preprocessor", error_msg: str) -> None:
 		"""Handles errors
 		Inputs:
       self - Preprocessor object
@@ -79,11 +73,12 @@ class Preprocessor:
       else raise an Exception
 		"""
 		if self.exit_on_error:
-			print("Error: {}".format(error_msg))
+			print("Error: {}".format(error_msg), file=stderr)
+			exit(self.exit_code)
 		else:
 			raise Exception(error_msg)
 
-	def send_warning(self, warning_msg):
+	def send_warning(self: "Preprocessor", warning_msg: str) -> None:
 		"""Handles errors
 		Inputs:
       self - Preprocessor object
@@ -96,16 +91,16 @@ class Preprocessor:
       | AS_ERROR -> passes to self.send_error()
 		"""
 		if self.warning_mode == WarningMode.PRINT:
-			print("Warning: {}".format(warning_msg))
+			print("Warning: {}".format(warning_msg), file=stderr)
 		elif self.warning_mode == WarningMode.RAISE:
 			raise Warning(warning_msg)
 		elif self.warning_mode == WarningMode.AS_ERROR:
 			self.send_error(warning_msg)
 
-	def get_identifier_name(self, string):
-		return 0
+	def get_identifier_name(self: "Preprocessor", string: str) -> str:
+		return "hello"
 
-	def find_matching_pair(self, tokens):
+	def find_matching_pair(self: "Preprocessor", tokens) -> int:
 		"""find the first innermost OPEN CLOSE pair in tokens
 		Inputs:
 		  tokens - list of tuples containing 4 elements
@@ -126,18 +121,18 @@ class Preprocessor:
 				return -1
 		return token_index
 
-	def parse(self, string):
+	def parse(self: "Preprocessor", string: str) -> str:
 		self._recursion_depth += 1
 		if self._recursion_depth == self.max_recursion_depth:
 			self.send_error("Recursion depth exceeded")
 
-		open_tokens = re.findall(self.token_begin, string, self.re_flags)
+		open_tokens  = re.findall(self.token_begin, string, self.re_flags)
 		close_tokens = re.findall(self.token_end, string, self.re_flags)
 		tokens =  [(x, x.start(), x.end(), TokenMatch.OPEN)  for x in open_tokens]
 		tokens += [(x, x.start(), x.end(), TokenMatch.CLOSE) for x in close_tokens]
 		# sort in order of appearance - if two tokens appear at same place
 		# sort CLOSE first
-		tokens.sort(key=lambda x: x[1] + 0.5 * x[3])
+		tokens.sort(key=lambda x: x[1] + 0.5 * int(x[3]))
 
 		len_tokens = len(tokens)
 		while len_tokens > 1:  # needs two tokens to make a pair
@@ -165,3 +160,13 @@ class Preprocessor:
 					self.token_begin, self.token_end, self.token_begin, self.token_end
 				)
 			)
+		return ""
+
+
+def define(processor: Preprocessor, args_string : str) -> str:
+	match = re.match(REGEX_IDENTIFIER, args_string)
+	if match is None:
+		raise CommandError(Position("", 0, 0), "Define has no valid command name")
+	# identifier = match.group()
+
+	return ""
