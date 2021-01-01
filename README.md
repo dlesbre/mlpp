@@ -25,4 +25,4 @@ To install the package for developpement
 
 5. You're done! You can run tests with
 
-		python -m pytest
+		pytest
