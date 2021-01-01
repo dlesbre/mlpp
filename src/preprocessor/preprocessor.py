@@ -1,40 +1,9 @@
 #!/usr/bin/python3
 import re
-from enum import Enum, IntEnum
 from sys import stderr
 from typing import Dict, Callable, List
 
-REGEX_IDENTIFIER: str = "[_a-zA-Z][_a-zA-Z0-9]*"
-REGEX_STRING: str = '""|".*?[^\\\\]"'
-
-
-class Position:
-	file: str = "stdin"
-	line: int = 0
-	char: int = 0
-
-	def __init__(self: "Position", file: str, line: int, char: int) -> None:
-		self.file = file
-		self.line = line
-		self.char = char
-
-
-class CommandError(Exception):
-	def __init__(self: "CommandError", position: Position, msg: str) -> None:
-		self.pos: Position = position
-		self.msg: str = msg
-
-
-class WarningMode(Enum):
-	HIDE = 1
-	PRINT = 2
-	RAISE = 3
-	AS_ERROR = 4
-
-
-class TokenMatch(IntEnum):
-	OPEN = 0
-	CLOSE = 1
+from defs import *
 
 
 class Preprocessor:
@@ -161,12 +130,3 @@ class Preprocessor:
 				)
 			)
 		return ""
-
-
-def define(processor: Preprocessor, args_string : str) -> str:
-	match = re.match(REGEX_IDENTIFIER, args_string)
-	if match is None:
-		raise CommandError(Position("", 0, 0), "Define has no valid command name")
-	# identifier = match.group()
-
-	return ""
