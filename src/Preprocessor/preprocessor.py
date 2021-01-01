@@ -1,7 +1,8 @@
 #!/usr/bin/python3
+# -*- coding: utf-8 -*-
 import re
 from sys import stderr
-from typing import Dict, Callable, List, Tuple, cast, Optional
+from typing import Callable, Dict, List, Optional, Tuple, cast
 
 from .defs import *
 

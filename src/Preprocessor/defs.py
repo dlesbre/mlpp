@@ -1,6 +1,6 @@
 #!/usr/bin/python3
+# -*- coding: utf-8 -*-
 from enum import Enum, IntEnum
-
 
 REGEX_IDENTIFIER: str = "[_a-zA-Z][_a-zA-Z0-9]*"
 REGEX_IDENTIFIER_END: str = "$|[^_a-zA-Z0-9]"

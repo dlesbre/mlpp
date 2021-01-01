@@ -1,7 +1,8 @@
 #!/usr/bin/python3
+# -*- coding: utf-8 -*-
 import pytest
-
 from Preprocessor import *
+
 
 class TestPreProcMethods:
 
