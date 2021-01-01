@@ -3,7 +3,7 @@ import re
 from sys import stderr
 from typing import Dict, Callable, List, Tuple, cast
 
-from defs import *
+from .defs import *
 
 TokenList = List[Tuple[int, TokenMatch]]
 

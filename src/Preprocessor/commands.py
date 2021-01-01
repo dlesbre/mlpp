@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from preprocessor import *
+from .preprocessor import *
 
 def define(processor: Preprocessor, args_string : str) -> str:
 	match = re.match(REGEX_IDENTIFIER, args_string)
