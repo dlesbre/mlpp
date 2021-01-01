@@ -69,15 +69,8 @@ class TestPreProcMethods:
 			("i", "(i) (ei)(i args) (i) (ei)(ei) more content (ei)", (43, 47)),
 			("i", "(i) foo (b) bar (eb) ctnt  (ei) more foo   (ei)", (43, 47)),
 			("i", "content (i (i arges) blah (ei) args) (ei)t (ei)", (43, 47)),
+			("i", "", (-1,-1)),
+			("i", "(i) (ei)", (-1,-1)),
 		]
 		for arg0, arg1, rep in test:
 			assert self.pre.find_matching_endblock(arg0, arg1) == rep
-		test_fail = [
-			("i", ""),
-			("i", "(i) (ei)"),
-		]
-		for arg0, arg1 in test_fail:
-			with pytest.raises(SystemExit) as ex:
-				self.pre.find_matching_endblock(arg0, arg1)
-			assert ex.type == SystemExit
-			assert ex.value.code == self.pre.exit_code

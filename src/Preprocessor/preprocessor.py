@@ -31,6 +31,7 @@ class Preprocessor:
 	_recursion_depth: int = 0
 	_context: List[str] = []
 	_tokens: TokenList = []
+	_dilatations: List[Tuple[int, int]] = []
 
 	# functions and blocks
 	functions: Dict[str, Callable[["Preprocessor", str], str]] = dict()
@@ -124,6 +125,16 @@ class Preprocessor:
 	def find_matching_endblock(
 		self: "Preprocessor", block_name: str, string: str
 	) -> Tuple[int, int]:
+		"""Finds the matching endblock
+		i.e. the first enblock token in string that does not
+		match a startblock token
+		Inputs:
+			block_name: str - the name of the block.
+				it is used to determine the endblock and startblock tokens
+			string: str - the string being parsed
+		Returns
+			tuple(endblock_start_pos: int, endblock_end_pos: int)
+			(-1,-1) if no such endblock exists"""
 		endblock_regex = r"{}\s*{}{}\s*{}".format(
 			self.token_begin, self.token_endblock, block_name, self.token_end
 		)
@@ -136,7 +147,7 @@ class Preprocessor:
 		match_end_opt = re.search(endblock_regex, string, self.re_flags)
 		while True:
 			if match_end_opt == None:
-				self.send_error('No matching endblock for block {}'.format(block_name))
+				return -1, -1
 			match_end = cast(re.Match, match_end_opt)
 			if match_begin_opt == None:
 				open_block -= 1
@@ -194,8 +205,12 @@ class Preprocessor:
 				command = self.functions[ident]
 				new_str = command(self, arg_string)
 			elif ident in self.blocks:
-				# todo find matching block
-				block_content = ""
+				endblock, end_pos = self.find_matching_endblock(ident, string[start_pos:])
+				if endblock == -1 and end_pos == -1:
+					self.send_error('No matching endblock for block {}'.format(ident))
+				endblock += start_pos
+				end_pos += start_pos
+				block_content = string[end_pos:endblock]
 				block = self.blocks[ident]
 				new_str = block(self, arg_string, block_content)
 			else:
