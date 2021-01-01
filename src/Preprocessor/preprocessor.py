@@ -76,7 +76,7 @@ class Preprocessor:
 
 	def get_identifier_name(self: "Preprocessor", string: str) -> Tuple[str, str]:
 		"""finds the first identifier in string:
-		Returns
+		Returns:
 			tuple str, str - identifier, rest_of_string
 		  returns ("","") if None found"""
 		match_opt = re.match(r"\s*({})({}*.)".format(self.token_ident, self.token_ident_end), string)
@@ -109,7 +109,7 @@ class Preprocessor:
 				tokens[i][3] should be a boolean indicating
 				OPEN with True and CLOSE with False
 				Assumed to be at least 2 elements long
-		Returns
+		Returns:
       the first index i such that tokens[i][3] == True and tokens[i+1][3] == False
       -1 if no such index exists
 		"""
@@ -134,7 +134,7 @@ class Preprocessor:
 			block_name: str - the name of the block.
 				it is used to determine the endblock and startblock tokens
 			string: str - the string being parsed
-		Returns
+		Returns:
 			tuple(endblock_start_pos: int, endblock_end_pos: int)
 			(-1,-1) if no such endblock exists"""
 		endblock_regex = r"{}\s*{}{}\s*{}".format(
@@ -169,6 +169,35 @@ class Preprocessor:
 			match_begin_opt = re.search(startblock_regex, string[pos:], self.re_flags)
 			match_end_opt = re.search(endblock_regex, string[pos:], self.re_flags)
 
+	def replace_string(self: "Preprocessor",
+		start: int, end: int, string: str, replacement: str
+	) -> str:
+		"""replaces string[start:end] with replacement
+		also add offset to token requiring them
+		Returns:
+			str = string[:start] + replacement + string[end:]
+		Effect:
+			removes all tokens occuring between start and end from self._tokens
+			corrects start and end of further tokens by the length change
+			adds the length change to self._dilatations
+		"""
+		test_range = range(start, end)
+		i = 0
+		dilat = len(replacement) - (end - start)
+		while i < len(self._tokens):
+			if self._tokens[i][0] in test_range or self._tokens[i][1] in test_range:
+				del self._tokens[i]
+			else:
+				if self._tokens[i][0] > end:
+					self._tokens[i] = (
+						self._tokens[i][0] + dilat,
+						self._tokens[i][1] + dilat,
+						self._tokens[i][2],
+					)
+				i += 1
+
+		self._dilatations.append((start, dilat))
+		return string[:start] + replacement + string[end:]
 
 	def remove_leading_close_tokens(self: "Preprocessor") -> None:
 		"""removes leading close tokens from self._tokens
@@ -185,8 +214,7 @@ class Preprocessor:
 
 		self._tokens = self.find_tokens(string)
 
-		len_tokens = len(self._tokens)
-		while len_tokens > 1:  # needs two tokens to make a pair
+		while len(self._tokens) > 1:  # needs two tokens to make a pair
 
 			# find innermost (nested pair)
 			token_index = self.find_matching_pair(self._tokens)
@@ -218,11 +246,10 @@ class Preprocessor:
 			else:
 				self.send_error("Command or block not recognized")
 
-			string = string[:start_pos] + new_str + string[end_pos:]
+			string = self.replace_string(start_pos, end_pos, string, new_str)
 			self.remove_leading_close_tokens()
-			len_tokens = len(self._tokens)
 
-		if len_tokens == 1:
+		if len(self._tokens) == 1:
 			self.send_error(
 				'lonely token, use "{}begin{}" or "{}end{}" to place it'.format(
 					self.token_begin, self.token_end, self.token_begin, self.token_end
