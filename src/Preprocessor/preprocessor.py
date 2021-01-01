@@ -191,7 +191,7 @@ class Preprocessor:
 			if tokens[i][0] in test_range or tokens[i][1] in test_range:
 				del tokens[i]
 			else:
-				if tokens[i][0] > end:
+				if tokens[i][0] >= end:
 					tokens[i] = (
 						tokens[i][0] + dilat,
 						tokens[i][1] + dilat,
@@ -224,7 +224,6 @@ class Preprocessor:
 			token_index = self.find_matching_pair(tokens)
 			if token_index == -1:
 				self.send_error("No matching open/close pair found")
-
 			substring = string[
 				tokens[token_index][1] : tokens[token_index + 1][0]
 			]
@@ -233,7 +232,7 @@ class Preprocessor:
 			end_pos = tokens[token_index + 1][1]
 			new_str = ""
 			if ident == "":
-				self.send_error("Unrecognized command name")
+				self.send_error("Unrecognized command name '{}'".format(string))
 			elif ident in self.commands:
 				# todo context
 				command = self.commands[ident]
@@ -246,7 +245,10 @@ class Preprocessor:
 				end_pos += start_pos
 				block_content = string[end_pos:endblock]
 				block = self.blocks[ident]
+				# block post action don't trickle upwards
+				post_actions = self.post_actions.copy()
 				new_str = block(self, arg_string, block_content)
+				self.post_actions = post_actions
 			else:
 				self.send_error("Command or block not recognized")
 
