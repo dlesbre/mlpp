@@ -10,7 +10,7 @@ from .preprocessor import Preprocessor
 # def/undef
 # ============================================================
 
-def define(preprocessor: Preprocessor, args_string : str) -> str:
+def cmd_def(preprocessor: Preprocessor, args_string : str) -> str:
 	ident, text = preprocessor.get_identifier_name(args_string)
 	if ident == "":
 		preprocessor.send_error("invalid identifier")
@@ -39,10 +39,11 @@ def define(preprocessor: Preprocessor, args_string : str) -> str:
 			pass
 		return p.parse(text)
 	defined_command.__doc__ = """Defined command for {}""".format(ident)
+	defined_command.__name__ = """cmd_{}""".format(ident)
 	preprocessor.commands[ident] = defined_command
 	return ""
 
-def undef(preprocessor: Preprocessor, args_string: str) -> str:
+def cmd_undef(preprocessor: Preprocessor, args_string: str) -> str:
 	"""The undef command, removes commands or blocks
 	from preprocessor.commands and preprocessor.blocks
 	usage: undef <command-name>"""
@@ -61,7 +62,7 @@ def undef(preprocessor: Preprocessor, args_string: str) -> str:
 # begin/end
 # ============================================================
 
-def begin(preprocessor: Preprocessor, args_string: str) -> str:
+def cmd_begin(preprocessor: Preprocessor, args_string: str) -> str:
 	"""The begin command, inserts token_begin
 	usage: begin [uint]
 	  begin -> token_begin
@@ -81,7 +82,7 @@ def begin(preprocessor: Preprocessor, args_string: str) -> str:
 	else:
 		return preprocessor.token_begin_repr + "begin " + str(level-1) + preprocessor.token_end_repr
 
-def end(preprocessor: Preprocessor, args_string: str) -> str:
+def cmd_end(preprocessor: Preprocessor, args_string: str) -> str:
 	"""The end command, inserts token_end
 	usage: end [uint]
 	  end -> token_end
@@ -101,7 +102,7 @@ def end(preprocessor: Preprocessor, args_string: str) -> str:
 	else:
 		return preprocessor.token_begin_repr + "end " + str(level-1) + preprocessor.token_end_repr
 
-def label(preprocessor: Preprocessor, arg_string: str) -> str:
+def cmd_label(preprocessor: Preprocessor, arg_string: str) -> str:
 	"""the label command
 	usage: label label_name
 	  adds the label to preprocessor.labels[label_name]
@@ -116,14 +117,15 @@ def label(preprocessor: Preprocessor, arg_string: str) -> str:
 		preprocessor.labels[lbl] = [0] #TODO pos
 	return ""
 
-def date(p: Preprocessor, s: str) -> str:
+def cmd_date(p: Preprocessor, s: str) -> str:
 	"""the date command, prints the current date in YYYY-MM-DD format"""
 	x = datetime.now()
 	return "{:04}-{:02}-{:02}".format(x.year, x.month, x.day)
 
-Preprocessor.commands["def"] = define
-Preprocessor.commands["undef"] = undef
-Preprocessor.commands["begin"] = begin
-Preprocessor.commands["end"] = end
-Preprocessor.commands["label"] = label
-Preprocessor.commands["date"] = date
+
+Preprocessor.commands["def"] = cmd_def
+Preprocessor.commands["undef"] = cmd_undef
+Preprocessor.commands["begin"] = cmd_begin
+Preprocessor.commands["end"] = cmd_end
+Preprocessor.commands["label"] = cmd_label
+Preprocessor.commands["date"] = cmd_date
