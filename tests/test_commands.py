@@ -13,7 +13,8 @@ class TestCommands:
 			("{% def nom jean %}\nbonjour je suis {% nom %}","\nbonjour je suis jean"),
 			("{% def nom\" jean\" %}\nbonjour je suis {% nom %}","\nbonjour je suis  jean"),
 			("{% def nom\" \"\\\"jean\" %}\nbonjour je suis {% nom %}","\nbonjour je suis  \"\"jean"),
-
+			("{% def nom jean %}{% def prenom nom %}\nbonjour je suis {% prenom %}","\nbonjour je suis nom"),
+			("{% def nom jean %}{% def prenom {% nom %} %}\nbonjour je suis {% prenom %}","\nbonjour je suis jean"),
 		]
 		for in_str, out_str in test:
 			assert self.pre.parse(in_str) == out_str
