@@ -8,6 +8,9 @@ from .defs import *
 
 TokenList = List[Tuple[int, int, TokenMatch]]
 DilatationList = List[Tuple[int, int]]
+TypeCommand = Callable[["Preprocessor", str], str]
+TypeBlock = Callable[["Preprocessor", str, str], str]
+TypePostaction = Callable[["Preprocessor", str], str]
 
 class Preprocessor:
 
@@ -34,10 +37,10 @@ class Preprocessor:
 	_recursion_depth: int = 0
 	_context: List[str] = []
 
-	# functions and blocks
-	functions: Dict[str, Callable[["Preprocessor", str], str]] = dict()
-	blocks: Dict[str, Callable[["Preprocessor", str, str], str]] = dict()
-	post_actions: List[Callable[["Preprocessor", str], str]] = []
+	# commands and blocks
+	commands: Dict[str, TypeCommand] = dict()
+	blocks: Dict[str, TypeBlock] = dict()
+	post_actions: List[TypePostaction] = []
 
 	def send_error(self: "Preprocessor", error_msg: str) -> None:
 		"""Handles errors
@@ -234,9 +237,9 @@ class Preprocessor:
 			new_str = ""
 			if ident == "":
 				self.send_error("Unrecognized command name")
-			elif ident in self.functions:
+			elif ident in self.commands:
 				# todo context
-				command = self.functions[ident]
+				command = self.commands[ident]
 				new_str = command(self, arg_string)
 			elif ident in self.blocks:
 				endblock, end_pos = self.find_matching_endblock(ident, string[start_pos:])
