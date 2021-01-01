@@ -250,6 +250,7 @@ class Preprocessor:
 				block = self.blocks[ident]
 				# block post action don't trickle upwards
 				post_actions = self.post_actions.copy()
+				self.post_actions = []
 				new_str = block(self, arg_string, block_content)
 				self.post_actions = post_actions
 			else:

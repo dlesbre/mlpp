@@ -122,6 +122,45 @@ def cmd_date(p: Preprocessor, s: str) -> str:
 	x = datetime.now()
 	return "{:04}-{:02}-{:02}".format(x.year, x.month, x.day)
 
+# TODO include, extends,
+
+# ============================================================
+# post parse commands
+# ============================================================
+
+# TODO replace
+
+def pst_strip_empty_lines(p: Preprocessor, string: str) -> str:
+	"""post action to remove empty lines from the text"""
+	return re.sub(r"\n\s*\n", "\n", string)
+
+def cmd_strip_empty_lines(preprocessor: Preprocessor, s: str) -> str:
+	"""the strip_empty_lines command
+	queues pst_strip_empty_lines to preprocessor.post_actions"""
+	preprocessor.post_actions.append(pst_strip_empty_lines)
+	return ""
+
+def pst_strip_leading_whitespace(p: Preprocessor, string: str) -> str:
+	"""post action to remove leading whitespace (indent) from string"""
+	return re.sub("^[ \t]*", "", string, flags = re.MULTILINE)
+
+def cmd_strip_leading_whitespace(preprocessor: Preprocessor, s: str) -> str:
+	"""the strip_leading_whitespace command
+	queues pst_strip_leading_whitespace to preprocessor.post_actions"""
+	preprocessor.post_actions.append(pst_strip_leading_whitespace)
+	return ""
+
+def pst_strip_trailing_whitespace(p: Preprocessor, string: str) -> str:
+	"""post action to remove trailing whitespace (indent) from string"""
+	return re.sub("[ \t]*$", "", string, flags = re.MULTILINE)
+
+def cmd_strip_trailing_whitespace(preprocessor: Preprocessor, s: str) -> str:
+	"""the strip_trailing_whitespace command
+	queues pst_strip_trailing_whitespace to preprocessor.post_actions"""
+	preprocessor.post_actions.append(pst_strip_trailing_whitespace)
+	return ""
+
+# TODO blocks repeat, labelblock, for, if
 
 Preprocessor.commands["def"] = cmd_def
 Preprocessor.commands["undef"] = cmd_undef
@@ -129,3 +168,7 @@ Preprocessor.commands["begin"] = cmd_begin
 Preprocessor.commands["end"] = cmd_end
 Preprocessor.commands["label"] = cmd_label
 Preprocessor.commands["date"] = cmd_date
+
+Preprocessor.commands["strip_empty_lines"] = cmd_strip_empty_lines
+Preprocessor.commands["strip_leading_whitespace"] = cmd_strip_leading_whitespace
+Preprocessor.commands["strip_trailing_whitespace"] = cmd_strip_trailing_whitespace
