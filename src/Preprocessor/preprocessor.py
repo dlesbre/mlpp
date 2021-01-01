@@ -91,7 +91,7 @@ class Preprocessor:
 		"""
 		open_tokens  = re.finditer(self.token_begin, string, self.re_flags)
 		close_tokens = re.finditer(self.token_end, string, self.re_flags)
-		tokens =  [(x.start(), x.end(), TokenMatch.OPEN)  for x in open_tokens]
+		tokens = [(x.start(), x.end(), TokenMatch.OPEN) for x in open_tokens]
 		tokens += [(x.start(), x.end(), TokenMatch.CLOSE) for x in close_tokens]
 		# sort in order of appearance - if two tokens appear at same place
 		# sort CLOSE first

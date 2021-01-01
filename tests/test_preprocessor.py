@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+import pytest
 
 from Preprocessor import *
 
@@ -70,3 +71,12 @@ class TestPreProcMethods:
 		]
 		for arg0, arg1, rep in test:
 			assert self.pre.find_matching_endblock(arg0, arg1) == rep
+		test_fail = [
+			("i", ""),
+			("i", "(i) (ei)"),
+		]
+		for arg0, arg1 in test_fail:
+			with pytest.raises(SystemExit) as ex:
+				self.pre.find_matching_endblock(arg0, arg1)
+			assert ex.type == SystemExit
+			assert ex.value.code == self.pre.exit_code
