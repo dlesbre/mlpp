@@ -15,6 +15,8 @@ class Preprocessor:
 	token_begin: str = re.escape("{% ")
 	token_end: str = re.escape(" %}")
 	token_endblock: str = re.escape("end")
+	token_ident: str = REGEX_IDENTIFIER
+	token_ident_end: str = REGEX_IDENTIFIER_END
 	re_flags: int = re.MULTILINE
 	exit_code: int = 2
 
@@ -76,8 +78,8 @@ class Preprocessor:
 		"""finds the first identifier in string:
 		Returns
 			tuple str, str - identifier, rest_of_string
-		  returns "","" if None found"""
-		match_opt = re.match(r"\s*({})({}*.)".format(REGEX_IDENTIFIER, REGEX_IDENTIFIER_END), string)
+		  returns ("","") if None found"""
+		match_opt = re.match(r"\s*({})({}*.)".format(self.token_ident, self.token_ident_end), string)
 		if match_opt == None:
 			return "", ""
 		match = cast(re.Match, match_opt)
@@ -139,7 +141,7 @@ class Preprocessor:
 			self.token_begin, self.token_endblock, block_name, self.token_end
 		)
 		startblock_regex = r"{}\s*{}(?:{}|{})".format(
-			self.token_begin, block_name, self.token_end, REGEX_IDENTIFIER_END
+			self.token_begin, block_name, self.token_end, self.token_ident_end
 		)
 		pos = 0
 		open_block = 0
@@ -222,8 +224,13 @@ class Preprocessor:
 
 		if len_tokens == 1:
 			self.send_error(
-				'lonely token, use "{} begin {}" or "{} end {}" to place it'.format(
+				'lonely token, use "{}begin{}" or "{}end{}" to place it'.format(
 					self.token_begin, self.token_end, self.token_begin, self.token_end
 				)
 			)
-		return ""
+
+		# Post actions
+		for action in self.post_actions:
+			string = action(self, string)
+
+		return string
