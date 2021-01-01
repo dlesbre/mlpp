@@ -115,14 +115,15 @@ class Preprocessor:
       the first index i such that tokens[i][3] == True and tokens[i+1][3] == False
       -1 if no such index exists
 		"""
+		print(tokens)
 		len_tokens = len(tokens)
 		token_index = 0
 		while (
 			tokens[token_index][2] != TokenMatch.OPEN
 			or tokens[token_index + 1][2] != TokenMatch.CLOSE
 		):
-			token_index += 2
-			if token_index + 1 > len_tokens:
+			token_index += 1
+			if token_index + 1 >= len_tokens:
 				return -1
 		return token_index
 
@@ -209,9 +210,6 @@ class Preprocessor:
 			del tokens[0]
 			if self.warn_unmatch_close:
 				self.send_warning("Unmatch close token")
-
-	def step_in_recursion(self: "Preprocessor") -> str:
-		pass
 
 	def parse(self: "Preprocessor", string: str) -> str:
 		self._recursion_depth += 1

@@ -47,6 +47,7 @@ class TestPreProcMethods:
 		tests = [
 			([(0,1, TokenMatch.OPEN), (1,2, TokenMatch.CLOSE)], 0),
 			([(1,2, TokenMatch.OPEN), (3,4, TokenMatch.CLOSE)], 0),
+			([(0,1, TokenMatch.OPEN), (1,2, TokenMatch.OPEN), (2,3, TokenMatch.CLOSE)], 1),
 			([
 				(0,1, TokenMatch.OPEN),
 				(1,2, TokenMatch.OPEN),
