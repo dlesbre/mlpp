@@ -137,6 +137,8 @@ def pst_strip_empty_lines(p: Preprocessor, string: str) -> str:
 def cmd_strip_empty_lines(preprocessor: Preprocessor, s: str) -> str:
 	"""the strip_empty_lines command
 	queues pst_strip_empty_lines to preprocessor.post_actions"""
+	if s.strip() != "":
+		preprocessor.send_error("empty_last_line takes no arguments")
 	preprocessor.post_actions.append(pst_strip_empty_lines)
 	return ""
 
@@ -147,6 +149,8 @@ def pst_strip_leading_whitespace(p: Preprocessor, string: str) -> str:
 def cmd_strip_leading_whitespace(preprocessor: Preprocessor, s: str) -> str:
 	"""the strip_leading_whitespace command
 	queues pst_strip_leading_whitespace to preprocessor.post_actions"""
+	if s.strip() != "":
+		preprocessor.send_error("empty_last_line takes no arguments")
 	preprocessor.post_actions.append(pst_strip_leading_whitespace)
 	return ""
 
@@ -157,6 +161,8 @@ def pst_strip_trailing_whitespace(p: Preprocessor, string: str) -> str:
 def cmd_strip_trailing_whitespace(preprocessor: Preprocessor, s: str) -> str:
 	"""the strip_trailing_whitespace command
 	queues pst_strip_trailing_whitespace to preprocessor.post_actions"""
+	if s.strip() != "":
+		preprocessor.send_error("empty_last_line takes no arguments")
 	preprocessor.post_actions.append(pst_strip_trailing_whitespace)
 	return ""
 
@@ -170,6 +176,8 @@ def pst_empty_last_line(p: Preprocessor, string: str) -> str:
 def cmd_empty_last_line(preprocessor: Preprocessor, s: str) -> str:
 	"""the empty_last_line command
 	queues pst_empty_last_line to preprocessor.post_actions"""
+	if s.strip() != "":
+		preprocessor.send_error("empty_last_line takes no arguments")
 	preprocessor.post_actions.append(pst_empty_last_line)
 	return ""
 
