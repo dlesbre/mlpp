@@ -120,6 +120,42 @@ class Preprocessor:
 				return -1
 		return token_index
 
+	def find_matching_endblock(
+		self: "Preprocessor", block_name: str, string: str
+	) -> Tuple[int, int]:
+		endblock_regex = r"{}\s*{}{}\s*{}".format(
+			self.token_begin, self.token_endblock, block_name, self.token_end
+		)
+		startblock_regex = r"{}\s*{}(?:{}|{})".format(
+			self.token_begin, block_name, self.token_end, REGEX_IDENTIFIER_END
+		)
+		pos = 0
+		open_block = 0
+		match_begin_opt = re.search(startblock_regex, string, self.re_flags)
+		match_end_opt = re.search(endblock_regex, string, self.re_flags)
+		while True:
+			if match_end_opt == None:
+				self.send_error('No matching endblock for block {}'.format(block_name))
+			match_end = cast(re.Match, match_end_opt)
+			if match_begin_opt == None:
+				open_block -= 1
+				if open_block == -1:
+					return pos + match_end.start(), pos + match_end.end()
+				pos += match_end.end()
+			else:
+				match_begin = cast(re.Match, match_begin_opt)
+				if match_begin.start() < match_end.start():
+					open_block += 1
+					pos += match_begin.end()
+				else:
+					open_block -= 1
+					if open_block == -1:
+						return pos + match_end.start(), pos + match_end.end()
+					pos += match_end.end()
+			match_begin_opt = re.search(startblock_regex, string[pos:], self.re_flags)
+			match_end_opt = re.search(endblock_regex, string[pos:], self.re_flags)
+
+
 	def remove_leading_close_tokens(self: "Preprocessor") -> None:
 		"""removes leading close tokens from self._tokens
 		if self.warn_unmatch_close is true, issues a warning"""

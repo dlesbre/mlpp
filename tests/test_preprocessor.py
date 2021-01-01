@@ -7,6 +7,7 @@ class TestPreProcMethods:
 	pre = Preprocessor()
 	pre.token_begin = re.escape("(")
 	pre.token_end = re.escape(")")
+	pre.token_endblock = re.escape("e")
 
 	def test_get_identifier_name(self):
 		"""unit tests for Preprocessor.get_identifier_name"""
@@ -58,3 +59,14 @@ class TestPreProcMethods:
 		]
 		for test_in, test_out in tests:
 			assert self.pre.find_matching_pair(test_in) == test_out
+
+	def test_find_matching_endblock(self):
+		test = [
+			("i", "(ei)", (0,4)),
+			("i", "content (i args) content (ei) more content (ei)", (43, 47)),
+			("i", "(i) (ei)(i args) (i) (ei)(ei) more content (ei)", (43, 47)),
+			("i", "(i) foo (b) bar (eb) ctnt  (ei) more foo   (ei)", (43, 47)),
+			("i", "content (i (i arges) blah (ei) args) (ei)t (ei)", (43, 47)),
+		]
+		for arg0, arg1, rep in test:
+			assert self.pre.find_matching_endblock(arg0, arg1) == rep
