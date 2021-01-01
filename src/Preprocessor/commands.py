@@ -131,7 +131,7 @@ def cmd_date(p: Preprocessor, s: str) -> str:
 # TODO replace
 
 def pst_strip_empty_lines(p: Preprocessor, string: str) -> str:
-	"""post action to remove empty lines from the text"""
+	"""post action to remove empty lines (containing whitespace only) from the text"""
 	return re.sub(r"\n\s*\n", "\n", string)
 
 def cmd_strip_empty_lines(preprocessor: Preprocessor, s: str) -> str:
@@ -160,6 +160,19 @@ def cmd_strip_trailing_whitespace(preprocessor: Preprocessor, s: str) -> str:
 	preprocessor.post_actions.append(pst_strip_trailing_whitespace)
 	return ""
 
+def pst_empty_last_line(p: Preprocessor, string: str) -> str:
+	"""post action to ensures file ends with an empty line if
+	it is not empty"""
+	if string and string[-1] != "\n":
+		string += "\n"
+	return string
+
+def cmd_empty_last_line(preprocessor: Preprocessor, s: str) -> str:
+	"""the empty_last_line command
+	queues pst_empty_last_line to preprocessor.post_actions"""
+	preprocessor.post_actions.append(pst_empty_last_line)
+	return ""
+
 # TODO blocks repeat, labelblock, for, if
 
 Preprocessor.commands["def"] = cmd_def
@@ -172,3 +185,4 @@ Preprocessor.commands["date"] = cmd_date
 Preprocessor.commands["strip_empty_lines"] = cmd_strip_empty_lines
 Preprocessor.commands["strip_leading_whitespace"] = cmd_strip_leading_whitespace
 Preprocessor.commands["strip_trailing_whitespace"] = cmd_strip_trailing_whitespace
+Preprocessor.commands["empty_last_line"] = cmd_empty_last_line

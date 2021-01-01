@@ -271,5 +271,5 @@ class Preprocessor:
 		# Post actions
 		for action in self.post_actions:
 			string = action(self, string)
-
+		self._recursion_depth -= 1
 		return string

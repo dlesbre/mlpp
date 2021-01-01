@@ -29,3 +29,14 @@ class TestCommands:
 		]
 		for in_str, out_str in test:
 			assert self.pre.parse(in_str) == out_str
+
+	def test_strips(self):
+		test = [
+			("{% strip_empty_lines %}\n\t\nhello\n  \n  \nhi\n", "\nhello\nhi\n"),
+			("{% strip_trailing_whitespace %}hello \n my name is john\t\t \nc\n", "hello\n my name is john\nc\n"),
+			("{% strip_leading_whitespace %}hello \n  my name\n\t \t is john\n", "hello\nmy name\nis john\n"),
+			("{% empty_last_line %}", ""),
+			("{% empty_last_line %}hello", "hello\n"),
+		]
+		for in_str, out_str in test:
+			assert self.pre.parse(in_str) == out_str
