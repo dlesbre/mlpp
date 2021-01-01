@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 import re
 from sys import stderr
-from typing import Dict, Callable, List, Tuple
+from typing import Dict, Callable, List, Tuple, cast
 
 from defs import *
 
@@ -68,7 +68,13 @@ class Preprocessor:
 			self.send_error(warning_msg)
 
 	def get_identifier_name(self: "Preprocessor", string: str) -> str:
-		return "hello"
+		"""find and returns the first identifier in string
+		return "" if None found"""
+		match_opt = re.match(r"\s*({})".format(REGEX_IDENTIFIER), string)
+		if match_opt == None:
+			return ""
+		match = cast(re.Match, match_opt)
+		return match.group(1)
 
 	def find_tokens(self: "Preprocessor", string: str) -> TokenList:
 		"""Find all tokens (begin/end) in string
@@ -129,7 +135,9 @@ class Preprocessor:
 				self._tokens[token_index + 1][0]
 			]
 			ident = self.get_identifier_name(substring)
-			if ident in self.functions:
+			if ident == "":
+				self.send_error("Unrecognized command name")
+			elif ident in self.functions:
 				del self._tokens[token_index]
 				del self._tokens[token_index]
 				len_tokens -= 2
