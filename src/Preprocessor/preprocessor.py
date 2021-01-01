@@ -7,6 +7,7 @@ from typing import Callable, Dict, List, Optional, Tuple, cast
 from .defs import *
 
 TokenList = List[Tuple[int, int, TokenMatch]]
+DilatationList = List[Tuple[int, int]]
 
 class Preprocessor:
 
@@ -32,8 +33,6 @@ class Preprocessor:
 	# private attributes
 	_recursion_depth: int = 0
 	_context: List[str] = []
-	_tokens: TokenList = []
-	_dilatations: List[Tuple[int, int]] = []
 
 	# functions and blocks
 	functions: Dict[str, Callable[["Preprocessor", str], str]] = dict()
@@ -170,63 +169,68 @@ class Preprocessor:
 			match_end_opt = re.search(endblock_regex, string[pos:], self.re_flags)
 
 	def replace_string(self: "Preprocessor",
-		start: int, end: int, string: str, replacement: str
+		start: int, end: int, string: str, replacement: str,
+		tokens: TokenList, dilatations: DilatationList
 	) -> str:
 		"""replaces string[start:end] with replacement
 		also add offset to token requiring them
 		Returns:
 			str = string[:start] + replacement + string[end:]
 		Effect:
-			removes all tokens occuring between start and end from self._tokens
+			removes all tokens occuring between start and end from tokens
 			corrects start and end of further tokens by the length change
 			adds the length change to self._dilatations
 		"""
 		test_range = range(start, end)
 		i = 0
 		dilat = len(replacement) - (end - start)
-		while i < len(self._tokens):
-			if self._tokens[i][0] in test_range or self._tokens[i][1] in test_range:
-				del self._tokens[i]
+		while i < len(tokens):
+			if tokens[i][0] in test_range or tokens[i][1] in test_range:
+				del tokens[i]
 			else:
-				if self._tokens[i][0] > end:
-					self._tokens[i] = (
-						self._tokens[i][0] + dilat,
-						self._tokens[i][1] + dilat,
-						self._tokens[i][2],
+				if tokens[i][0] > end:
+					tokens[i] = (
+						tokens[i][0] + dilat,
+						tokens[i][1] + dilat,
+						tokens[i][2],
 					)
 				i += 1
 
-		self._dilatations.append((start, dilat))
+		dilatations.append((start, dilat))
 		return string[:start] + replacement + string[end:]
 
-	def remove_leading_close_tokens(self: "Preprocessor") -> None:
-		"""removes leading close tokens from self._tokens
+	def remove_leading_close_tokens(self: "Preprocessor", tokens: TokenList) -> None:
+		"""removes leading close tokens from tokens
 		if self.warn_unmatch_close is true, issues a warning"""
-		while self._tokens and self._tokens[0][2] == TokenMatch.CLOSE:
-			del self._tokens[0]
+		while tokens and tokens[0][2] == TokenMatch.CLOSE:
+			del tokens[0]
 			if self.warn_unmatch_close:
 				self.send_warning("Unmatch close token")
+
+	def step_in_recursion(self: "Preprocessor") -> str:
+		pass
 
 	def parse(self: "Preprocessor", string: str) -> str:
 		self._recursion_depth += 1
 		if self._recursion_depth == self.max_recursion_depth:
 			self.send_error("Recursion depth exceeded")
 
-		self._tokens = self.find_tokens(string)
+		tokens: TokenList = self.find_tokens(string)
+		dilatations: DilatationList = []
 
-		while len(self._tokens) > 1:  # needs two tokens to make a pair
+		while len(tokens) > 1:  # needs two tokens to make a pair
 
 			# find innermost (nested pair)
-			token_index = self.find_matching_pair(self._tokens)
+			token_index = self.find_matching_pair(tokens)
 			if token_index == -1:
 				self.send_error("No matching open/close pair found")
 
 			substring = string[
-				self._tokens[token_index][1] : self._tokens[token_index + 1][0]
+				tokens[token_index][1] : tokens[token_index + 1][0]
 			]
 			ident, arg_string = self.get_identifier_name(substring)
-			start_pos = self._tokens[token_index][0]
-			end_pos = self._tokens[token_index + 1][1]
+			start_pos = tokens[token_index][0]
+			end_pos = tokens[token_index + 1][1]
 			new_str = ""
 			if ident == "":
 				self.send_error("Unrecognized command name")
@@ -246,10 +250,12 @@ class Preprocessor:
 			else:
 				self.send_error("Command or block not recognized")
 
-			string = self.replace_string(start_pos, end_pos, string, new_str)
-			self.remove_leading_close_tokens()
+			string = self.replace_string(
+				start_pos, end_pos, string, new_str, tokens, dilatations
+			)
+			self.remove_leading_close_tokens(tokens)
 
-		if len(self._tokens) == 1:
+		if len(tokens) == 1:
 			self.send_error(
 				'lonely token, use "{}begin{}" or "{}end{}" to place it'.format(
 					self.token_begin, self.token_end, self.token_begin, self.token_end
