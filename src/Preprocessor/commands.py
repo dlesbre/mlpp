@@ -101,8 +101,23 @@ def end(preprocessor: Preprocessor, args_string: str) -> str:
 	else:
 		return preprocessor.token_begin_repr + "end " + str(level-1) + preprocessor.token_end_repr
 
+def label(preprocessor: Preprocessor, arg_string: str) -> str:
+	"""the label command
+	usage: label label_name
+	  adds the label to preprocessor.labels[label_name]
+		which can be used by other commands/blocks
+	"""
+	lbl = arg_string.strip()
+	if lbl == "":
+		preprocessor.send_error("empty label name")
+	if lbl in preprocessor.labels:
+		preprocessor.labels[lbl].append(0) #TODO pos
+	else:
+		preprocessor.labels[lbl] = [0] #TODO pos
+	return ""
 
 def date(p: Preprocessor, s: str) -> str:
+	"""the date command, prints the current date in YYYY-MM-DD format"""
 	x = datetime.now()
 	return "{:04}-{:02}-{:02}".format(x.year, x.month, x.day)
 
@@ -110,4 +125,5 @@ Preprocessor.commands["def"] = define
 Preprocessor.commands["undef"] = undef
 Preprocessor.commands["begin"] = begin
 Preprocessor.commands["end"] = end
+Preprocessor.commands["label"] = label
 Preprocessor.commands["date"] = date

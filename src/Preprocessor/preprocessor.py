@@ -43,6 +43,7 @@ class Preprocessor:
 	commands: Dict[str, TypeCommand] = dict()
 	blocks: Dict[str, TypeBlock] = dict()
 	post_actions: List[TypePostaction] = []
+	labels: Dict[str, List[int]] = dict()
 
 	def send_error(self: "Preprocessor", error_msg: str) -> None:
 		"""Handles errors
