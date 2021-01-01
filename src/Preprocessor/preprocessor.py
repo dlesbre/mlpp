@@ -84,8 +84,8 @@ class Preprocessor:
 			tokens: List[int, TokenMatch] - list of (position, OPEN/CLOSE)
 				sorted by position (CLOSE comes first if equal)
 		"""
-		open_tokens  = re.findall(self.token_begin, string, self.re_flags)
-		close_tokens = re.findall(self.token_end, string, self.re_flags)
+		open_tokens  = re.finditer(self.token_begin, string, self.re_flags)
+		close_tokens = re.finditer(self.token_end, string, self.re_flags)
 		tokens =  [(x.start(), TokenMatch.OPEN)  for x in open_tokens]
 		tokens += [(x.start(), TokenMatch.CLOSE) for x in close_tokens]
 		# sort in order of appearance - if two tokens appear at same place
