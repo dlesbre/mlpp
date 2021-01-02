@@ -11,6 +11,7 @@ from .preprocessor import Preprocessor
 # def/undef
 # ============================================================
 
+
 def cmd_def(preprocessor: Preprocessor, args_string : str) -> str:
 	ident, text, _ = preprocessor.get_identifier_name(args_string)
 	if ident == "":
@@ -60,9 +61,11 @@ def cmd_undef(preprocessor: Preprocessor, args_string: str) -> str:
 		del preprocessor.commands[ident]
 	return ""
 
+
 # ============================================================
 # begin/end
 # ============================================================
+
 
 def cmd_begin(preprocessor: Preprocessor, args_string: str) -> str:
 	"""The begin command, inserts token_begin
@@ -154,6 +157,12 @@ def cmd_date(p: Preprocessor, args: str) -> str:
 		hour = x.hour, minute = x.minute, second = x.second, year2 = x.year % 100
 	)
 
+
+# ============================================================
+# include/extends
+# ============================================================
+
+
 include_parser = ArgumentParserNoExit(
 	prog="include", description="places the contents of the file at file_path",
   add_help=False
@@ -170,7 +179,7 @@ def cmd_include(p: Preprocessor, args: str) -> str:
 	try:
 		arguments = include_parser.parse_args(p.split_args(args))
 	except argparse.ArgumentError:
-		p.send_error("invalid argument - usage: include [-v|--verbatim] file_path")
+		p.send_error("invalid argument.\nusage: include [-v|--verbatim] file_path")
 	try:
 		with open(arguments.file_path, "r") as file:
 			contents = file.read()
@@ -186,4 +195,4 @@ def cmd_include(p: Preprocessor, args: str) -> str:
 		p.context_pop()
 	return contents
 
-# TODO include, extends,
+# TODO extends,

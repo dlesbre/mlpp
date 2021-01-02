@@ -20,6 +20,7 @@ Preprocessor.commands["strip_empty_lines"] = cmd_strip_empty_lines
 Preprocessor.commands["strip_leading_whitespace"] = cmd_strip_leading_whitespace
 Preprocessor.commands["strip_trailing_whitespace"] = cmd_strip_trailing_whitespace
 Preprocessor.commands["empty_last_line"] = cmd_empty_last_line
+Preprocessor.commands["replace"] = cmd_replace
 
 # default post action
 

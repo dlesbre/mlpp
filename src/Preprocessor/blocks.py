@@ -3,6 +3,7 @@
 
 from .preprocessor import Preprocessor
 
+# TODO blocks for if
 
 def blck_block(p: Preprocessor, args: str, contents: str) -> str:
 	"""The block block. It does nothing but ensure post action

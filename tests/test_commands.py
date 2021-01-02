@@ -34,8 +34,8 @@ class TestCommands:
 	def test_strips(self):
 		test = [
 			("{% strip_empty_lines %}\n\t\nhello\n  \n  \nhi\n", "\nhello\nhi\n"),
-			("{% strip_trailing_whitespace %}hello \n my name is john\t\t \nc\n", "hello\n my name is john\nc\n"),
-			("{% strip_leading_whitespace %}hello \n  my name\n\t \t is john\n", "hello\nmy name\nis john\n"),
+			("{% strip_trailing_whitespace %}hello \n my name is johnd\t\t \nc\n", "hello\n my name is johnd\nc\n"),
+			("{% strip_leading_whitespace %}hello \n  my name\n\t \t is johnc\n", "hello \nmy name\nis johnc\n"),
 			("{% empty_last_line %}", ""),
 			("{% empty_last_line %}hello", "hello\n"),
 			("{% empty_last_line %}hello\n\n\n", "hello\n"),
@@ -50,6 +50,7 @@ class TestCommands:
 			("hello", "bonjour:{% include test.out %}:guten tag", "bonjour:hello:guten tag"),
 			("{% def a b %}", "bonjour:{% include test.out %}:{% a %}", "bonjour::b"),
 			("{% def a b %}{% c %}", "bonjour{% def c d %}:{% include test.out %}:{% a %}", "bonjour:d:b"),
+			("{% def a b %}{% c %}", "bonjour{% def c d %}:{% include -v test.out %}:{% a %}", "bonjour:{% def a b %}{% c %}:b"),
 		]
 		for content, in_str, out_str in test:
 			with open(path, "w") as file:
@@ -57,6 +58,18 @@ class TestCommands:
 			assert self.pre.parse(in_str) == out_str
 		remove(path)
 
+	def test_replace(self):
+		test = [
+			("foofoobjf{% replace foo bar %}oofbifooj", "barbarbjbarfbibarj"),
+			("foo{% block %}{% replace foo bar %}foo yfoo{% endblock %}foo", "foobar ybarfoo"),
+			("afoo{% replace foo bar %}{% replace aba yo %}fooabr", "yorbarabr"),
+			("afoo{% replace --ignore-case foo bar %}FoOfOo FOO", "abarbarbar bar"),
+			("{% replace -w foo bar %}foo(afoo1foo+foo foo", "bar(afoo1bar+bar bar"),
+			("{% replace -w \"foo\" bar %}foo(afoo1foo+foo foo", "bar(afoo1bar+bar bar"),
+			(r'{% replace -r "([a-z]+)" "low(\\1)" %}hello hio', "low(hello) low(hio)"),
+		]
+		for in_str, out_str in test:
+			assert self.pre.parse(in_str) == out_str
 
 	def test_block(self):
 		test = [

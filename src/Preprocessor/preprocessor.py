@@ -64,6 +64,7 @@ class Preprocessor:
 		Inputs:
 		 - desc should be "error" or "warning"
 		 - msg the message to print"""
+		msg = msg.replace("\n", "\n  ") # add indent to following lines
 		if self._context:
 			len_ctxt = len(self._context)
 			for i, ctxt_tu in enumerate(self._context):
@@ -347,6 +348,9 @@ class Preprocessor:
 
 		tokens: TokenList = self.find_tokens(string)
 
+		# post_action init
+		post_actions = self.post_actions.copy()
+
 		while len(tokens) > 1:  # needs two tokens to make a pair
 
 			# find innermost (nested pair)
@@ -379,7 +383,6 @@ class Preprocessor:
 				endblock_b, endblock_e = self.find_matching_endblock(ident, string[self.current_position.end:])
 				if endblock_b == -1:
 					self.send_error('no matching endblock for block {}'.format(ident))
-
 				self.current_position.endblock_begin = endblock_b + self.current_position.end
 				self.current_position.endblock_end = endblock_e + self.current_position.end
 				block_content = string[
@@ -390,12 +393,9 @@ class Preprocessor:
 
 				# block post action don't trickle upwards
 				self.context_update(self.current_position.cmd_begin, "in block {}".format(ident))
-				post_actions = self.post_actions
-				self.post_actions = Preprocessor.post_actions.copy()
 
 				new_str = block(self, arg_string, block_content)
 
-				self.post_actions = post_actions
 				self.context_pop()
 			else:
 				self.send_error("command or block not recognized")
@@ -423,4 +423,7 @@ class Preprocessor:
 		if empty_context:
 			self._context = []
 		self.current_position.offset = old_offset
+
+		self.post_actions = post_actions
+
 		return string
