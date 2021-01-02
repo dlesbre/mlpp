@@ -4,6 +4,28 @@ import pytest
 from Preprocessor import *
 
 
+def test_context():
+	s = """This is a string
+With line breaks
+and some unispired text"""
+	a = Context("", s)
+	assert a._line_breaks == [16, 33]
+	line, char = a.line_number(s.find("some"))
+	assert line == 3
+	assert char == 5
+	line, char = a.line_number(s.find("line"))
+	assert line == 2
+	assert char == 6
+	a.add_dilatation(s.find("line"), 6)
+	s = s.replace("line", "longerline")
+	line, char = a.line_number(s.find("some"))
+	assert line == 3
+	assert char == 5
+	line, char = a.line_number(s.find("line"))
+	assert line == 2
+	assert char == 6
+
+
 class TestPreProcMethods:
 
 	pre = Preprocessor()
