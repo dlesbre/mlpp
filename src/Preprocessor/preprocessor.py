@@ -45,6 +45,9 @@ class Preprocessor:
 	post_actions: List[TypePostaction] = []
 	labels: Dict[str, List[int]] = dict()
 
+	# usefull variables
+	current_position: Position = Position()
+
 	def send_error(self: "Preprocessor", error_msg: str) -> None:
 		"""Handles errors
 		Inputs:
@@ -117,16 +120,16 @@ class Preprocessor:
 			arg_list.append(args[last_blank:ii].replace("\\ ", " "))
 		return arg_list
 
-	def get_identifier_name(self: "Preprocessor", string: str) -> Tuple[str, str]:
+	def get_identifier_name(self: "Preprocessor", string: str) -> Tuple[str, str, int]:
 		"""finds the first identifier in string:
 		Returns:
-			tuple str, str - identifier, rest_of_string
-		  returns ("","") if None found"""
+			tuple str, str, int - identifier, rest_of_string, start_of_rest_of_string
+		  returns ("","", -1) if None found"""
 		match_opt = re.match(r"\s*({})({}.*)".format(self.token_ident, self.token_ident_end), string)
 		if match_opt == None:
-			return "", ""
+			return ("", "", -1)
 		match = cast(re.Match, match_opt)
-		return match.group(1), match.group(2)
+		return match.group(1), match.group(2), match.start(2)
 
 	def find_tokens(self: "Preprocessor", string: str) -> TokenList:
 		"""Find all tokens (begin/end) in string
@@ -256,7 +259,19 @@ class Preprocessor:
 			if self.warn_unmatch_close:
 				self.send_warning("Unmatch close token")
 
+	def context_new(self: "Preprocessor", file : str, pos : int) -> None:
+		pass
+
+	def context_update(self: "Preprocessor", pos : int) -> None:
+		pass
+
+	def context_pop(self : "Preprocessor") -> None:
+		pass
+
 	def parse(self: "Preprocessor", string: str) -> str:
+		"""parses the string, calling command and blocks it contains
+		calls post_actions when parsing is done
+		returns the resulting string"""
 		self._recursion_depth += 1
 		if self._recursion_depth == self.max_recursion_depth:
 			self.send_error("Recursion depth exceeded")
@@ -270,27 +285,34 @@ class Preprocessor:
 			token_index = self.find_matching_pair(tokens)
 			if token_index == -1:
 				self.send_error("No matching open/close pair found")
+
+			self.current_position.begin = tokens[token_index][0]
+			self.current_position.cmd_begin = tokens[token_index][1]
+			self.current_position.cmd_end = tokens[token_index+1][0]
+			self.current_position.end = tokens[token_index+1][1]
 			substring = string[
-				tokens[token_index][1] : tokens[token_index + 1][0]
+				self.current_position.cmd_begin : self.current_position.cmd_end
 			]
-			ident, arg_string = self.get_identifier_name(substring)
-			start_pos = tokens[token_index][0]
-			end_pos = tokens[token_index + 1][1]
+			ident, arg_string, i = self.get_identifier_name(substring)
+			self.current_position.cmd_argbegin = i
+			end_pos = self.current_position.end
 			new_str = ""
 			if ident == "":
 				self.send_error("Unrecognized command name '{}'".format(string))
 			elif ident in self.commands:
-				# todo context
+				# todo context, try
 				command = self.commands[ident]
 				new_str = command(self, arg_string)
 			elif ident in self.blocks:
-				endblock, new_end = self.find_matching_endblock(ident, string[end_pos:])
-				if endblock == -1 and end_pos == -1:
+				endblock_b, endblock_e = self.find_matching_endblock(ident, string[self.current_position.end:])
+				if endblock_b == -1:
 					self.send_error('No matching endblock for block {}'.format(ident))
-				endblock += end_pos
-				block_content = string[end_pos:endblock]
-				end_pos += new_end
-				print(block_content)
+				self.current_position.endblock_begin = endblock_b + self.current_position.end
+				self.current_position.endblock_end = endblock_e + self.current_position.end
+				block_content = string[
+					self.current_position.end : self.current_position.endblock_begin
+				]
+				end_pos = self.current_position.endblock_end
 				block = self.blocks[ident]
 				# block post action don't trickle upwards
 				post_actions = self.post_actions.copy()
@@ -300,7 +322,7 @@ class Preprocessor:
 			else:
 				self.send_error("Command or block not recognized")
 			string = self.replace_string(
-				start_pos, end_pos, string, new_str, tokens, dilatations
+				self.current_position.begin, end_pos, string, new_str, tokens, dilatations
 			)
 			self.remove_leading_close_tokens(tokens)
 		if len(tokens) == 1:

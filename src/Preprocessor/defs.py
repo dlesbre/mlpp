@@ -8,14 +8,23 @@ REGEX_STRING: str = '""|".*?[^\\\\]"'
 
 
 class Position:
-	file: str = "stdin"
-	line: int = 0
-	char: int = 0
-
-	def __init__(self: "Position", file: str, line: int, char: int) -> None:
-		self.file = file
-		self.line = line
-		self.char = char
+	"""represents a position to a command
+	#1{% #2cmd#3 args#4 %}#5...#6{% endcmd %}#7
+	- #1 - begin
+	- #2 - cmd_begin
+	- #3 - cmd_argbegin
+	- #4 - cmd_end
+	- #5 - end
+	#6 and #7 values are meaningless if not a block
+	- #6 - endblock_begin
+	- #7 - endblock_end"""
+	begin:          int = 0
+	end:            int = 0
+	cmd_begin:      int = 0
+	cmd_end:        int = 0
+	cmd_argbegin:   int = 0
+	endblock_begin: int = 0
+	endblock_end:   int = 0
 
 
 class CommandError(Exception):

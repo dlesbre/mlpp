@@ -14,11 +14,11 @@ class TestPreProcMethods:
 	def test_get_identifier_name(self):
 		"""unit tests for Preprocessor.get_identifier_name"""
 		tests = [
-			("21", ("", "")),
-			("+*", ("", "")),
-			("hello21+3", ("hello21", "+3")),
-			("\t\n name ", ("name", " ")),
-			("    _hidden_12||", ("_hidden_12", "||")),
+			("21", ("", "", -1)),
+			("+*", ("", "", -1)),
+			("hello21+3", ("hello21", "+3", 7)),
+			("\t\n name ", ("name", " ", 7)),
+			("    _hidden_12||", ("_hidden_12", "||", 14)),
 		]
 		for test_in, test_out in tests:
 			assert self.pre.get_identifier_name(test_in) == test_out

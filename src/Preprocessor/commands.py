@@ -12,7 +12,7 @@ from .preprocessor import Preprocessor
 # ============================================================
 
 def cmd_def(preprocessor: Preprocessor, args_string : str) -> str:
-	ident, text = preprocessor.get_identifier_name(args_string)
+	ident, text, _ = preprocessor.get_identifier_name(args_string)
 	if ident == "":
 		preprocessor.send_error("invalid identifier")
 
@@ -48,7 +48,7 @@ def cmd_undef(preprocessor: Preprocessor, args_string: str) -> str:
 	"""The undef command, removes commands or blocks
 	from preprocessor.commands and preprocessor.blocks
 	usage: undef <command-name>"""
-	ident, _ = preprocessor.get_identifier_name(args_string)
+	ident = preprocessor.get_identifier_name(args_string)[0]
 	if ident == "":
 		preprocessor.send_error("invalid identifier")
 	if ident in preprocessor.commands:
@@ -113,14 +113,41 @@ def cmd_label(preprocessor: Preprocessor, arg_string: str) -> str:
 	if lbl == "":
 		preprocessor.send_error("empty label name")
 	if lbl in preprocessor.labels:
-		preprocessor.labels[lbl].append(0) #TODO pos
+		preprocessor.labels[lbl].append(preprocessor.current_position.begin)
 	else:
-		preprocessor.labels[lbl] = [0] #TODO pos
+		preprocessor.labels[lbl] = [preprocessor.current_position.begin]
 	return ""
 
-def cmd_date(p: Preprocessor, s: str) -> str:
+def cmd_date(p: Preprocessor, args: str) -> str:
 	"""the date command, prints the current date in YYYY-MM-DD format"""
+	args = args.strip()
+	if args == "":
+		args = "YYYY-MM-DD"
+	# we need to use a placeholder to avoid conflits
+	# in successive replaces
+	replacements = (
+		("YYYY", "\0001", "{year:04}"),
+		("YY", "\0002", "{year2:02}"),
+		("Y", "\0003", "{year}"),
+		("MM", "\0004", "{month:02}"),
+		("M", "\0005", "{month}"),
+		("DD", "\0006", "{day:02}"),
+		("D", "\0007", "{day}"),
+		("hh", "\0008", "{hour:02}"),
+		("h", "\0009", "{hour}"),
+		("mm", "\000a", "{minute:02}"),
+		("m", "\000b", "{minute}"),
+		("ss", "\000c", "{second:02}"),
+		("s", "\000d", "{second}"),
+	)
+	for val, placeholder, _ in replacements:
+		args = args.replace(val, placeholder)
+	for _, placeholder, repl in replacements:
+		args = args.replace(placeholder, repl)
+	print(args)
 	x = datetime.now()
-	return "{:04}-{:02}-{:02}".format(x.year, x.month, x.day)
+	return args.format(year = x.year, month = x.month, day = x.day,
+		hour = x.hour, minute = x.minute, second = x.second, year2 = x.year % 100
+	)
 
 # TODO include, extends,
