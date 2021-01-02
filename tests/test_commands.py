@@ -37,6 +37,7 @@ class TestCommands:
 			("{% strip_leading_whitespace %}hello \n  my name\n\t \t is john\n", "hello\nmy name\nis john\n"),
 			("{% empty_last_line %}", ""),
 			("{% empty_last_line %}hello", "hello\n"),
+			("{% empty_last_line %}hello\n\n\n", "hello\n"),
 		]
 		for in_str, out_str in test:
 			assert self.pre.parse(in_str) == out_str

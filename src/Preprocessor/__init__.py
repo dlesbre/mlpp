@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-from .commands import *
+from .defaults import *
 from .defs import *
 from .preprocessor import *

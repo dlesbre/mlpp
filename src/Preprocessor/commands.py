@@ -4,6 +4,7 @@
 import re
 from datetime import datetime
 
+from .defs import process_string
 from .preprocessor import Preprocessor
 
 # ============================================================
@@ -32,7 +33,7 @@ def cmd_def(preprocessor: Preprocessor, args_string : str) -> str:
 
 	# if its a string - use escapes and remove external quotes
 	if len(text) >= 2 and text[0] == '"' and text[-1] == '"':
-		text = text[1:-1].encode().decode("unicode-escape")
+		text = process_string(text[1:-1])
 
 	def defined_command(p: Preprocessor, s: str) -> str:
 		if is_macro:
@@ -123,74 +124,3 @@ def cmd_date(p: Preprocessor, s: str) -> str:
 	return "{:04}-{:02}-{:02}".format(x.year, x.month, x.day)
 
 # TODO include, extends,
-
-# ============================================================
-# post parse commands
-# ============================================================
-
-# TODO replace
-
-def pst_strip_empty_lines(p: Preprocessor, string: str) -> str:
-	"""post action to remove empty lines (containing whitespace only) from the text"""
-	return re.sub(r"\n\s*\n", "\n", string)
-
-def cmd_strip_empty_lines(preprocessor: Preprocessor, s: str) -> str:
-	"""the strip_empty_lines command
-	queues pst_strip_empty_lines to preprocessor.post_actions"""
-	if s.strip() != "":
-		preprocessor.send_error("empty_last_line takes no arguments")
-	preprocessor.post_actions.append(pst_strip_empty_lines)
-	return ""
-
-def pst_strip_leading_whitespace(p: Preprocessor, string: str) -> str:
-	"""post action to remove leading whitespace (indent) from string"""
-	return re.sub("^[ \t]*", "", string, flags = re.MULTILINE)
-
-def cmd_strip_leading_whitespace(preprocessor: Preprocessor, s: str) -> str:
-	"""the strip_leading_whitespace command
-	queues pst_strip_leading_whitespace to preprocessor.post_actions"""
-	if s.strip() != "":
-		preprocessor.send_error("empty_last_line takes no arguments")
-	preprocessor.post_actions.append(pst_strip_leading_whitespace)
-	return ""
-
-def pst_strip_trailing_whitespace(p: Preprocessor, string: str) -> str:
-	"""post action to remove trailing whitespace (indent) from string"""
-	return re.sub("[ \t]*$", "", string, flags = re.MULTILINE)
-
-def cmd_strip_trailing_whitespace(preprocessor: Preprocessor, s: str) -> str:
-	"""the strip_trailing_whitespace command
-	queues pst_strip_trailing_whitespace to preprocessor.post_actions"""
-	if s.strip() != "":
-		preprocessor.send_error("empty_last_line takes no arguments")
-	preprocessor.post_actions.append(pst_strip_trailing_whitespace)
-	return ""
-
-def pst_empty_last_line(p: Preprocessor, string: str) -> str:
-	"""post action to ensures file ends with an empty line if
-	it is not empty"""
-	if string and string[-1] != "\n":
-		string += "\n"
-	return string
-
-def cmd_empty_last_line(preprocessor: Preprocessor, s: str) -> str:
-	"""the empty_last_line command
-	queues pst_empty_last_line to preprocessor.post_actions"""
-	if s.strip() != "":
-		preprocessor.send_error("empty_last_line takes no arguments")
-	preprocessor.post_actions.append(pst_empty_last_line)
-	return ""
-
-# TODO blocks repeat, labelblock, for, if
-
-Preprocessor.commands["def"] = cmd_def
-Preprocessor.commands["undef"] = cmd_undef
-Preprocessor.commands["begin"] = cmd_begin
-Preprocessor.commands["end"] = cmd_end
-Preprocessor.commands["label"] = cmd_label
-Preprocessor.commands["date"] = cmd_date
-
-Preprocessor.commands["strip_empty_lines"] = cmd_strip_empty_lines
-Preprocessor.commands["strip_leading_whitespace"] = cmd_strip_leading_whitespace
-Preprocessor.commands["strip_trailing_whitespace"] = cmd_strip_trailing_whitespace
-Preprocessor.commands["empty_last_line"] = cmd_empty_last_line
