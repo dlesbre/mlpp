@@ -34,3 +34,9 @@ class WarningMode(Enum):
 class TokenMatch(IntEnum):
 	OPEN = 0
 	CLOSE = 1
+
+
+def process_string(string: str) -> str:
+	"""Change escape sequences to the chars they match
+	ex: process_string("\\\\n") -> "\\n\""""
+	return string.encode().decode("unicode-escape")

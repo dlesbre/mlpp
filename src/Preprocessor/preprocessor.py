@@ -32,7 +32,7 @@ class Preprocessor:
 
 	# if True, handle warnings as errors
 	warning_mode: WarningMode = WarningMode.PRINT
-
+  # if True, warning when finding unmatch token_end
 	warn_unmatch_close: bool = False
 
 	# private attributes
@@ -78,6 +78,44 @@ class Preprocessor:
 			raise Warning(warning_msg)
 		elif self.warning_mode == WarningMode.AS_ERROR:
 			self.send_error(warning_msg)
+
+	def split_args(self: "Preprocessor", args: str) -> List[str]:
+		"""Splits args along space like on the command line
+		preserves strings
+		ex: self.split_args(" foo -bar\\t "some string" escaped\\ space")
+		    returns ["foo", "-bar", "some string", "escaped space"]"""
+		arg_list: List[str] = []
+		ii = 0
+		last_blank = 0
+		len_args = len(args)
+		in_string = False
+		while ii < len_args:
+			if args[ii] == "\\":
+				ii += 1
+				if ii < len_args:
+					# skip escaped character
+					ii += 1
+					continue
+				else:
+					break
+			if in_string:
+				if args[ii] == '"':
+					in_string = False
+					arg_list.append(process_string(args[last_blank + 1 : ii]))
+					last_blank = ii + 1
+			elif args[ii].isspace():
+				if last_blank != ii:
+					arg_list.append(args[last_blank:ii].replace("\\ ", " "))
+				last_blank = ii + 1
+			elif args[ii] == '"':
+				in_string = True
+			ii += 1
+		# end while
+		if in_string:
+			self.send_error("Unterminated string \"... in arguments")
+		if last_blank != ii:
+			arg_list.append(args[last_blank:ii].replace("\\ ", " "))
+		return arg_list
 
 	def get_identifier_name(self: "Preprocessor", string: str) -> Tuple[str, str]:
 		"""finds the first identifier in string:

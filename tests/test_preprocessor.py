@@ -75,3 +75,11 @@ class TestPreProcMethods:
 		]
 		for arg0, arg1, rep in test:
 			assert self.pre.find_matching_endblock(arg0, arg1) == rep
+
+	def test_split_args(self):
+		test = [
+			(" foo -bar\t \"some string\" escaped\\ space", ["foo", "-bar", "some string", "escaped space"]),
+      ("\nfoo \"string\\twith\\n\\\"escaped chars\"", ["foo", "string\twith\n\"escaped chars"]),
+		]
+		for arg, rep in test:
+			assert self.pre.split_args(arg) == rep
