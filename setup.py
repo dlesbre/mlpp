@@ -2,7 +2,7 @@
 from setuptools import find_packages, setup  # type: ignore
 
 setup(
-	name = "Preprocessor",
+	name = "preprocessor",
 	version = "0.1",
 	author = "Dorian Lesbre",
 	url = "https://github.com/Lesbre/preprocessor/",
