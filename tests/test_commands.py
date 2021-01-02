@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 from os import remove
 
-from Preprocessor import Preprocessor  # type: ignore
+from preprocessor import Preprocessor  # type: ignore
 
 
 class TestCommands:

@@ -1,7 +1,9 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
+import re
+
 import pytest
-from Preprocessor import *
+from preprocessor import Context, Preprocessor, TokenMatch  # type: ignore
 
 
 def test_context():
