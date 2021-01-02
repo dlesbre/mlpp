@@ -38,7 +38,10 @@ def cmd_def(preprocessor: Preprocessor, args_string : str) -> str:
 	def defined_command(p: Preprocessor, s: str) -> str:
 		if is_macro:
 			pass
-		return p.parse(text)
+		p.context_update(p.current_position.cmd_begin, 'in expansion of defined command {}'.format(ident))
+		parsed = p.parse(text)
+		p.context_pop()
+		return parsed
 	defined_command.__doc__ = """Defined command for {}""".format(ident)
 	defined_command.__name__ = """cmd_{}""".format(ident)
 	preprocessor.commands[ident] = defined_command
@@ -53,10 +56,8 @@ def cmd_undef(preprocessor: Preprocessor, args_string: str) -> str:
 		preprocessor.send_error("invalid identifier")
 	if ident in preprocessor.commands:
 		del preprocessor.commands[ident]
-	elif ident in preprocessor.blocks:
+	if ident in preprocessor.blocks:
 		del preprocessor.commands[ident]
-	else:
-		preprocessor.send_error("can't undefine \"{}\", it aldready undefined")
 	return ""
 
 # ============================================================

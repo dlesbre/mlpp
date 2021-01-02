@@ -26,6 +26,10 @@ class Preprocessor:
 	re_flags: int = re.MULTILINE
 	exit_code: int = 2
 
+	# change to warnings and error to remove ansi sequences
+	warning_str: str = "\033[35mwarning\033[39m"
+	error_str: str   = "\033[31merror\033[39m"
+
 	# if False raises an error
 	# if True print to stderr and exit
 	exit_on_error: bool = True
@@ -37,7 +41,7 @@ class Preprocessor:
 
 	# private attributes
 	_recursion_depth: int = 0
-	_context: List[Tuple[Context, int]] = []
+	_context: List[Tuple[Context, int, bool]] = []
 
 	# commands and blocks
 	commands: Dict[str, TypeCommand] = dict()
@@ -55,13 +59,16 @@ class Preprocessor:
 		 - desc should be "error" or "warning"
 		 - msg the message to print"""
 		if self._context:
-			ctxt = self._context[-1][0]
-			line_nb, char = ctxt.line_number(self._context[-1][1])
-			if ctxt.desc:
-				print("{}:{}:{}: {}".format(
-					ctxt.file, line_nb, char, ctxt.desc),
-					file=stderr
-				)
+			len_ctxt = len(self._context)
+			for i, ctxt_tu in enumerate(self._context):
+				if i + 1 == len_ctxt or self._context[i+1][2]:
+					ctxt = ctxt_tu[0]
+					line_nb, char = ctxt.line_number(ctxt_tu[1])
+					if ctxt.desc:
+						print("{}:{}:{}: {}".format(
+							ctxt.file, line_nb, char, ctxt.desc),
+							file=stderr
+						)
 			print("{}:{}:{}: {}: {}".format(
 				ctxt.file, line_nb, char, desc, msg),
 				file=stderr
@@ -79,7 +86,7 @@ class Preprocessor:
       else raise an Exception
 		"""
 		if self.exit_on_error:
-			self._print_stderr_msg("error", error_msg)
+			self._print_stderr_msg(self.error_str, error_msg)
 			exit(self.exit_code)
 		else:
 			raise Exception(error_msg)
@@ -97,7 +104,7 @@ class Preprocessor:
       | AS_ERROR -> passes to self.send_error()
 		"""
 		if self.warning_mode == WarningMode.PRINT:
-			self._print_stderr_msg("warning", warning_msg)
+			self._print_stderr_msg(self.warning_str, warning_msg)
 		elif self.warning_mode == WarningMode.RAISE:
 			raise Warning(warning_msg)
 		elif self.warning_mode == WarningMode.AS_ERROR:
@@ -287,7 +294,7 @@ class Preprocessor:
 		  pos is the relative (dilated) position in the file
 		    (can be obtained from self.current_position)
 		"""
-		self._context.append((context, pos))
+		self._context.append((context, pos, True))
 
 	def context_update(self: "Preprocessor", pos: int, desc: Optional[str] = None) -> None:
 		"""Updates the current context
@@ -297,7 +304,7 @@ class Preprocessor:
 			new_context = self._context[-1][0].copy()
 			if isinstance(desc, str):
 				new_context.desc = desc
-			self._context.append((new_context, pos))
+			self._context.append((new_context, pos, False))
 		else:
 			raise EmptyContextStack
 
@@ -310,16 +317,30 @@ class Preprocessor:
 			raise EmptyContextStack
 
 	def parse(self: "Preprocessor", string: str) -> str:
-		"""parses the string, calling command and blocks it contains
+		"""parses the string, calling the command and blocks it contains
 		calls post_actions when parsing is done
-		returns the resulting string"""
+		Inputs:
+		  string - the string to parse
+		Expects:
+			self._context[-1][0] should contain a context describing the string
+			self._context[-1][1] is used to determine offset between string and source
+			  (for error display)
+		Returns:
+			the resulting string"""
+		# Recursion check
 		self._recursion_depth += 1
 		if self._recursion_depth == self.max_recursion_depth:
 			self.send_error("Recursion depth exceeded")
+
+		# context init
 		empty_context = False
+		old_offset = self.current_position.offset
 		if self._context == []:
 			self.context_new(NO_CONTEXT, 0)
-			empty_context = True
+			self.current_position.offset = 0
+			empty_context = True # used to remove added context when doe
+		else:
+			self.current_position.offset = self._context[-1][1]
 
 		tokens: TokenList = self.find_tokens(string)
 		dilatations: DilatationList = []
@@ -377,6 +398,7 @@ class Preprocessor:
 			)
 			self.context_pop()
 			self.remove_leading_close_tokens(tokens)
+		# end while
 		if len(tokens) == 1:
 			self.send_error(
 				'lonely token, use "{}begin{}" or "{}end{}" to place it'.format(
@@ -393,4 +415,5 @@ class Preprocessor:
 		self._recursion_depth -= 1
 		if empty_context:
 			self._context = []
+		self.current_position.offset = old_offset
 		return string

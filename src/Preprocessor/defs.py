@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import enum
 import re
-from typing import List, Tuple, Union, cast
+from typing import Callable, List, Tuple, Union, cast
 
 REGEX_IDENTIFIER:       str = "[_a-zA-Z][_a-zA-Z0-9]*"
 REGEX_IDENTIFIER_END:   str = "$|[^_a-zA-Z0-9]"
@@ -21,11 +21,14 @@ class Position:
 	#6 and #7 values are meaningless if not a block
 	- #6 - endblock_begin
 	- #7 - endblock_end
-	true_begin represents the position of #1
-	in the original file (whereas #1 represents its position
-	in the current string, they can differ due to previous
-	insertions/deletions)"""
-	true_begin:     int = 0
+	these values are relative to the start of the string
+	being scanned. For values relative to the start of the source
+	(namely for errors and context updates) use the methods
+	true_begin(), true_end()...
+
+	offset represents the offset between current string and source"""
+	offset: int = 0
+
 	begin:          int = 0
 	end:            int = 0
 	cmd_begin:      int = 0
@@ -34,14 +37,24 @@ class Position:
 	endblock_begin: int = 0
 	endblock_end:   int = 0
 
+	true_begin: Callable[["Position"], int] = \
+		lambda self: self.begin + self.offset
+	true_end: Callable[["Position"], int] = \
+		lambda self: self.end + self.offset
+	true_cmd_begin: Callable[["Position"], int] = \
+		lambda self: self.cmd_begin + self.offset
+	true_cmd_end: Callable[["Position"], int] = \
+		lambda self: self.cmd_end + self.offset
+	true_cmd_argbegin: Callable[["Position"], int] = \
+		lambda self: self.cmd_argbegin + self.offset
+	true_endblock_begin: Callable[["Position"], int] = \
+		lambda self: self.endblock_begin + self.offset
+	true_endblock_end: Callable[["Position"], int] = \
+		lambda self: self.endblock_end + self.offset
+
+
 class EmptyContextStack(Exception):
 	pass
-
-
-class CommandError(Exception):
-	def __init__(self: "CommandError", position: Position, msg: str) -> None:
-		self.pos: Position = position
-		self.msg: str = msg
 
 
 class WarningMode(enum.Enum):
