@@ -7,7 +7,6 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, cast
 from .defs import *
 
 TokenList = List[Tuple[int, int, TokenMatch]]
-DilatationList = List[Tuple[int, int]]
 TypeCommand = Callable[["Preprocessor", str], str]
 TypeBlock = Callable[["Preprocessor", str, str], str]
 TypePostaction = Callable[["Preprocessor", str], str]
@@ -52,6 +51,13 @@ class Preprocessor:
 	# usefull variables
 	current_position: Position = Position()
 	command_vars: Dict[str, Any] = dict()
+
+	def __init__(self):
+		self.commands = Preprocessor.commands.copy()
+		self.blocks = Preprocessor.blocks.copy()
+		self.post_actions = Preprocessor.post_actions.copy()
+		self.command_vars = Preprocessor.command_vars.copy()
+		self._context = Preprocessor._context.copy()
 
 	def _print_stderr_msg(self: "Preprocessor", desc: str, msg: str) -> None:
 		"""Pretty printing to stderr using self._context
@@ -244,8 +250,7 @@ class Preprocessor:
 			match_end_opt = re.search(endblock_regex, string[pos:], self.re_flags)
 
 	def replace_string(self: "Preprocessor",
-		start: int, end: int, string: str, replacement: str,
-		tokens: TokenList, dilatations: DilatationList
+		start: int, end: int, string: str, replacement: str, tokens: TokenList,
 	) -> str:
 		"""replaces string[start:end] with replacement
 		also add offset to token requiring them
@@ -254,7 +259,6 @@ class Preprocessor:
 		Effect:
 			removes all tokens occuring between start and end from tokens
 			corrects start and end of further tokens by the length change
-			adds the length change to self._dilatations
 		"""
 		test_range = range(start, end)
 		i = 0
@@ -276,7 +280,6 @@ class Preprocessor:
 				if index_list[i] >= end:
 					index_list[i] += dilat
 
-		dilatations.append((start, dilat))
 		return string[:start] + replacement + string[end:]
 
 	def remove_leading_close_tokens(self: "Preprocessor", tokens: TokenList) -> None:
@@ -330,7 +333,7 @@ class Preprocessor:
 		# Recursion check
 		self._recursion_depth += 1
 		if self._recursion_depth == self.max_recursion_depth:
-			self.send_error("Recursion depth exceeded")
+			self.send_error("recursion depth exceeded")
 
 		# context init
 		empty_context = False
@@ -343,14 +346,13 @@ class Preprocessor:
 			self.current_position.offset = self._context[-1][1]
 
 		tokens: TokenList = self.find_tokens(string)
-		dilatations: DilatationList = []
 
 		while len(tokens) > 1:  # needs two tokens to make a pair
 
 			# find innermost (nested pair)
 			token_index = self.find_matching_pair(tokens)
 			if token_index == -1:
-				self.send_error("No matching open/close pair found")
+				self.send_error("no matching open/close pair found")
 
 			self.current_position.begin = tokens[token_index][0]
 			self.current_position.cmd_begin = tokens[token_index][1]
@@ -365,7 +367,7 @@ class Preprocessor:
 			self.context_update(self.current_position.begin)
 			new_str = ""
 			if ident == "":
-				self.send_error("Unrecognized command name '{}'".format(string))
+				self.send_error("unrecognized command name '{}'".format(string))
 			elif ident in self.commands:
 				# todo try
 				self.context_update(self.current_position.cmd_begin, "in command {}".format(ident))
@@ -375,7 +377,7 @@ class Preprocessor:
 			elif ident in self.blocks:
 				endblock_b, endblock_e = self.find_matching_endblock(ident, string[self.current_position.end:])
 				if endblock_b == -1:
-					self.send_error('No matching endblock for block {}'.format(ident))
+					self.send_error('no matching endblock for block {}'.format(ident))
 
 				self.current_position.endblock_begin = endblock_b + self.current_position.end
 				self.current_position.endblock_end = endblock_e + self.current_position.end
@@ -384,17 +386,20 @@ class Preprocessor:
 				]
 				end_pos = self.current_position.endblock_end
 				block = self.blocks[ident]
+
 				# block post action don't trickle upwards
 				self.context_update(self.current_position.cmd_begin, "in block {}".format(ident))
-				post_actions = self.post_actions.copy()
-				self.post_actions = []
+				post_actions = self.post_actions
+				self.post_actions = Preprocessor.post_actions.copy()
+
 				new_str = block(self, arg_string, block_content)
+
 				self.post_actions = post_actions
 				self.context_pop()
 			else:
-				self.send_error("Command or block not recognized")
+				self.send_error("command or block not recognized")
 			string = self.replace_string(
-				self.current_position.begin, end_pos, string, new_str, tokens, dilatations
+				self.current_position.begin, end_pos, string, new_str, tokens
 			)
 			self.context_pop()
 			self.remove_leading_close_tokens(tokens)

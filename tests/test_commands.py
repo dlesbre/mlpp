@@ -41,12 +41,13 @@ class TestCommands:
 		]
 		for in_str, out_str in test:
 			assert self.pre.parse(in_str) == out_str
-		self.pre.post_actions = []
+		self.pre.post_actions = Preprocessor.post_actions.copy()
 
 	def test_block(self):
 		test = [
 			("{% verbatim %}{% hello %}{% endverbatim %}", "{% hello %}"),
 			("{% repeat 5 %}yo{% endrepeat %}", "yoyoyoyoyo"),
+			("{% label foo %}lala{% atlabel foo %}bar{% endatlabel %}yoyo{% label foo %}oups", "barlalayoyobaroups"),
 		]
 		for in_str, out_str in test:
 			assert self.pre.parse(in_str) == out_str
