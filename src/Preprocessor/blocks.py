@@ -13,7 +13,7 @@ def blck_block(p: Preprocessor, args: str, contents: str) -> str:
 
 def blck_verbatim(p: Preprocessor, args: str, contents: str) -> str:
 	"""The verbatim block. It copies its content without parsing them
-	Stops at first {% endverbatim %} not matchin a {% verbatim %}"""
+	Stops at first {% endverbatim %} not matching a {% verbatim %}"""
 	if args.strip() != "":
 		p.send_error("the verbatim block takes no arguments")
 	return contents
