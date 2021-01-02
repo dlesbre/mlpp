@@ -16,6 +16,8 @@ class TestCommands:
 			("{% def nom\" \"\\\"jean\" %}\nbonjour je suis {% nom %}","\nbonjour je suis  \"\"jean"),
 			("{% def nom jean %}{% def prenom nom %}\nbonjour je suis {% prenom %}","\nbonjour je suis nom"),
 			("{% def nom jean %}{% def prenom {% nom %} %}\nbonjour je suis {% prenom %}","\nbonjour je suis jean"),
+			("{% def add(a,b,c) (a+b+2c) %}hello{% add 1 2 3 %}", "hello(1+2+23)"),
+			("{% def add(pha,alpha,lpha) (pha,alpha)lpha %}hello{% add 1 2 3 %}", "hello(1,2)3"),
 		]
 		for in_str, out_str in test:
 			assert self.pre.parse(in_str) == out_str

@@ -34,7 +34,7 @@ def cmd_def(preprocessor: Preprocessor, args_string : str) -> str:
 		for i in range(len(args)):
 			args[i] = args[i].strip()
 			if not args[i].isidentifier():
-				preprocessor.send_error('in def {} : invalid macro parameter name "{}"'.format(ident, args[i]))
+				preprocessor.send_error('in def {}: invalid macro parameter name "{}"'.format(ident, args[i]))
 		text = text[end+1:].strip()
 
 
@@ -60,7 +60,7 @@ def cmd_def(preprocessor: Preprocessor, args_string : str) -> str:
 				string = re.sub(pattern, repl, string, flags=re.MULTILINE)
 			for i in range(len(args)):
 				pattern = re.escape("\000{}".format(i))
-				repl = "\\1{}\\3".format(arguments.vars[i])
+				repl = arguments.vars[i]
 				string = re.sub(pattern, repl, string, flags=re.MULTILINE)
 
 		p.context_update(p.current_position.cmd_begin, 'in expansion of defined command {}'.format(ident))
