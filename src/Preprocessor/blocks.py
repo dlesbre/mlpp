@@ -39,17 +39,19 @@ def blck_atlabel(p: Preprocessor, args: str, contents: str) -> str:
 	lbl = args.strip()
 	if lbl == "":
 		p.send_error("empty label name")
-	lbl_ident = "atlabel_" + lbl
-	if lbl_ident in p.__dict__:
-		p.send_error('Multiple atlabel blocks with label "{}"'.format(lbl))
-	p.__dict__[lbl_ident] = p.parse(contents)
+	if "atlabel" in p.command_vars:
+		if lbl in p.command_vars["atlabel"]:
+			p.send_error('Multiple atlabel blocks with label "{}"'.format(lbl))
+	else:
+		p.command_vars["atlabel"] = dict()
+	p.command_vars["atlabel"][lbl] = p.parse(contents)
 	def place_block(pre: Preprocessor, string: str) -> str:
 		if not lbl in pre.labels:
 			pre.send_warning('No matching label for atlabel block "{}"'.format(lbl))
 		indexes = pre.labels[lbl]
 		for i in range(len(indexes)):
 			string = pre.replace_string(
-				indexes[i], indexes[i], string, pre.__dict__[lbl_ident], [], []
+				indexes[i], indexes[i], string, p.command_vars["atlabel"][lbl], [], []
 			)
 		return string
 

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import re
 from sys import stderr
-from typing import Callable, Dict, List, Optional, Tuple, cast
+from typing import Any, Callable, Dict, List, Optional, Tuple, cast
 
 from .defs import *
 
@@ -47,6 +47,7 @@ class Preprocessor:
 
 	# usefull variables
 	current_position: Position = Position()
+	command_vars: Dict[str, Any] = dict()
 
 	def send_error(self: "Preprocessor", error_msg: str) -> None:
 		"""Handles errors
