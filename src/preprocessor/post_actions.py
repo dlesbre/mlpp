@@ -3,8 +3,7 @@
 import argparse
 import re
 
-from .defs import (REGEX_IDENTIFIER_BEGIN, REGEX_IDENTIFIER_END,
-                   ArgumentParserNoExit)
+from .defs import REGEX_IDENTIFIER_WRAPPED, ArgumentParserNoExit
 from .preprocessor import Preprocessor
 
 # ============================================================
@@ -103,11 +102,19 @@ def cmd_replace(p: Preprocessor, args: str) -> str:
 	else:
 		pattern = re.escape(pattern)
 		if arguments.whole_word:
-			pattern = "(^|(?<=([^_a-zA-Z]))){}((?=([^_a-zA-Z0-9]))|$)".format(pattern)
+			pattern = REGEX_IDENTIFIER_WRAPPED.format(pattern)
 			repl = "\\1{}\\3".format(repl)
 
+	pos = p.current_position.cmd_begin
+
 	def pst_replace(p: Preprocessor, string: str) -> str:
-		return re.sub(pattern, repl, string, flags = flags)
+		try:
+			return re.sub(pattern, repl, string, flags = flags)
+		except re.error as err:
+			p.context_update(pos)
+			p.send_error("replace regex error: {}".format(err.msg))
+			p.context_pop()
+			return ""
 	pst_replace.__name__ = "pst_replace_lambda"
 	pst_replace.__doc__ = "post action for replace {}".format(args)
 	p.post_actions.append(pst_replace)

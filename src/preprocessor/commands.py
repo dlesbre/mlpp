@@ -4,13 +4,16 @@ import argparse
 import re
 from datetime import datetime
 
-from .defs import ArgumentParserNoExit, Context, process_string
+from .defs import (REGEX_IDENTIFIER_WRAPPED, ArgumentParserNoExit, Context,
+                   process_string)
 from .preprocessor import Preprocessor
 
 # ============================================================
 # def/undef
 # ============================================================
 
+macro_parser = ArgumentParserNoExit(prog="macro", add_help=False)
+macro_parser.add_argument('vars', nargs='*') # arbitrary number of arguments
 
 def cmd_def(preprocessor: Preprocessor, args_string : str) -> str:
 	ident, text, _ = preprocessor.get_identifier_name(args_string)
@@ -21,7 +24,7 @@ def cmd_def(preprocessor: Preprocessor, args_string : str) -> str:
 	text = text.strip()
 	is_macro = False
 	args = []
-	#
+
 	if text and text[0] == "(":
 		is_macro = True
 		end = text.find(")")
@@ -30,17 +33,38 @@ def cmd_def(preprocessor: Preprocessor, args_string : str) -> str:
 		args = text[1:end].split(",")
 		for i in range(len(args)):
 			args[i] = args[i].strip()
+			if not args[i].isidentifier():
+				preprocessor.send_error('in def {} : invalid macro parameter name "{}"'.format(ident, args[i]))
 		text = text[end+1:].strip()
+
 
 	# if its a string - use escapes and remove external quotes
 	if len(text) >= 2 and text[0] == '"' and text[-1] == '"':
 		text = process_string(text[1:-1])
 
 	def defined_command(p: Preprocessor, s: str) -> str:
+		string = text
 		if is_macro:
-			pass
+			try:
+				arguments = macro_parser.parse_args(p.split_args(s))
+			except argparse.ArgumentError:
+				p.send_error("invalid argument for macro.\nusage: {} {}".format(ident, " ".join(args)))
+			if len(arguments.vars) != len(args):
+				p.send_error("invalid number of arguments for macro (expected {} got {}).\nusage: {} {}".format(len(args), len(arguments.vars), ident, " ".join(args)))
+			# first subsitution : placeholder to avoid conflits
+			# with multiple replaces
+			for i in range(len(args)):
+				pattern = REGEX_IDENTIFIER_WRAPPED.format(re.escape(args[i]))
+				placeholder = "\000{}".format(i)
+				repl = "\\1{}\\3".format(placeholder)
+				string = re.sub(pattern, repl, string, flags=re.MULTILINE)
+			for i in range(len(args)):
+				pattern = re.escape("\000{}".format(i))
+				repl = "\\1{}\\3".format(arguments.vars[i])
+				string = re.sub(pattern, repl, string, flags=re.MULTILINE)
+
 		p.context_update(p.current_position.cmd_begin, 'in expansion of defined command {}'.format(ident))
-		parsed = p.parse(text)
+		parsed = p.parse(string)
 		p.context_pop()
 		return parsed
 	defined_command.__doc__ = """Defined command for {}""".format(ident)
