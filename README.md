@@ -100,6 +100,98 @@ These commands print nothing and trigger post actions
 
 	If the whole-word flag is present, only replace occurrences which aren't part of a larger identifier (no letter/underscore before, no letter/underscore/number after).
 
+---
+
+## Custom commands from python
+
+### Defining commands, blocks and post action
+
+This package is designed to simply add new commands and blocks:
+
+- **commands**: they are function with signature:
+	```Python
+	def command_func(p: Preprocessor, args: str) -> str
+	```
+
+	The first argument is the preprocessor object, the second is the args string entered after the command. For example when calling `{% command_name some args %}` args will contain `" some args"` including leading/trailing spaces.
+	
+	The return value is the string to be inserted instead of the command call.
+
+	Command are stored in the preprocessor's `command` dict. They can be added with:
+	
+	```Python
+	# adds the command to all new Preprocessor objects
+	Preprocessor.commands["command_name"] = command_function
+	# adds the command to a specific Preprocessor object
+	my_preproc_obj.commands["command_name"] = command_function
+	```
+
+- **blocks**: they are functions with signature:
+	```Python
+	def block_func(p: Preprocessor, args: str, block_contents: str) -> str
+	```
+
+	`args` is the blocks argument, just like in commands, and `block_contents` is everything between `{% block args %}` and `{% endblock %}`.
+	
+	They return a string that replaces the whole block `{% block ... %}...{% endblock %}`
+	
+	Blocks are stored in the preprocessor's `blocks` dict. They can be added with:
+	
+	```Python
+	Preprocessor.blocks["block_name"] = block_func
+	```	
+
+- **post actions**: they have the same signature as commands:
+	```Python
+	def post_action_function(p: Preprocessor, text: str) -> str
+	```
+
+	Here the `text` arg is the whole text (with all commands rendered).
+	
+	The post action returns the transformed text.
+	
+	Post action are stored in the preprocessor's `post_actions` list. The list's order determines the order in which post actions are executed.
+
+	```Python
+	# adds a post action that executes after all previous post_action
+	Preprocessor.post_actions.append(post_action_function)
+	# adds a post action which happens first
+	Preprocessor.post_actions.insert(0, post_action_function)
+	```
+
+	Adding block actions with commands to run in the current block is pretty simple:
+	
+	```Python
+	def my_post_action(p: Preprocessor, args: str) -> str:
+		# not added to Preprocessor.post_actions
+		...
+	
+	def my_post_action_command(p: Preprocessor, args: str) -> str:
+		# will run in the current block and it's sublocks only
+		p.post_actions.append(my_post_action) 
+		return ""
+		
+	Preprocessor.commands["run_my_post_action"] = my_post_action_command
+	```
+
+### Useful functions
+
+Some useful functions and attribute that are usefull when defining commands or blocks
+
+- `Preprocessor.split_args(self, args: str) -> List[str]` - use split a command or block arguments like the command line would.
+	You can then parse them with `argparse`. However, `argparse` exits on parsing errors, so the module provide
+	```Python
+	class ArgumentParserNoExit(argparse.ArgumentParser):
+	```
+	which raises `argparse.ArgumentError` instead of exiting, allowing errors to be caught and passed to the preprocessor error handling system.
+- `Preprocessor.send_error(self, msg: str)` - sends an error (and exits). Errors should be only fatal problems. Non-fatal problems should be warnings.
+- `Preprocessor.send_warning(self, msg: str)` - sends a warning.
+- `Preprocessor.current_position: Position` - variable containing all position info.
+- `Preprocessor.parse(self, string: str) -> str` - processed the string commands and blocks and returns the parsed version
+	It can be used for block contents, recursive defines, or any text which has preprocessor syntax.
+
+---
+
 ## Developpement install
 
 To install the package for developpement
