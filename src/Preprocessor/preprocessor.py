@@ -37,7 +37,7 @@ class Preprocessor:
 
 	# private attributes
 	_recursion_depth: int = 0
-	_context: List[str] = []
+	_context: List[Tuple[Context, int]] = []
 
 	# commands and blocks
 	commands: Dict[str, TypeCommand] = dict()
@@ -49,6 +49,26 @@ class Preprocessor:
 	current_position: Position = Position()
 	command_vars: Dict[str, Any] = dict()
 
+	def _print_stderr_msg(self: "Preprocessor", desc: str, msg: str) -> None:
+		"""Pretty printing to stderr using self._context
+		Inputs:
+		 - desc should be "error" or "warning"
+		 - msg the message to print"""
+		if self._context:
+			ctxt = self._context[-1][0]
+			line_nb, char = ctxt.line_number(self._context[-1][1])
+			if ctxt.desc:
+				print("{}:{}:{}: {}".format(
+					ctxt.file, line_nb, char, ctxt.desc),
+					file=stderr
+				)
+			print("{}:{}:{}: {}: {}".format(
+				ctxt.file, line_nb, char, desc, msg),
+				file=stderr
+			)
+		else:
+			print(" {}: {}".format(desc, msg), file=stderr)
+
 	def send_error(self: "Preprocessor", error_msg: str) -> None:
 		"""Handles errors
 		Inputs:
@@ -59,7 +79,7 @@ class Preprocessor:
       else raise an Exception
 		"""
 		if self.exit_on_error:
-			print("Error: {}".format(error_msg), file=stderr)
+			self._print_stderr_msg("error", error_msg)
 			exit(self.exit_code)
 		else:
 			raise Exception(error_msg)
@@ -77,7 +97,7 @@ class Preprocessor:
       | AS_ERROR -> passes to self.send_error()
 		"""
 		if self.warning_mode == WarningMode.PRINT:
-			print("Warning: {}".format(warning_msg), file=stderr)
+			self._print_stderr_msg("warning", warning_msg)
 		elif self.warning_mode == WarningMode.RAISE:
 			raise Warning(warning_msg)
 		elif self.warning_mode == WarningMode.AS_ERROR:
@@ -260,14 +280,34 @@ class Preprocessor:
 			if self.warn_unmatch_close:
 				self.send_warning("Unmatch close token")
 
-	def context_new(self: "Preprocessor", file : str, pos : int) -> None:
-		pass
+	def context_new(self: "Preprocessor", context: Context, pos: int) -> None:
+		"""Adds a new context. This is used to traceback errors
+		Inputs:
+		  context object indicates file and description
+		  pos is the relative (dilated) position in the file
+		    (can be obtained from self.current_position)
+		"""
+		self._context.append((context, pos))
 
-	def context_update(self: "Preprocessor", pos : int) -> None:
-		pass
+	def context_update(self: "Preprocessor", pos: int, desc: Optional[str] = None) -> None:
+		"""Updates the current context
+		can change the position and, optionnaly, the description
+		"""
+		if len(self._context) != 0:
+			new_context = self._context[-1][0].copy()
+			if isinstance(desc, str):
+				new_context.desc = desc
+			self._context.append((new_context, pos))
+		else:
+			raise EmptyContextStack
 
 	def context_pop(self : "Preprocessor") -> None:
-		pass
+		"""Removes the last context_new of context_update
+		from the _context stack"""
+		if len(self._context) != 0:
+			self._context.pop()
+		else:
+			raise EmptyContextStack
 
 	def parse(self: "Preprocessor", string: str) -> str:
 		"""parses the string, calling command and blocks it contains
@@ -276,6 +316,10 @@ class Preprocessor:
 		self._recursion_depth += 1
 		if self._recursion_depth == self.max_recursion_depth:
 			self.send_error("Recursion depth exceeded")
+		empty_context = False
+		if self._context == []:
+			self.context_new(NO_CONTEXT, 0)
+			empty_context = True
 
 		tokens: TokenList = self.find_tokens(string)
 		dilatations: DilatationList = []
@@ -297,17 +341,21 @@ class Preprocessor:
 			ident, arg_string, i = self.get_identifier_name(substring)
 			self.current_position.cmd_argbegin = i
 			end_pos = self.current_position.end
+			self.context_update(self.current_position.begin)
 			new_str = ""
 			if ident == "":
 				self.send_error("Unrecognized command name '{}'".format(string))
 			elif ident in self.commands:
-				# todo context, try
+				# todo try
+				self.context_update(self.current_position.cmd_begin, "in command {}".format(ident))
 				command = self.commands[ident]
 				new_str = command(self, arg_string)
+				self.context_pop()
 			elif ident in self.blocks:
 				endblock_b, endblock_e = self.find_matching_endblock(ident, string[self.current_position.end:])
 				if endblock_b == -1:
 					self.send_error('No matching endblock for block {}'.format(ident))
+
 				self.current_position.endblock_begin = endblock_b + self.current_position.end
 				self.current_position.endblock_end = endblock_e + self.current_position.end
 				block_content = string[
@@ -316,15 +364,18 @@ class Preprocessor:
 				end_pos = self.current_position.endblock_end
 				block = self.blocks[ident]
 				# block post action don't trickle upwards
+				self.context_update(self.current_position.cmd_begin, "in block {}".format(ident))
 				post_actions = self.post_actions.copy()
 				self.post_actions = []
 				new_str = block(self, arg_string, block_content)
 				self.post_actions = post_actions
+				self.context_pop()
 			else:
 				self.send_error("Command or block not recognized")
 			string = self.replace_string(
 				self.current_position.begin, end_pos, string, new_str, tokens, dilatations
 			)
+			self.context_pop()
 			self.remove_leading_close_tokens(tokens)
 		if len(tokens) == 1:
 			self.send_error(
@@ -334,7 +385,12 @@ class Preprocessor:
 			)
 
 		# Post actions
+		self.context_update(0, "in post actions")
 		for action in self.post_actions:
 			string = action(self, string)
+		self.context_pop()
+
 		self._recursion_depth -= 1
+		if empty_context:
+			self._context = []
 		return string

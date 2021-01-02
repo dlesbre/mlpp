@@ -34,6 +34,9 @@ class Position:
 	endblock_begin: int = 0
 	endblock_end:   int = 0
 
+class EmptyContextStack(Exception):
+	pass
+
 
 class CommandError(Exception):
 	def __init__(self: "CommandError", position: Position, msg: str) -> None:
@@ -71,7 +74,7 @@ class Context:
 				  can be generated with Context.line_breaks_from_str() or
 					[n.start() for n in re.finditer(re.escape("\\n"), file_contents)]
 				if a str, it should be the file contents (or have linebreaks in the same places)
-			desc: str (default "") - a description
+			desc: str (default "") - a description (ex "in command my_command")
 		"""
 		self.file = file
 		if isinstance(line_breaks, list):
@@ -117,6 +120,16 @@ class Context:
 				if true_pos - line_end < true_pos - closest_line_end:
 					closest_line_end = line_end
 		return line_nb, true_pos - closest_line_end
+
+	def copy(self: "Context") -> "Context":
+		"""returns a copy of self sharing _line_break and _dilatations
+		but not desc"""
+		copy = Context(self.file, self._line_breaks, self.desc)
+		copy._dilatations = self._dilatations
+		return copy
+
+
+NO_CONTEXT = Context("", [], "")
 
 def process_string(string: str) -> str:
 	"""Change escape sequences to the chars they match
