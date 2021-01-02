@@ -76,6 +76,7 @@ Here follows a list of predefined commands, blocks and post_actions:
 
 - `{% undef <identifier> %}` - undefines commands and blocks named identifier. You can undefine anything, including builtin commands and blocks.
 - `{% label <label> %}` - prints no text and sets a label at current position
+- `{% include [-v|--verbatim] path %}` - inserts the content of the new file. parses them unless *verbatim* is set.
 
 #### Blocks
 
