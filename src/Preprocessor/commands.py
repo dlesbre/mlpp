@@ -1,10 +1,10 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-
+import argparse
 import re
 from datetime import datetime
 
-from .defs import process_string
+from .defs import ArgumentParserNoExit, Context, process_string
 from .preprocessor import Preprocessor
 
 # ============================================================
@@ -120,7 +120,11 @@ def cmd_label(preprocessor: Preprocessor, arg_string: str) -> str:
 	return ""
 
 def cmd_date(p: Preprocessor, args: str) -> str:
-	"""the date command, prints the current date in YYYY-MM-DD format"""
+	"""the date command, prints the current date.
+	usage: date [format=YYYY-MM-DD]
+	  format specifies year with YYYY or YY, month with MM or M,
+		day with DD or D, hour with hh or h, minutes with mm or m
+		seconds with ss or s"""
 	args = args.strip()
 	if args == "":
 		args = "YYYY-MM-DD"
@@ -145,10 +149,41 @@ def cmd_date(p: Preprocessor, args: str) -> str:
 		args = args.replace(val, placeholder)
 	for _, placeholder, repl in replacements:
 		args = args.replace(placeholder, repl)
-	print(args)
 	x = datetime.now()
 	return args.format(year = x.year, month = x.month, day = x.day,
 		hour = x.hour, minute = x.minute, second = x.second, year2 = x.year % 100
 	)
+
+include_parser = ArgumentParserNoExit(
+	prog="include", description="places the contents of the file at file_path",
+  add_help=False
+)
+
+include_parser.add_argument("--verbatim", "-v", action="store_true")
+include_parser.add_argument("file_path")
+
+def cmd_include(p: Preprocessor, args: str) -> str:
+	"""the include command
+	usage: include [-v|--verbatim] file_path
+	  places the contents of the file at file_path
+		parse them by default, doesn't parse when verbatim is set"""
+	try:
+		arguments = include_parser.parse_args(p.split_args(args))
+	except argparse.ArgumentError:
+		p.send_error("invalid argument - usage: include [-v|--verbatim] file_path")
+	try:
+		with open(arguments.file_path, "r") as file:
+			contents = file.read()
+	except FileNotFoundError:
+		p.send_error('file not found "{}"'.format(arguments.file_path))
+	except PermissionError:
+		p.send_error('can\'t open file "{}", permission denied'.format(arguments.file_path))
+	except Exception:
+		p.send_error('can\'t open file "{}"'.format(arguments.file_path))
+	if not arguments.verbatim:
+		p.context_new(Context(arguments.file_path, contents, "in included file"), 0)
+		contents = p.parse(contents)
+		p.context_pop()
+	return contents
 
 # TODO include, extends,

@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
+import argparse
 import enum
 import re
 from typing import Callable, List, Tuple, Union, cast
@@ -51,6 +52,19 @@ class Position:
 		lambda self: self.endblock_begin + self.offset
 	true_endblock_end: Callable[["Position"], int] = \
 		lambda self: self.endblock_end + self.offset
+
+	def copy(self:"Position") -> "Position":
+		"""creates an independent copy"""
+		new = Position()
+		new.offset = self.offset
+		new.begin = self.begin
+		new.end = self.end
+		new.cmd_begin = self.cmd_begin
+		new.cmd_end = self.cmd_end
+		new.cmd_argbegin = self.cmd_argbegin
+		new.endblock_begin = self.endblock_begin
+		new.endblock_end = self.endblock_end
+		return new
 
 
 class EmptyContextStack(Exception):
@@ -144,7 +158,13 @@ class Context:
 
 NO_CONTEXT = Context("", [], "")
 
+
 def process_string(string: str) -> str:
 	"""Change escape sequences to the chars they match
 	ex: process_string("\\\\n") -> "\\n\""""
 	return string.encode().decode("unicode-escape")
+
+
+class ArgumentParserNoExit(argparse.ArgumentParser):
+	def error(self, message):
+		raise argparse.ArgumentError(None, message)

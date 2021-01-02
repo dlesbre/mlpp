@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
+from os import remove
 
 from Preprocessor import Preprocessor  # type: ignore
 
@@ -42,6 +43,20 @@ class TestCommands:
 		for in_str, out_str in test:
 			assert self.pre.parse(in_str) == out_str
 		self.pre.post_actions = Preprocessor.post_actions.copy()
+
+	def test_include(self):
+		path = "test.out"
+		test = [
+			("hello", "bonjour:{% include test.out %}:guten tag", "bonjour:hello:guten tag"),
+			("{% def a b %}", "bonjour:{% include test.out %}:{% a %}", "bonjour::b"),
+			("{% def a b %}{% c %}", "bonjour{% def c d %}:{% include test.out %}:{% a %}", "bonjour:d:b"),
+		]
+		for content, in_str, out_str in test:
+			with open(path, "w") as file:
+				file.write(content)
+			assert self.pre.parse(in_str) == out_str
+		remove(path)
+
 
 	def test_block(self):
 		test = [

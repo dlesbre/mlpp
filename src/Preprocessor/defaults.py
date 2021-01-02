@@ -14,6 +14,7 @@ Preprocessor.commands["begin"] = cmd_begin
 Preprocessor.commands["end"] = cmd_end
 Preprocessor.commands["label"] = cmd_label
 Preprocessor.commands["date"] = cmd_date
+Preprocessor.commands["include"] = cmd_include
 
 Preprocessor.commands["strip_empty_lines"] = cmd_strip_empty_lines
 Preprocessor.commands["strip_leading_whitespace"] = cmd_strip_leading_whitespace

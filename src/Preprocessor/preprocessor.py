@@ -366,6 +366,7 @@ class Preprocessor:
 			end_pos = self.current_position.end
 			self.context_update(self.current_position.begin)
 			new_str = ""
+			position = self.current_position.copy()
 			if ident == "":
 				self.send_error("unrecognized command name '{}'".format(string))
 			elif ident in self.commands:
@@ -398,6 +399,7 @@ class Preprocessor:
 				self.context_pop()
 			else:
 				self.send_error("command or block not recognized")
+			self.current_position = position
 			string = self.replace_string(
 				self.current_position.begin, end_pos, string, new_str, tokens
 			)
