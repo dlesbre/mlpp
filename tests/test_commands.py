@@ -41,3 +41,11 @@ class TestCommands:
 		]
 		for in_str, out_str in test:
 			assert self.pre.parse(in_str) == out_str
+		self.pre.post_actions = []
+
+	def test_block(self):
+		test = [
+			("{% verbatim %}{% hello %}{% endverbatim %}", "{% hello %}"),
+		]
+		for in_str, out_str in test:
+			assert self.pre.parse(in_str) == out_str

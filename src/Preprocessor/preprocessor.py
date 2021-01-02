@@ -279,12 +279,13 @@ class Preprocessor:
 				command = self.commands[ident]
 				new_str = command(self, arg_string)
 			elif ident in self.blocks:
-				endblock, end_pos = self.find_matching_endblock(ident, string[start_pos:])
+				endblock, new_end = self.find_matching_endblock(ident, string[end_pos:])
 				if endblock == -1 and end_pos == -1:
 					self.send_error('No matching endblock for block {}'.format(ident))
-				endblock += start_pos
-				end_pos += start_pos
+				endblock += end_pos
 				block_content = string[end_pos:endblock]
+				end_pos += new_end
+				print(block_content)
 				block = self.blocks[ident]
 				# block post action don't trickle upwards
 				post_actions = self.post_actions.copy()
@@ -293,12 +294,10 @@ class Preprocessor:
 				self.post_actions = post_actions
 			else:
 				self.send_error("Command or block not recognized")
-
 			string = self.replace_string(
 				start_pos, end_pos, string, new_str, tokens, dilatations
 			)
 			self.remove_leading_close_tokens(tokens)
-
 		if len(tokens) == 1:
 			self.send_error(
 				'lonely token, use "{}begin{}" or "{}end{}" to place it'.format(
