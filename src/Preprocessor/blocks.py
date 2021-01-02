@@ -17,3 +17,43 @@ def blck_verbatim(p: Preprocessor, args: str, contents: str) -> str:
 	if args.strip() != "":
 		p.send_error("the verbatim block takes no arguments")
 	return contents
+
+def blck_repeat(p: Preprocessor, args: str, contents: str) -> str:
+	"""The repeat block.
+	usage: repeat <number>
+		renders its contents one and copies them number times"""
+	args = args.strip()
+	if not args.isnumeric():
+		p.send_error("invalid argument. Usage: repeat [uint > 0]")
+	nb = int(args)
+	if nb <= 0:
+		p.send_error("invalid argument. Usage: repeat [uint > 0]")
+	contents = p.parse(contents)
+	return contents * nb
+
+def blck_atlabel(p: Preprocessor, args: str, contents: str) -> str:
+	"""the atlabel block
+	usage: atlabel <label>
+	renders its contents and stores them
+	add a post action to place itself at all labels <label>"""
+	lbl = args.strip()
+	if lbl == "":
+		p.send_error("empty label name")
+	lbl_ident = "atlabel_" + lbl
+	if lbl_ident in p.__dict__:
+		p.send_error('Multiple atlabel blocks with label "{}"'.format(lbl))
+	p.__dict__[lbl_ident] = p.parse(contents)
+	def place_block(pre: Preprocessor, string: str) -> str:
+		if not lbl in pre.labels:
+			pre.send_warning('No matching label for atlabel block "{}"'.format(lbl))
+		indexes = pre.labels[lbl]
+		for i in range(len(indexes)):
+			string = pre.replace_string(
+				indexes[i], indexes[i], string, pre.__dict__[lbl_ident], [], []
+			)
+		return string
+
+	place_block.__doc__ = """Place the atlabel "{}" block at all labels""".format(lbl)
+	place_block.__name__ = "place_atlabel_{}".format(lbl)
+	p.post_actions.insert(0, place_block)
+	return ""

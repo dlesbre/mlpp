@@ -95,9 +95,9 @@ def cmd_end(preprocessor: Preprocessor, args_string: str) -> str:
 		if args_string.isnumeric():
 			level = int(args_string)
 		else:
-			preprocessor.send_error("invalid argument: usage end [uint]")
+			preprocessor.send_error("invalid argument. Usage: end [uint]")
 		if level < 0:
-			preprocessor.send_error("invalid argument: usage end [uint]")
+			preprocessor.send_error("invalid argument. Usage: end [uint]")
 	if level == 0:
 		return preprocessor.token_end_repr
 	else:

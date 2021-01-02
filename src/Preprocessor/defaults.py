@@ -26,3 +26,5 @@ Preprocessor.commands["empty_last_line"] = cmd_empty_last_line
 
 Preprocessor.blocks["block"] = blck_block
 Preprocessor.blocks["verbatim"] = blck_verbatim
+Preprocessor.blocks["repeat"] = blck_repeat
+Preprocessor.blocks["atlabel"] = blck_atlabel

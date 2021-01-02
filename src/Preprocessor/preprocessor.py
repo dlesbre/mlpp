@@ -239,6 +239,11 @@ class Preprocessor:
 						tokens[i][2],
 					)
 				i += 1
+		for key in self.labels:
+			index_list = self.labels[key]
+			for i in range(len(index_list)):
+				if index_list[i] >= end:
+					index_list[i] += dilat
 
 		dilatations.append((start, dilat))
 		return string[:start] + replacement + string[end:]

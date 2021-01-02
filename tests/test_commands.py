@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-from Preprocessor import Preprocessor
+from Preprocessor import Preprocessor  # type: ignore
 
 
 class TestCommands:
@@ -46,6 +46,7 @@ class TestCommands:
 	def test_block(self):
 		test = [
 			("{% verbatim %}{% hello %}{% endverbatim %}", "{% hello %}"),
+			("{% repeat 5 %}yo{% endrepeat %}", "yoyoyoyoyo"),
 		]
 		for in_str, out_str in test:
 			assert self.pre.parse(in_str) == out_str
