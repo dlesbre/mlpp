@@ -9,6 +9,30 @@ from .defs import (REGEX_IDENTIFIER_WRAPPED, ArgumentParserNoExit, Context,
 from .preprocessor import Preprocessor
 
 # ============================================================
+# simple commands
+# ============================================================
+
+def cmd_error(p: Preprocessor, args: str) -> str:
+	"""the error command - raises an error
+	usage: error [msg]"""
+	args = args.strip()
+	if args == "":
+		p.send_error("raised by error command")
+	else:
+		p.send_error("raised by error command: {}".format(args))
+	return ""
+
+def cmd_warning(p: Preprocessor, args: str) -> str:
+	"""the warning command - raises a warning
+	usage: warning [msg]"""
+	args = args.strip()
+	if args == "":
+		p.send_warning("raised by warning command")
+	else:
+		p.send_warning("raised by warning command: {}".format(args))
+	return ""
+
+# ============================================================
 # def/undef
 # ============================================================
 
@@ -16,6 +40,13 @@ macro_parser = ArgumentParserNoExit(prog="macro", add_help=False)
 macro_parser.add_argument('vars', nargs='*') # arbitrary number of arguments
 
 def cmd_def(preprocessor: Preprocessor, args_string : str) -> str:
+	"""the define command - inspired by the C preprocessor's define
+	usage:
+		def <ident> <replacement> -> defines ident with replacement
+			(strips leading/trailing space)
+		def <ident> " replacement with leading/trailin space  "
+		def <ident>(<ident1>, <ident2>) replacement
+			defines a macro"""
 	ident, text, _ = preprocessor.get_identifier_name(args_string)
 	if ident == "":
 		preprocessor.send_error("invalid identifier")
@@ -35,6 +66,9 @@ def cmd_def(preprocessor: Preprocessor, args_string : str) -> str:
 			args[i] = args[i].strip()
 			if not args[i].isidentifier():
 				preprocessor.send_error('in def {}: invalid macro parameter name "{}"'.format(ident, args[i]))
+		for arg in args:
+			if args.count(arg) > 1:
+				preprocessor.send_error('in def {}: multiple macro parameters with same name "{}"'.format(ident, arg))
 		text = text[end+1:].strip()
 
 
