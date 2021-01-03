@@ -77,11 +77,17 @@ Here follows a list of predefined commands, blocks and post_actions:
 - `{% undef <identifier> %}` - undefines commands and blocks named identifier. You can undefine anything, including builtin commands and blocks.
 - `{% label <label> %}` - prints no text and sets a label at current position
 - `{% include [-v|--verbatim] path %}` - inserts the content of the new file. parses them unless *verbatim* is set.
+- `{% error [msg] %}` - sends an error
+- `{% warning [msg] %}` - sends a warning
+- `{% version %}` - prints the preprocessor's version
+- `{% file %}` - prints the current file name
+- `{% line %}` - prints the line number of the command in the original file. It can differ in the render dus to commands adding/removing line breaks
 
 #### Blocks
 
 - `{% block %}...{% endblock %}` - basic block, used to restrict post actions scope
 - `{% verbatim %}...{% endverbatim %}` - copies its contents without parsing them. Stops at first `{% endverbatim %}` not matching a `{% verbatim %}`
+- `{% void %}...{% endvoid %}` - run all commands/blocks inside it but prints nothing. Can be used for comments of many definitions without adding linebreaks.
 - `{% repeat <number>0> %}...{% endrepeat %}` - renders its contents once and copies it *number* times.
 - `{% atlabel <label> %}...{% endatlabel %}` - renders its contents but doesn't print them. As a post action, places a copy of the render at each occurence of *label*.
 
@@ -93,12 +99,14 @@ These commands print nothing and trigger post actions
 - `{% strip_trailing_whitespace %}` - removes all trailing whitespace (space, tabs,...) from the current block
 - `{% strip_leading_whitespace %}` - removes leading whitespace (indent) from the current block
 - `{% empty_last_line %}` - ensure the current block ends with a single empty (unless it is empty)
-- `{% replace [-r|--regex] [-i|--ignore-case] [-w|--whole-word] "pattern" "replacement" %}`
+- `{% replace [-r|--regex] [-i|--ignore-case] [-w|--whole-word] [-c|--count <number>] "pattern" "replacement" %}`
 	replaces all occurences of pattern with replacement in the current block.
 
 	If the regex flag is present, pattern is a regex, replacement can contain `\1`, `\2` to place the groups captured by pattern
 
 	If the whole-word flag is present, only replace occurrences which aren't part of a larger identifier (no letter/underscore before, no letter/underscore/number after).
+
+	The count argument specifies how many occurrences of pattern to replace, from the start. Defaults to 0, replace all occurrences.
 
 ---
 
@@ -114,11 +122,11 @@ This package is designed to simply add new commands and blocks:
 	```
 
 	The first argument is the preprocessor object, the second is the args string entered after the command. For example when calling `{% command_name some args %}` args will contain `" some args"` including leading/trailing spaces.
-	
+
 	The return value is the string to be inserted instead of the command call.
 
 	Command are stored in the preprocessor's `command` dict. They can be added with:
-	
+
 	```Python
 	# adds the command to all new Preprocessor objects
 	Preprocessor.commands["command_name"] = command_function
@@ -132,14 +140,14 @@ This package is designed to simply add new commands and blocks:
 	```
 
 	`args` is the blocks argument, just like in commands, and `block_contents` is everything between `{% block args %}` and `{% endblock %}`.
-	
+
 	They return a string that replaces the whole block `{% block ... %}...{% endblock %}`
-	
+
 	Blocks are stored in the preprocessor's `blocks` dict. They can be added with:
-	
+
 	```Python
 	Preprocessor.blocks["block_name"] = block_func
-	```	
+	```
 
 - **post actions**: they have the same signature as commands:
 	```Python
@@ -147,9 +155,9 @@ This package is designed to simply add new commands and blocks:
 	```
 
 	Here the `text` arg is the whole text (with all commands rendered).
-	
+
 	The post action returns the transformed text.
-	
+
 	Post action are stored in the preprocessor's `post_actions` list. The list's order determines the order in which post actions are executed.
 
 	```Python
@@ -160,17 +168,17 @@ This package is designed to simply add new commands and blocks:
 	```
 
 	Adding block actions with commands to run in the current block is pretty simple:
-	
+
 	```Python
 	def my_post_action(p: Preprocessor, args: str) -> str:
 		# not added to Preprocessor.post_actions
 		...
-	
+
 	def my_post_action_command(p: Preprocessor, args: str) -> str:
 		# will run in the current block and it's sublocks only
-		p.post_actions.append(my_post_action) 
+		p.post_actions.append(my_post_action)
 		return ""
-		
+
 	Preprocessor.commands["run_my_post_action"] = my_post_action_command
 	```
 

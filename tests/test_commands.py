@@ -1,12 +1,26 @@
 # -*- coding: utf-8 -*-
 from os import remove
 
-from preprocessor import Preprocessor  # type: ignore
+from preprocessor import Context, Preprocessor  # type: ignore
 
 
 class TestCommands:
 
 	pre = Preprocessor()
+	file_name = "my_file"
+
+	def runtests(self, test):
+		for in_str, out_str in test:
+			self.pre.context_new(Context(self.file_name, in_str), 0)
+			assert self.pre.parse(in_str) == out_str
+			self.pre.context_pop()
+
+	def test_command(self):
+		test = [
+			("{% file %}", self.file_name),
+			#("{% line %}\n\n\n{% line %}", "1\n\n\n4"),
+		]
+		self.runtests(test)
 
 	def test_def(self):
 		test = [
@@ -18,8 +32,7 @@ class TestCommands:
 			("{% def add(a,b,c) (a+b+2c) %}hello{% add 1 2 3 %}", "hello(1+2+23)"),
 			("{% def add(pha,alpha,lpha) (pha,alpha)lpha %}hello{% add 1 2 3 %}", "hello(1,2)3"),
 		]
-		for in_str, out_str in test:
-			assert self.pre.parse(in_str) == out_str
+		self.runtests(test)
 
 	def test_begin_end(self):
 		test = [
@@ -29,8 +42,7 @@ class TestCommands:
 			("{% def hello {% begin 1 %} %}{% hello %}", "{% "),
 			("{% def foo bar %}{% def hello {% begin %}foo{% end %} %}{% hello %}", "bar"),
 		]
-		for in_str, out_str in test:
-			assert self.pre.parse(in_str) == out_str
+		self.runtests(test)
 
 	def test_strips(self):
 		test = [
@@ -41,8 +53,7 @@ class TestCommands:
 			("{% empty_last_line %}hello", "hello\n"),
 			("{% empty_last_line %}hello\n\n\n", "hello\n"),
 		]
-		for in_str, out_str in test:
-			assert self.pre.parse(in_str) == out_str
+		self.runtests(test)
 		self.pre.post_actions = Preprocessor.post_actions.copy()
 
 	def test_include(self):
@@ -68,15 +79,15 @@ class TestCommands:
 			("{% replace -w foo bar %}foo(afoo1foo+foo foo", "bar(afoo1bar+bar bar"),
 			("{% replace -w \"foo\" bar %}foo(afoo1foo+foo foo", "bar(afoo1bar+bar bar"),
 			(r'{% replace -r "([a-z]+)" "low(\\1)" %}hello hio', "low(hello) low(hio)"),
+			("{% replace -c 2 foo bar %}foo foo foo foo", "bar bar foo foo"),
 		]
-		for in_str, out_str in test:
-			assert self.pre.parse(in_str) == out_str
+		self.runtests(test)
 
 	def test_block(self):
 		test = [
+			("text{% void %}{% def name john %}hello this is a comment{% endvoid %}\n{% name %}", "text\njohn"),
 			("{% verbatim %}{% hello %}{% endverbatim %}", "{% hello %}"),
 			("{% repeat 5 %}yo{% endrepeat %}", "yoyoyoyoyo"),
 			("{% label foo %}lala{% atlabel foo %}bar{% endatlabel %}yoyo{% label foo %}oups", "barlalayoyobaroups"),
 		]
-		for in_str, out_str in test:
-			assert self.pre.parse(in_str) == out_str
+		self.runtests(test)
