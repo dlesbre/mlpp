@@ -5,6 +5,8 @@ import enum
 import re
 from typing import Callable, List, Tuple, Union, cast
 
+PREPROCESSOR_VERSION = "0.1"
+
 REGEX_IDENTIFIER:       str = "[_a-zA-Z][_a-zA-Z0-9]*"
 REGEX_IDENTIFIER_WRAPPED: str = "(^|(?<=([^_a-zA-Z]))){}((?=([^_a-zA-Z0-9]))|$)"
 REGEX_IDENTIFIER_END:   str = "$|[^_a-zA-Z0-9]"

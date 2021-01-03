@@ -17,6 +17,9 @@ Preprocessor.commands["date"] = cmd_date
 Preprocessor.commands["include"] = cmd_include
 Preprocessor.commands["error"] = cmd_error
 Preprocessor.commands["warning"] = cmd_warning
+Preprocessor.commands["version"] = cmd_version
+Preprocessor.commands["file"] = cmd_file
+Preprocessor.commands["line"] = cmd_line
 
 Preprocessor.commands["strip_empty_lines"] = cmd_strip_empty_lines
 Preprocessor.commands["strip_leading_whitespace"] = cmd_strip_leading_whitespace
@@ -30,6 +33,7 @@ Preprocessor.post_actions.append(pst_atlabel)
 
 # default blocks
 
+Preprocessor.blocks["void"] = blck_void
 Preprocessor.blocks["block"] = blck_block
 Preprocessor.blocks["verbatim"] = blck_verbatim
 Preprocessor.blocks["repeat"] = blck_repeat

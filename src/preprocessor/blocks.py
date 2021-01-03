@@ -3,7 +3,15 @@
 
 from .preprocessor import Preprocessor
 
-# TODO blocks for if
+
+def blck_void(p: Preprocessor, args: str, contents: str) -> str:
+	"""The void block, processes commands inside it but prints nothing"""
+	if args.strip() != "":
+		p.send_warning("the void block takes no arguments")
+	p.context_update(p.current_position.true_end(), "in void block")
+	contents = p.parse(contents)
+	p.context_pop()
+	return ""
 
 def blck_block(p: Preprocessor, args: str, contents: str) -> str:
 	"""The block block. It does nothing but ensure post action

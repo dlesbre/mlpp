@@ -4,7 +4,8 @@ import argparse
 import re
 from datetime import datetime
 
-from .defs import (REGEX_IDENTIFIER_WRAPPED, ArgumentParserNoExit, Context,
+from .defs import (PREPROCESSOR_VERSION, REGEX_IDENTIFIER_WRAPPED,
+                   ArgumentParserNoExit, Context, EmptyContextStack,
                    process_string)
 from .preprocessor import Preprocessor
 
@@ -32,9 +33,32 @@ def cmd_warning(p: Preprocessor, args: str) -> str:
 		p.send_warning("raised by warning command: {}".format(args))
 	return ""
 
+def cmd_version(p: Preprocessor, args: str) -> str:
+	"""the version command - prints the preprocessor version"""
+	if args.strip() != "":
+		p.send_warning("the version command takes no arguments")
+	return PREPROCESSOR_VERSION
+
+def cmd_file(p: Preprocessor, args: str) -> str:
+	"""the file command - prints the current file name"""
+	if args.strip() != "":
+		p.send_warning("the file command takes no arguments")
+	if p._context:
+		return p._context[-1][0].file
+	raise EmptyContextStack
+
+def cmd_line(p: Preprocessor, args: str) -> str:
+	"""the line command - prints the current line number"""
+	if args.strip() != "":
+		p.send_warning("the line command takes no arguments")
+	if p._context:
+		return str(p._context[-1][0].line_number(p.current_position.begin)[0])
+	raise EmptyContextStack
+
 # ============================================================
 # def/undef
 # ============================================================
+
 
 macro_parser = ArgumentParserNoExit(prog="macro", add_help=False)
 macro_parser.add_argument('vars', nargs='*') # arbitrary number of arguments
@@ -71,7 +95,6 @@ def cmd_def(preprocessor: Preprocessor, args_string : str) -> str:
 				preprocessor.send_error('in def {}: multiple macro parameters with same name "{}"'.format(ident, arg))
 		text = text[end+1:].strip()
 
-
 	# if its a string - use escapes and remove external quotes
 	if len(text) >= 2 and text[0] == '"' and text[-1] == '"':
 		text = process_string(text[1:-1])
@@ -84,7 +107,11 @@ def cmd_def(preprocessor: Preprocessor, args_string : str) -> str:
 			except argparse.ArgumentError:
 				p.send_error("invalid argument for macro.\nusage: {} {}".format(ident, " ".join(args)))
 			if len(arguments.vars) != len(args):
-				p.send_error("invalid number of arguments for macro (expected {} got {}).\nusage: {} {}".format(len(args), len(arguments.vars), ident, " ".join(args)))
+				p.send_error((
+					"invalid number of arguments for macro (expected {} got {}).\n"
+					"usage: {} {}").format(
+						len(args), len(arguments.vars), ident, " ".join(args)
+				))
 			# first subsitution : placeholder to avoid conflits
 			# with multiple replaces
 			for i in range(len(args)):
