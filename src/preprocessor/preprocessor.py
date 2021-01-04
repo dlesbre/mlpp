@@ -157,7 +157,8 @@ class Preprocessor:
 		Returns:
 			tuple str, str, int - identifier, rest_of_string, start_of_rest_of_string
 		  returns ("","", -1) if None found"""
-		match_opt = re.match(r"\s*({})({}.*)".format(self.token_ident, self.token_ident_end), string)
+		match_opt = re.match(r"\s*({})({}.*$)".format(
+			self.token_ident, self.token_ident_end), string, re.DOTALL)
 		if match_opt == None:
 			return ("", "", -1)
 		match = cast(re.Match, match_opt)
@@ -369,21 +370,21 @@ class Preprocessor:
 			ident, arg_string, i = self.get_identifier_name(substring)
 			self.current_position.cmd_argbegin = i
 			end_pos = self.current_position.end
-			self.context_update(self.current_position.begin)
+			self.context_update(self.current_position.true_begin())
 			new_str = ""
 			position = self.current_position.copy()
 			if ident == "":
-				self.send_error("unrecognized command name '{}'".format(string))
+				self.send_error("unrecognized command name '{}'".format(substring))
 			elif ident in self.commands:
 				# todo try
-				self.context_update(self.current_position.cmd_begin, "in command {}".format(ident))
+				self.context_update(self.current_position.true_cmd_begin(), "in command {}".format(ident))
 				command = self.commands[ident]
 				new_str = command(self, arg_string)
 				self.context_pop()
 			elif ident in self.blocks:
 				endblock_b, endblock_e = self.find_matching_endblock(ident, string[self.current_position.end:])
 				if endblock_b == -1:
-					self.send_error('no matching endblock for block {}'.format(ident))
+					self.send_error('no matching endblock for {} block'.format(ident))
 				self.current_position.endblock_begin = endblock_b + self.current_position.end
 				self.current_position.endblock_end = endblock_e + self.current_position.end
 				block_content = string[
@@ -392,8 +393,7 @@ class Preprocessor:
 				end_pos = self.current_position.endblock_end
 				block = self.blocks[ident]
 
-				# block post action don't trickle upwards
-				self.context_update(self.current_position.cmd_begin, "in block {}".format(ident))
+				self.context_update(self.current_position.true_cmd_begin(), "in {} block".format(ident))
 
 				new_str = block(self, arg_string, block_content)
 

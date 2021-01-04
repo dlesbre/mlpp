@@ -51,7 +51,7 @@ def cmd_line(p: Preprocessor, args: str) -> str:
 	if args.strip() != "":
 		p.send_warning("the line command takes no arguments")
 	if p._context:
-		return str(p._context[-1][0].line_number(p.current_position.begin)[0])
+		return str(p._context[-1][0].line_number(p.current_position.true_begin())[0])
 	raise EmptyContextStack
 
 # ============================================================
@@ -70,6 +70,7 @@ def cmd_def(preprocessor: Preprocessor, args_string : str) -> str:
 		def <ident> " replacement with leading/trailin space  "
 		def <ident>(<ident1>, <ident2>) replacement
 			defines a macro"""
+	print("def ", args_string)
 	ident, text, _ = preprocessor.get_identifier_name(args_string)
 	if ident == "":
 		preprocessor.send_error("invalid identifier")
@@ -96,6 +97,7 @@ def cmd_def(preprocessor: Preprocessor, args_string : str) -> str:
 
 	# if its a string - use escapes and remove external quotes
 	if len(text) >= 2 and text[0] == '"' and text[-1] == '"':
+		print("string")
 		text = process_string(text[1:-1])
 
 	def defined_command(p: Preprocessor, s: str) -> str:
@@ -123,7 +125,7 @@ def cmd_def(preprocessor: Preprocessor, args_string : str) -> str:
 				repl = arguments.vars[i]
 				string = re.sub(pattern, repl, string, flags=re.MULTILINE)
 
-		p.context_update(p.current_position.cmd_begin, 'in expansion of defined command {}'.format(ident))
+		p.context_update(p.current_position.true_cmd_argbegin(), 'in expansion of defined command {}'.format(ident))
 		parsed = p.parse(string)
 		p.context_pop()
 		return parsed

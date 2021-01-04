@@ -15,11 +15,12 @@ class TestCommands:
 			assert self.pre.parse(in_str) == out_str
 			self.pre.context_pop()
 
-	def test_command(self):
+	def test_commands(self):
 		test = [
 			("{% file %}", self.file_name),
 			("{% line %}\n\n\n{% line %}", "1\n\n\n4"),
-			("{% void %}{% def a \"booyouhou\\n\" %}\n\n\n\n{% endvoid %}{% line %}{% a %}{% a %}{% line %}", "5booyouhou\nbooyouhou\n5"),
+			("h \n\n{% block %}{% line %}in sub{% endblock %}", "h \n\n3in sub"),
+			("{% void %}{% def a \"booyouhou\n\" %}\n\n\n\n{% endvoid %}{% line %}{% a %}{% a %}{% line %}", "6booyouhou\nbooyouhou\n6"),
 			("{% line %}{% repeat 5 %}\t\n{% endrepeat %}µ{% line %}", "1\t\n\t\n\t\n\t\n\t\nµ2"),
 		]
 		self.runtests(test)

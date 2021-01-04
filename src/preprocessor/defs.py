@@ -73,6 +73,7 @@ class EmptyContextStack(Exception):
 	pass
 
 
+@enum.unique
 class WarningMode(enum.Enum):
 	HIDE = 1
 	PRINT = 2
@@ -80,6 +81,7 @@ class WarningMode(enum.Enum):
 	AS_ERROR = 4
 
 
+@enum.unique
 class TokenMatch(enum.IntEnum):
 	OPEN = 0
 	CLOSE = 1
