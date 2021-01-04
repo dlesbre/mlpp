@@ -51,7 +51,7 @@ def cmd_line(p: Preprocessor, args: str) -> str:
 	if args.strip() != "":
 		p.send_warning("the line command takes no arguments")
 	if p._context:
-		return str(p._context[-1][0].line_number(p.current_position.true_begin())[0])
+		return str(p._context[-1][0].line_number(p.current_position.begin)[0])
 	raise EmptyContextStack
 
 # ============================================================
@@ -125,7 +125,7 @@ def cmd_def(preprocessor: Preprocessor, args_string : str) -> str:
 				repl = arguments.vars[i]
 				string = re.sub(pattern, repl, string, flags=re.MULTILINE)
 
-		p.context_update(p.current_position.true_cmd_argbegin(), 'in expansion of defined command {}'.format(ident))
+		p.context_update(p.current_position.cmd_argbegin, 'in expansion of defined command {}'.format(ident))
 		parsed = p.parse(string)
 		p.context_pop()
 		return parsed

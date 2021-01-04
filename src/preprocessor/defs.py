@@ -40,20 +40,48 @@ class Position:
 	endblock_begin: int = 0
 	endblock_end:   int = 0
 
-	true_begin: Callable[["Position"], int] = \
-		lambda self: self.begin + self.offset
-	true_end: Callable[["Position"], int] = \
-		lambda self: self.end + self.offset
-	true_cmd_begin: Callable[["Position"], int] = \
-		lambda self: self.cmd_begin + self.offset
-	true_cmd_end: Callable[["Position"], int] = \
-		lambda self: self.cmd_end + self.offset
-	true_cmd_argbegin: Callable[["Position"], int] = \
-		lambda self: self.cmd_argbegin + self.offset
-	true_endblock_begin: Callable[["Position"], int] = \
-		lambda self: self.endblock_begin + self.offset
-	true_endblock_end: Callable[["Position"], int] = \
-		lambda self: self.endblock_end + self.offset
+	relative_begin: property = property(
+		lambda self: self.begin - self.offset,
+		lambda self, value: setattr(self, "begin", value + self.offset),
+		doc="same as begin, but relative to start of current parsed string\n"
+		    "(begin is relative to start of file)"
+	)
+	relative_end: property = property(
+		lambda self: self.end - self.offset,
+		lambda self, value: setattr(self, "end", value + self.offset),
+		doc="same as end, but relative to start of current parsed string\n"
+		    "(end is relative to start of file)"
+	)
+	relative_cmd_begin: property = property(
+		lambda self: self.cmd_begin - self.offset,
+		lambda self, value: setattr(self, "cmd_begin", value + self.offset),
+		doc="same as cmd_begin, but relative to start of current parsed string\n"
+		    "(cmd_begin is relative to start of file)"
+	)
+	relative_cmd_end: property = property(
+		lambda self: self.cmd_end - self.offset,
+		lambda self, value: setattr(self, "cmd_end", value + self.offset),
+		doc="same as cmd_end, but relative to start of current parsed string\n"
+		    "(cmd_end is relative to start of file)"
+	)
+	relative_cmd_argbegin: property = property(
+		lambda self: self.cmd_argbegin - self.offset,
+		lambda self, value: setattr(self, "cmd_argbegin", value + self.offset),
+		doc="same as cmd_argbegin, but relative to start of current parsed string\n"
+		    "(cmd_argbegin is relative to start of file)"
+	)
+	relative_endblock_begin: property = property(
+		lambda self: self.endblock_begin - self.offset,
+		lambda self, value: setattr(self, "endblock_begin", value + self.offset),
+		doc="same as endblock_begin, but relative to start of current parsed string\n"
+		    "(endblock_begin is relative to start of file)"
+	)
+	relative_endblock_end: property = property(
+		lambda self: self.endblock_end - self.offset,
+		lambda self, value: setattr(self, "endblock_end", value + self.offset),
+		doc="same as endblock_end, but relative to start of current parsed string\n"
+		    "(endblock_end is relative to start of file)"
+	)
 
 	def copy(self:"Position") -> "Position":
 		"""creates an independent copy"""

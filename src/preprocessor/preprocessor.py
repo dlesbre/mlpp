@@ -277,6 +277,8 @@ class Preprocessor:
 				i += 1
 		if self._context:
 			self._context[-1][0].add_dilatation(start, dilat)
+		else:
+			raise EmptyContextStack
 		for key in self.labels:
 			index_list = self.labels[key]
 			for i in range(len(index_list)):
@@ -340,7 +342,6 @@ class Preprocessor:
 
 		# context init
 		empty_context = False
-		old_offset = self.current_position.offset
 		if self._context == []:
 			self.context_new(NO_CONTEXT, 0)
 			self.current_position.offset = 0
@@ -360,24 +361,24 @@ class Preprocessor:
 			if token_index == -1:
 				self.send_error("no matching open/close pair found")
 
-			self.current_position.begin = tokens[token_index][0]
-			self.current_position.cmd_begin = tokens[token_index][1]
-			self.current_position.cmd_end = tokens[token_index+1][0]
-			self.current_position.end = tokens[token_index+1][1]
+			self.current_position.relative_begin = tokens[token_index][0]
+			self.current_position.relative_cmd_begin = tokens[token_index][1]
+			self.current_position.relative_cmd_end = tokens[token_index+1][0]
+			self.current_position.relative_end = tokens[token_index+1][1]
 			substring = string[
-				self.current_position.cmd_begin : self.current_position.cmd_end
+				self.current_position.relative_cmd_begin : self.current_position.relative_cmd_end
 			]
 			ident, arg_string, i = self.get_identifier_name(substring)
-			self.current_position.cmd_argbegin = i
-			end_pos = self.current_position.end
-			self.context_update(self.current_position.true_begin())
+			self.current_position.relative_cmd_argbegin = i
+			end_pos = self.current_position.relative_end
+			self.context_update(self.current_position.begin)
 			new_str = ""
 			position = self.current_position.copy()
 			if ident == "":
 				self.send_error("unrecognized command name '{}'".format(substring))
 			elif ident in self.commands:
 				# todo try
-				self.context_update(self.current_position.true_cmd_begin(), "in command {}".format(ident))
+				self.context_update(self.current_position.cmd_begin, "in command {}".format(ident))
 				command = self.commands[ident]
 				new_str = command(self, arg_string)
 				self.context_pop()
@@ -388,12 +389,12 @@ class Preprocessor:
 				self.current_position.endblock_begin = endblock_b + self.current_position.end
 				self.current_position.endblock_end = endblock_e + self.current_position.end
 				block_content = string[
-					self.current_position.end : self.current_position.endblock_begin
+					self.current_position.relative_end : self.current_position.relative_endblock_begin
 				]
-				end_pos = self.current_position.endblock_end
+				end_pos = self.current_position.relative_endblock_end
 				block = self.blocks[ident]
 
-				self.context_update(self.current_position.true_cmd_begin(), "in {} block".format(ident))
+				self.context_update(self.current_position.cmd_begin, "in {} block".format(ident))
 
 				new_str = block(self, arg_string, block_content)
 
@@ -403,7 +404,7 @@ class Preprocessor:
 			self.current_position = position
 			self.context_pop()
 			string = self.replace_string(
-				self.current_position.begin, end_pos, string, new_str, tokens
+				self.current_position.relative_begin, end_pos, string, new_str, tokens
 			)
 			self.remove_leading_close_tokens(tokens)
 		# end while
@@ -423,7 +424,6 @@ class Preprocessor:
 		self._recursion_depth -= 1
 		if empty_context:
 			self._context = []
-		self.current_position.offset = old_offset
 
 		self.post_actions = post_actions
 

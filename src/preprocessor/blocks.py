@@ -7,7 +7,7 @@ def blck_void(p: Preprocessor, args: str, contents: str) -> str:
 	"""The void block, processes commands inside it but prints nothing"""
 	if args.strip() != "":
 		p.send_warning("the void block takes no arguments")
-	p.context_update(p.current_position.true_end(), "in void block")
+	p.context_update(p.current_position.end, "in void block")
 	contents = p.parse(contents)
 	p.context_pop()
 	return ""
@@ -17,7 +17,7 @@ def blck_block(p: Preprocessor, args: str, contents: str) -> str:
 	declared in this block don't affect the rest of the file"""
 	if args.strip() != "":
 		p.send_warning("the block block takes no arguments")
-	p.context_update(p.current_position.true_end(), "in block block")
+	p.context_update(p.current_position.end, "in block block")
 	contents = p.parse(contents)
 	p.context_pop()
 	return contents
@@ -39,7 +39,7 @@ def blck_repeat(p: Preprocessor, args: str, contents: str) -> str:
 	nb = int(args)
 	if nb <= 0:
 		p.send_error("invalid argument. Usage: repeat [uint > 0]")
-	p.context_update(p.current_position.true_end(), "in block repeat")
+	p.context_update(p.current_position.end, "in block repeat")
 	contents = p.parse(contents)
 	p.context_pop()
 	return contents * nb
@@ -58,7 +58,7 @@ def blck_atlabel(p: Preprocessor, args: str, contents: str) -> str:
 	else:
 		p.command_vars["atlabel"] = dict()
 
-	p.context_update(p.current_position.true_end(), "in block atlabel")
+	p.context_update(p.current_position.end, "in block atlabel")
 	p.command_vars["atlabel"][lbl] = p.parse(contents)
 	p.context_pop()
 	return ""

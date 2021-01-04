@@ -133,7 +133,7 @@ def cmd_replace(p: Preprocessor, args: str) -> str:
 	count = arguments.count
 	if count < 0:
 		p.send_error("invalid argument.\nthe replace --count argument must be positive")
-	pos = p.current_position.true_cmd_begin()
+	pos = p.current_position.cmd_begin
 
 	def pst_replace(p: Preprocessor, string: str) -> str:
 		try:
