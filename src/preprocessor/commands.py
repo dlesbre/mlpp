@@ -4,8 +4,7 @@ import re
 from datetime import datetime
 
 from .defs import (PREPROCESSOR_VERSION, REGEX_IDENTIFIER_WRAPPED,
-                   ArgumentParserNoExit, Context, EmptyContextStack,
-                   process_string)
+                   ArgumentParserNoExit, Context, process_string)
 from .preprocessor import Preprocessor
 
 # ============================================================
@@ -42,17 +41,13 @@ def cmd_file(p: Preprocessor, args: str) -> str:
 	"""the file command - prints the current file name"""
 	if args.strip() != "":
 		p.send_warning("the file command takes no arguments")
-	if p._context:
-		return p._context[-1][0].file
-	raise EmptyContextStack
+	return p.get_context().file
 
 def cmd_line(p: Preprocessor, args: str) -> str:
 	"""the line command - prints the current line number"""
 	if args.strip() != "":
 		p.send_warning("the line command takes no arguments")
-	if p._context:
-		return str(p._context[-1][0].line_number(p.current_position.begin)[0])
-	raise EmptyContextStack
+	return str(p.get_context().line_number(p.current_position.begin)[0])
 
 # ============================================================
 # def/undef
@@ -105,11 +100,11 @@ def cmd_def(preprocessor: Preprocessor, args_string : str) -> str:
 		print("string")
 		text = process_string(text[1:-1])
 
-	def defined_command(p: Preprocessor, s: str) -> str:
+	def defined_command(p: Preprocessor, args_string: str) -> str:
 		string = text
 		if is_macro:
 			try:
-				arguments = macro_parser.parse_args(p.split_args(s))
+				arguments = macro_parser.parse_args(p.split_args(args_string))
 			except argparse.ArgumentError:
 				p.send_error("invalid argument for macro.\nusage: {} {}".format(ident, " ".join(args)))
 			if len(arguments.vars) != len(args):
@@ -120,8 +115,8 @@ def cmd_def(preprocessor: Preprocessor, args_string : str) -> str:
 				))
 			# first subsitution : placeholder to avoid conflits
 			# with multiple replaces
-			for i in range(len(args)):
-				pattern = REGEX_IDENTIFIER_WRAPPED.format(re.escape(args[i]))
+			for i, arg in enumerate(args):
+				pattern = REGEX_IDENTIFIER_WRAPPED.format(re.escape(arg))
 				placeholder = "\000{}".format(i)
 				repl = "\\1{}\\3".format(placeholder)
 				string = re.sub(pattern, repl, string, flags=re.MULTILINE)

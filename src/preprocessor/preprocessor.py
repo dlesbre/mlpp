@@ -285,10 +285,7 @@ class Preprocessor:
 						tokens[i][2],
 					)
 				i += 1
-		if self._context:
-			self._context[-1][0].add_dilatation(start, dilat)
-		else:
-			raise EmptyContextStack
+		self.get_context().add_dilatation(start, dilat)
 		non_rel_end = self.current_position.from_relative(end)
 		for key in self.labels:
 			index_list = self.labels[key]
@@ -319,13 +316,10 @@ class Preprocessor:
 		"""Updates the current context
 		can change the position and, optionnaly, the description
 		"""
-		if len(self._context) != 0:
-			new_context = self._context[-1][0].copy()
-			if isinstance(desc, str):
-				new_context.desc = desc
-			self._context.append((new_context, pos, False))
-		else:
-			raise EmptyContextStack
+		new_context = self.get_context()
+		if isinstance(desc, str):
+			new_context.desc = desc
+		self._context.append((new_context, pos, False))
 
 	def context_pop(self : "Preprocessor") -> None:
 		"""Removes the last context_new of context_update
@@ -432,7 +426,7 @@ class Preprocessor:
 			level, run_at, action = self._final_actions[ii]
 			if self._runs_at_current_level(level, run_at):
 				string = action(self, string)
-			if ii >= nb_original_final_actions and not (run_at & RunActionAt.STRICT_PARENT_LEVELS):
+			if ii >= nb_original_final_actions and not bool(run_at & RunActionAt.STRICT_PARENT_LEVELS):
 				del self._final_actions[ii]
 			else:
 				ii += 1
@@ -462,3 +456,10 @@ class Preprocessor:
 	) -> None:
 		"""adds a final action at the current level"""
 		self._final_actions.append((self._recursion_depth, run_at, action))
+
+	def get_context(self: "Preprocessor") -> Context:
+		"""returns the latest context,
+		raises EmptyContextStack if no such context exists"""
+		if len(self._context) != 0:
+			return self._context[-1][0]
+		raise EmptyContextStack
