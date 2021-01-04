@@ -167,9 +167,9 @@ def cmd_begin(preprocessor: Preprocessor, args_string: str) -> str:
 		if level < 0:
 			preprocessor.send_error("invalid argument: usage begin [uint]")
 	if level == 0:
-		return preprocessor.token_begin_repr
+		return preprocessor.token_begin
 	else:
-		return preprocessor.token_begin_repr + "begin " + str(level-1) + preprocessor.token_end_repr
+		return preprocessor.token_begin + "begin " + str(level-1) + preprocessor.token_end
 
 def cmd_end(preprocessor: Preprocessor, args_string: str) -> str:
 	"""The end command, inserts token_end
@@ -187,9 +187,9 @@ def cmd_end(preprocessor: Preprocessor, args_string: str) -> str:
 		if level < 0:
 			preprocessor.send_error("invalid argument. Usage: end [uint]")
 	if level == 0:
-		return preprocessor.token_end_repr
+		return preprocessor.token_end
 	else:
-		return preprocessor.token_begin_repr + "end " + str(level-1) + preprocessor.token_end_repr
+		return preprocessor.token_begin + "end " + str(level-1) + preprocessor.token_end
 
 def cmd_label(preprocessor: Preprocessor, arg_string: str) -> str:
 	"""the label command

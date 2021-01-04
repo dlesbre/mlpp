@@ -14,11 +14,9 @@ class Preprocessor:
 
 	# constants
 	max_recursion_depth: int = 20
-	token_begin_repr: str = "{% "
-	token_end_repr: str = " %}"
-	token_begin: str = re.escape("{% ")
-	token_end: str = re.escape(" %}")
-	token_endblock: str = re.escape("end")
+	token_begin: str = "{% "
+	token_end: str = " %}"
+	token_endblock: str = "end"
 	token_ident: str = REGEX_IDENTIFIER
 	token_ident_end: str = REGEX_IDENTIFIER_END
 	re_flags: int = re.MULTILINE
@@ -173,8 +171,8 @@ class Preprocessor:
 			tokens: List[int, TokenMatch] - list of (position, OPEN/CLOSE)
 				sorted by position (CLOSE comes first if equal)
 		"""
-		open_tokens  = re.finditer(self.token_begin, string, self.re_flags)
-		close_tokens = re.finditer(self.token_end, string, self.re_flags)
+		open_tokens  = re.finditer(re.escape(self.token_begin), string, self.re_flags)
+		close_tokens = re.finditer(re.escape(self.token_end), string, self.re_flags)
 		tokens = [(x.start(), x.end(), TokenMatch.OPEN) for x in open_tokens]
 		tokens += [(x.start(), x.end(), TokenMatch.CLOSE) for x in close_tokens]
 		# sort in order of appearance - if two tokens appear at same place
@@ -218,10 +216,12 @@ class Preprocessor:
 			tuple(endblock_start_pos: int, endblock_end_pos: int)
 			(-1,-1) if no such endblock exists"""
 		endblock_regex = r"{}\s*{}{}\s*{}".format(
-			self.token_begin, self.token_endblock, block_name, self.token_end
+			re.escape(self.token_begin), re.escape(self.token_endblock),
+			block_name, re.escape(self.token_end)
 		)
 		startblock_regex = r"{}\s*{}(?:{}|{})".format(
-			self.token_begin, block_name, self.token_end, self.token_ident_end
+			re.escape(self.token_begin), block_name,
+			re.escape(self.token_end), self.token_ident_end
 		)
 		pos = 0
 		open_block = 0

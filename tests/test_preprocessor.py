@@ -30,9 +30,9 @@ and some unispired text"""
 class TestPreProcMethods:
 
 	pre = Preprocessor()
-	pre.token_begin = re.escape("(")
-	pre.token_end = re.escape(")")
-	pre.token_endblock = re.escape("e")
+	pre.token_begin = "("
+	pre.token_end = ")"
+	pre.token_endblock = "e"
 
 	def test_get_identifier_name(self):
 		"""unit tests for Preprocessor.get_identifier_name"""
