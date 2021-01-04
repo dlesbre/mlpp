@@ -2,7 +2,7 @@
 
 from .blocks import *
 from .commands import *
-from .post_actions import *
+from .final_actions import *
 from .preprocessor import Preprocessor
 
 # default commands
