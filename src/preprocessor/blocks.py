@@ -69,9 +69,12 @@ def pst_atlabel(pre: Preprocessor, string: str) -> str:
 		for lbl in pre.command_vars["atlabel"]:
 			if not lbl in pre.labels:
 				pre.send_warning('No matching label for atlabel block "{}"'.format(lbl))
-			indexes = pre.labels[lbl]
-			for i in range(len(indexes)):
-				string = pre.replace_string(
-					indexes[i], indexes[i], string, pre.command_vars["atlabel"][lbl], []
-				)
+			else:
+				indexes = pre.labels[lbl]
+				print(lbl, indexes)
+				for i in range(len(indexes)):
+					string = pre.replace_string(
+						indexes[i], indexes[i], string, pre.command_vars["atlabel"][lbl], []
+					)
+				del pre.labels[lbl]
 	return string

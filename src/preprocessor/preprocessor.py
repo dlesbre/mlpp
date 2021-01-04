@@ -8,7 +8,7 @@ from .defs import *
 TokenList = List[Tuple[int, int, TokenMatch]]
 TypeCommand = Callable[["Preprocessor", str], str]
 TypeBlock = Callable[["Preprocessor", str, str], str]
-TypePostaction = Callable[["Preprocessor", str], str]
+TypeFinalAction = Callable[["Preprocessor", str], str]
 
 class Preprocessor:
 
@@ -42,7 +42,7 @@ class Preprocessor:
 	# commands and blocks
 	commands: Dict[str, TypeCommand] = dict()
 	blocks: Dict[str, TypeBlock] = dict()
-	post_actions: List[TypePostaction] = []
+	_final_actions: List[Tuple[int, RunActionAt, TypeFinalAction]] = []
 	labels: Dict[str, List[int]] = dict()
 
 	# usefull variables
@@ -52,7 +52,7 @@ class Preprocessor:
 	def __init__(self):
 		self.commands = Preprocessor.commands.copy()
 		self.blocks = Preprocessor.blocks.copy()
-		self.post_actions = Preprocessor.post_actions.copy()
+		self._final_actions = Preprocessor._final_actions.copy()
 		self.command_vars = Preprocessor.command_vars.copy()
 		self._context = Preprocessor._context.copy()
 
@@ -250,6 +250,16 @@ class Preprocessor:
 			match_begin_opt = re.search(startblock_regex, string[pos:], self.re_flags)
 			match_end_opt = re.search(endblock_regex, string[pos:], self.re_flags)
 
+	def add_dilatation(self: "Preprocessor", pos: int, value: int) -> None:
+		"""adds dilatation to tokens, labels and context
+		Inputs:
+			pos - the position relative to start of source
+				(Position.XXX and not Position.relative_XXX)
+			value - the dilatation amount (>0 for adding text, <0 for removing)
+		"""
+
+
+
 	def replace_string(self: "Preprocessor",
 		start: int, end: int, string: str, replacement: str, tokens: TokenList,
 	) -> str:
@@ -279,10 +289,11 @@ class Preprocessor:
 			self._context[-1][0].add_dilatation(start, dilat)
 		else:
 			raise EmptyContextStack
+		non_rel_end = self.current_position.from_relative(end)
 		for key in self.labels:
 			index_list = self.labels[key]
 			for i in range(len(index_list)):
-				if index_list[i] >= end:
+				if index_list[i] >= non_rel_end:
 					index_list[i] += dilat
 
 		return string[:start] + replacement + string[end:]
@@ -351,8 +362,8 @@ class Preprocessor:
 
 		tokens: TokenList = self.find_tokens(string)
 
-		# post_action init
-		post_actions = self.post_actions.copy()
+		# save original length to avoid deleting preexisting actions
+		nb_original_final_actions = len(self._final_actions.copy())
 
 		while len(tokens) > 1:  # needs two tokens to make a pair
 
@@ -416,15 +427,39 @@ class Preprocessor:
 			)
 
 		# Post actions
-		self.context_update(0, "in post actions")
-		for action in self.post_actions:
-			string = action(self, string)
+		self.context_update(self.current_position.from_relative(0), "in final actions")
+		ii = 0
+		while ii < len(self._final_actions):
+			level, run_at, action = self._final_actions[ii]
+			if self._runs_at_current_level(level, run_at): # TODO
+				string = action(self, string)
+			if ii >= nb_original_final_actions and not (run_at & RunActionAt.STRICT_PARENT_LEVELS):
+				del self._final_actions[ii]
+			else:
+				ii += 1
 		self.context_pop()
 
 		self._recursion_depth -= 1
 		if empty_context:
 			self._context = []
 
-		self.post_actions = post_actions
-
 		return string
+
+	def _runs_at_current_level(self: "Preprocessor", level: int, run_at: RunActionAt) -> bool:
+		"""return True if this action should be run at the current recursion level"""
+		return (level == self._recursion_depth and bool(run_at & RunActionAt.CURRENT_LEVEL)) \
+		  or (level < self._recursion_depth and bool(run_at & RunActionAt.STRICT_SUB_LEVELS)) \
+		  or (level > self._recursion_depth and bool(run_at & RunActionAt.STRICT_PARENT_LEVELS))
+
+	@staticmethod
+	def static_add_finalaction(
+		action: TypeFinalAction, run_at: RunActionAt = RunActionAt.CURRENT_LEVEL
+	) -> None:
+		"""adds a final action to the base class, will be a part of all new objects"""
+		Preprocessor._final_actions.append((1, run_at, action))
+
+	def add_finalaction(self: "Preprocessor", action: TypeFinalAction,
+		run_at: RunActionAt = RunActionAt.CURRENT_LEVEL
+	) -> None:
+		"""adds a final action at the current level"""
+		self._final_actions.append((self._recursion_depth, run_at, action))

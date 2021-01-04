@@ -24,10 +24,9 @@ class Position:
 	#6 and #7 values are meaningless if not a block
 	- #6 - endblock_begin
 	- #7 - endblock_end
-	these values are relative to the start of the string
-	being scanned. For values relative to the start of the source
-	(namely for errors and context updates) use the methods
-	true_begin(), true_end()...
+	these values are relative to the start of the source file
+	being scanned. For values relative to the start of the string
+	use relative_begin, relative_end...
 
 	offset represents the offset between current string and source"""
 	offset: int = 0
@@ -40,45 +39,53 @@ class Position:
 	endblock_begin: int = 0
 	endblock_end:   int = 0
 
+	def to_relative(self: "Position", value: int) -> int:
+		"""transform a value relative to source into one relative to current string"""
+		return value - self.offset
+
+	def from_relative(self: "Position", value: int) -> int:
+		"""transform a value relative to current string into one relative to source"""
+		return value + self.offset
+
 	relative_begin: property = property(
-		lambda self: self.begin - self.offset,
-		lambda self, value: setattr(self, "begin", value + self.offset),
+		lambda self: self.to_relative(self.begin),
+		lambda self, value: setattr(self, "begin", self.from_relative(value)),
 		doc="same as begin, but relative to start of current parsed string\n"
 		    "(begin is relative to start of file)"
 	)
 	relative_end: property = property(
-		lambda self: self.end - self.offset,
-		lambda self, value: setattr(self, "end", value + self.offset),
+		lambda self: self.to_relative(self.end),
+		lambda self, value: setattr(self, "end", self.from_relative(value)),
 		doc="same as end, but relative to start of current parsed string\n"
 		    "(end is relative to start of file)"
 	)
 	relative_cmd_begin: property = property(
-		lambda self: self.cmd_begin - self.offset,
-		lambda self, value: setattr(self, "cmd_begin", value + self.offset),
+		lambda self: self.to_relative(self.cmd_begin),
+		lambda self, value: setattr(self, "cmd_begin", self.from_relative(value)),
 		doc="same as cmd_begin, but relative to start of current parsed string\n"
 		    "(cmd_begin is relative to start of file)"
 	)
 	relative_cmd_end: property = property(
-		lambda self: self.cmd_end - self.offset,
-		lambda self, value: setattr(self, "cmd_end", value + self.offset),
+		lambda self: self.to_relative(self.cmd_end),
+		lambda self, value: setattr(self, "cmd_end", self.from_relative(value)),
 		doc="same as cmd_end, but relative to start of current parsed string\n"
 		    "(cmd_end is relative to start of file)"
 	)
 	relative_cmd_argbegin: property = property(
-		lambda self: self.cmd_argbegin - self.offset,
-		lambda self, value: setattr(self, "cmd_argbegin", value + self.offset),
+		lambda self: self.to_relative(self.cmd_argbegin),
+		lambda self, value: setattr(self, "cmd_argbegin", self.from_relative(value)),
 		doc="same as cmd_argbegin, but relative to start of current parsed string\n"
 		    "(cmd_argbegin is relative to start of file)"
 	)
 	relative_endblock_begin: property = property(
-		lambda self: self.endblock_begin - self.offset,
-		lambda self, value: setattr(self, "endblock_begin", value + self.offset),
+		lambda self: self.to_relative(self.endblock_begin),
+		lambda self, value: setattr(self, "endblock_begin", self.from_relative(value)),
 		doc="same as endblock_begin, but relative to start of current parsed string\n"
 		    "(endblock_begin is relative to start of file)"
 	)
 	relative_endblock_end: property = property(
-		lambda self: self.endblock_end - self.offset,
-		lambda self, value: setattr(self, "endblock_end", value + self.offset),
+		lambda self: self.to_relative(self.endblock_end),
+		lambda self, value: setattr(self, "endblock_end", self.from_relative(value)),
 		doc="same as endblock_end, but relative to start of current parsed string\n"
 		    "(endblock_end is relative to start of file)"
 	)
@@ -113,6 +120,16 @@ class WarningMode(enum.Enum):
 class TokenMatch(enum.IntEnum):
 	OPEN = 0
 	CLOSE = 1
+
+
+class RunActionAt(enum.IntFlag):
+	NO_LEVEL = 0
+	CURRENT_LEVEL = enum.auto()
+	STRICT_SUB_LEVELS = enum.auto()
+	STRICT_PARENT_LEVELS = enum.auto()
+	CURRENT_AND_SUB_LEVELS = CURRENT_LEVEL | STRICT_SUB_LEVELS
+	CURRENT_AND_PARENT_LEVELS = CURRENT_LEVEL | STRICT_PARENT_LEVELS
+	ALL_LEVELS = CURRENT_LEVEL | STRICT_PARENT_LEVELS | STRICT_SUB_LEVELS
 
 
 class Context:

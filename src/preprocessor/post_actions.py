@@ -10,44 +10,44 @@ from .preprocessor import Preprocessor
 # ============================================================
 
 
-def pst_strip_empty_lines(p: Preprocessor, string: str) -> str:
-	"""post action to remove empty lines (containing whitespace only) from the text"""
+def fnl_strip_empty_lines(p: Preprocessor, string: str) -> str:
+	"""final action to remove empty lines (containing whitespace only) from the text"""
 	return re.sub(r"\n\s*\n", "\n", string)
 
 def cmd_strip_empty_lines(preprocessor: Preprocessor, s: str) -> str:
 	"""the strip_empty_lines command
-	queues pst_strip_empty_lines to preprocessor.post_actions"""
+	queues fnl_strip_empty_lines to preprocessor final actions"""
 	if s.strip() != "":
 		preprocessor.send_warning("strip_empty_line takes no arguments")
-	preprocessor.post_actions.append(pst_strip_empty_lines)
+	preprocessor.add_finalaction(fnl_strip_empty_lines)
 	return ""
 
-def pst_strip_leading_whitespace(p: Preprocessor, string: str) -> str:
-	"""post action to remove leading whitespace (indent) from string"""
+def fnl_strip_leading_whitespace(p: Preprocessor, string: str) -> str:
+	"""final action to remove leading whitespace (indent) from string"""
 	return re.sub("^[ \t]*", "", string, flags = re.MULTILINE)
 
 def cmd_strip_leading_whitespace(preprocessor: Preprocessor, s: str) -> str:
 	"""the strip_leading_whitespace command
-	queues pst_strip_leading_whitespace to preprocessor.post_actions"""
+	queues fnl_strip_leading_whitespace to preprocessor final actions"""
 	if s.strip() != "":
 		preprocessor.send_warning("strip_leading_whitespace takes no arguments")
-	preprocessor.post_actions.append(pst_strip_leading_whitespace)
+	preprocessor.add_finalaction(fnl_strip_leading_whitespace)
 	return ""
 
-def pst_strip_trailing_whitespace(p: Preprocessor, string: str) -> str:
-	"""post action to remove trailing whitespace (indent) from string"""
+def fnl_strip_trailing_whitespace(p: Preprocessor, string: str) -> str:
+	"""final action to remove trailing whitespace (indent) from string"""
 	return re.sub("[ \t]*$", "", string, flags = re.MULTILINE)
 
 def cmd_strip_trailing_whitespace(preprocessor: Preprocessor, s: str) -> str:
 	"""the strip_trailing_whitespace command
-	queues pst_strip_trailing_whitespace to preprocessor.post_actions"""
+	queues fnl_strip_trailing_whitespace to preprocessor final actions"""
 	if s.strip() != "":
 		preprocessor.send_warning("strip_trailing_whitespace takes no arguments")
-	preprocessor.post_actions.append(pst_strip_trailing_whitespace)
+	preprocessor.add_finalaction(fnl_strip_trailing_whitespace)
 	return ""
 
-def pst_fix_last_line(p: Preprocessor, string: str) -> str:
-	"""post action to ensures file ends with an empty line if
+def fnl_fix_last_line(p: Preprocessor, string: str) -> str:
+	"""final action to ensures file ends with an empty line if
 	it is not empty"""
 	if string and string[-1] != "\n":
 		string += "\n"
@@ -60,14 +60,14 @@ def pst_fix_last_line(p: Preprocessor, string: str) -> str:
 
 def cmd_fix_last_line(preprocessor: Preprocessor, s: str) -> str:
 	"""the fix_last_line command
-	queues pst_fix_last_line to preprocessor.post_actions"""
+	queues fnl_fix_last_line to preprocessor final actions"""
 	if s.strip() != "":
 		preprocessor.send_warning("fix_last_line takes no arguments")
-	preprocessor.post_actions.append(pst_fix_last_line)
+	preprocessor.add_finalaction(fnl_fix_last_line)
 	return ""
 
-def pst_fix_first_line(p: Preprocessor, string: str) -> str:
-	"""post action to ensures file starts with a non-empty
+def fnl_fix_first_line(p: Preprocessor, string: str) -> str:
+	"""final action to ensures file starts with a non-empty
 	non-whitespace line (if it is not empty)"""
 	while string != "":
 		pos = string.find("\n")
@@ -83,10 +83,10 @@ def pst_fix_first_line(p: Preprocessor, string: str) -> str:
 
 def cmd_fix_first_line(preprocessor: Preprocessor, s: str) -> str:
 	"""the fix_first_line command
-	queues pst_fix_first_line to preprocessor.post_actions"""
+	queues fnl_fix_first_line to preprocessor final actions"""
 	if s.strip() != "":
 		preprocessor.send_warning("fix_last_line takes no arguments")
-	preprocessor.post_actions.append(pst_fix_first_line)
+	preprocessor.add_finalaction(fnl_fix_first_line)
 	return ""
 
 # ============================================================
@@ -135,7 +135,7 @@ def cmd_replace(p: Preprocessor, args: str) -> str:
 		p.send_error("invalid argument.\nthe replace --count argument must be positive")
 	pos = p.current_position.cmd_begin
 
-	def pst_replace(p: Preprocessor, string: str) -> str:
+	def fnl_replace(p: Preprocessor, string: str) -> str:
 		try:
 			return re.sub(pattern, repl, string, count=count, flags = flags)
 		except re.error as err:
@@ -143,7 +143,7 @@ def cmd_replace(p: Preprocessor, args: str) -> str:
 			p.send_error("replace regex error: {}".format(err.msg))
 			p.context_pop()
 			return ""
-	pst_replace.__name__ = "pst_replace_lambda"
-	pst_replace.__doc__ = "post action for replace {}".format(args)
-	p.post_actions.append(pst_replace)
+	fnl_replace.__name__ = "fnl_replace_lambda"
+	fnl_replace.__doc__ = "final action for replace {}".format(args)
+	p.add_finalaction(fnl_replace)
 	return ""
