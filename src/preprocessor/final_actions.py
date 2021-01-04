@@ -10,7 +10,7 @@ from .preprocessor import Preprocessor
 # ============================================================
 
 
-def fnl_strip_empty_lines(p: Preprocessor, string: str) -> str:
+def fnl_strip_empty_lines(_: Preprocessor, string: str) -> str:
 	"""final action to remove empty lines (containing whitespace only) from the text"""
 	return re.sub(r"\n\s*\n", "\n", string)
 
@@ -22,7 +22,7 @@ def cmd_strip_empty_lines(preprocessor: Preprocessor, s: str) -> str:
 	preprocessor.add_finalaction(fnl_strip_empty_lines)
 	return ""
 
-def fnl_strip_leading_whitespace(p: Preprocessor, string: str) -> str:
+def fnl_strip_leading_whitespace(_: Preprocessor, string: str) -> str:
 	"""final action to remove leading whitespace (indent) from string"""
 	return re.sub("^[ \t]*", "", string, flags = re.MULTILINE)
 
@@ -34,7 +34,7 @@ def cmd_strip_leading_whitespace(preprocessor: Preprocessor, s: str) -> str:
 	preprocessor.add_finalaction(fnl_strip_leading_whitespace)
 	return ""
 
-def fnl_strip_trailing_whitespace(p: Preprocessor, string: str) -> str:
+def fnl_strip_trailing_whitespace(_: Preprocessor, string: str) -> str:
 	"""final action to remove trailing whitespace (indent) from string"""
 	return re.sub("[ \t]*$", "", string, flags = re.MULTILINE)
 
@@ -46,7 +46,7 @@ def cmd_strip_trailing_whitespace(preprocessor: Preprocessor, s: str) -> str:
 	preprocessor.add_finalaction(fnl_strip_trailing_whitespace)
 	return ""
 
-def fnl_fix_last_line(p: Preprocessor, string: str) -> str:
+def fnl_fix_last_line(_: Preprocessor, string: str) -> str:
 	"""final action to ensures file ends with an empty line if
 	it is not empty"""
 	if string and string[-1] != "\n":
@@ -66,7 +66,7 @@ def cmd_fix_last_line(preprocessor: Preprocessor, s: str) -> str:
 	preprocessor.add_finalaction(fnl_fix_last_line)
 	return ""
 
-def fnl_fix_first_line(p: Preprocessor, string: str) -> str:
+def fnl_fix_first_line(_: Preprocessor, string: str) -> str:
 	"""final action to ensures file starts with a non-empty
 	non-whitespace line (if it is not empty)"""
 	while string != "":

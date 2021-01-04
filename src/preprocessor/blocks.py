@@ -63,18 +63,22 @@ def blck_atlabel(p: Preprocessor, args: str, contents: str) -> str:
 	p.context_pop()
 	return ""
 
-def pst_atlabel(pre: Preprocessor, string: str) -> str:
+def fnl_atlabel(pre: Preprocessor, string: str) -> str:
 	"""places atlabel blocks at all matching labels"""
 	if "atlabel" in pre.command_vars:
+		deletions = []
 		for lbl in pre.command_vars["atlabel"]:
 			if not lbl in pre.labels:
 				pre.send_warning('No matching label for atlabel block "{}"'.format(lbl))
 			else:
 				indexes = pre.labels[lbl]
 				print(lbl, indexes)
-				for i in range(len(indexes)):
+				for index in indexes:
 					string = pre.replace_string(
-						indexes[i], indexes[i], string, pre.command_vars["atlabel"][lbl], []
+						index, index, string, pre.command_vars["atlabel"][lbl], []
 					)
 				del pre.labels[lbl]
+			deletions.append(lbl)
+		for lbl in deletions:
+			del pre.command_vars["atlabel"][lbl]
 	return string

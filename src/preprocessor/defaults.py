@@ -29,7 +29,7 @@ Preprocessor.commands["replace"] = cmd_replace
 
 # default post action
 
-Preprocessor.static_add_finalaction(pst_atlabel)
+Preprocessor.static_add_finalaction(fnl_atlabel)
 
 # default blocks
 

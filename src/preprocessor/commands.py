@@ -65,7 +65,6 @@ def cmd_def(preprocessor: Preprocessor, args_string : str) -> str:
 		def <ident> " replacement with leading/trailin space  "
 		def <ident>(<ident1>, <ident2>) replacement
 			defines a macro"""
-	print("def ", args_string)
 	ident, text, _ = preprocessor.get_identifier_name(args_string)
 	if ident == "":
 		preprocessor.send_error("invalid identifier")
@@ -97,7 +96,6 @@ def cmd_def(preprocessor: Preprocessor, args_string : str) -> str:
 
 	# if its a string - use escapes and remove external quotes
 	if len(text) >= 2 and text[0] == '"' and text[-1] == '"':
-		print("string")
 		text = process_string(text[1:-1])
 
 	def defined_command(p: Preprocessor, args_string: str) -> str:
