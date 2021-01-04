@@ -388,7 +388,6 @@ class Preprocessor:
 			if ident == "":
 				self.send_error("unrecognized command name '{}'".format(substring))
 			elif ident in self.commands:
-				# todo try
 				self.context_update(self.current_position.cmd_begin, "in command {}".format(ident))
 				command = self.commands[ident]
 				new_str = command(self, arg_string)
@@ -431,7 +430,7 @@ class Preprocessor:
 		ii = 0
 		while ii < len(self._final_actions):
 			level, run_at, action = self._final_actions[ii]
-			if self._runs_at_current_level(level, run_at): # TODO
+			if self._runs_at_current_level(level, run_at):
 				string = action(self, string)
 			if ii >= nb_original_final_actions and not (run_at & RunActionAt.STRICT_PARENT_LEVELS):
 				del self._final_actions[ii]

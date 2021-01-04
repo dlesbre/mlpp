@@ -2,7 +2,7 @@
 import argparse
 import enum
 import re
-from typing import Callable, List, Tuple, Union, cast
+from typing import List, Tuple, Union
 
 PREPROCESSOR_VERSION = "0.1"
 

@@ -84,7 +84,10 @@ def cmd_def(preprocessor: Preprocessor, args_string : str) -> str:
 		is_macro = True
 		end = text.find(")")
 		if end == -1:
-			preprocessor.send_error('no matching closing ")" in macro definition\nEnclose in quotes to have a paranthese as first character')
+			preprocessor.send_error(
+				'no matching closing ")" in macro definition\n'
+				'Enclose in quotes to have a paranthese as first character'
+			)
 		args = text[1:end].split(",")
 		for i in range(len(args)):
 			args[i] = args[i].strip()
@@ -92,7 +95,9 @@ def cmd_def(preprocessor: Preprocessor, args_string : str) -> str:
 				preprocessor.send_error('in def {}: invalid macro parameter name "{}"'.format(ident, args[i]))
 		for arg in args:
 			if args.count(arg) > 1:
-				preprocessor.send_error('in def {}: multiple macro parameters with same name "{}"'.format(ident, arg))
+				preprocessor.send_error(
+					'in def {}: multiple macro parameters with same name "{}"'.format(ident, arg)
+				)
 		text = text[end+1:].strip()
 
 	# if its a string - use escapes and remove external quotes
@@ -125,7 +130,10 @@ def cmd_def(preprocessor: Preprocessor, args_string : str) -> str:
 				repl = arguments.vars[i]
 				string = re.sub(pattern, repl, string, flags=re.MULTILINE)
 
-		p.context_update(p.current_position.cmd_argbegin, 'in expansion of defined command {}'.format(ident))
+		p.context_update(
+			p.current_position.cmd_argbegin,
+			'in expansion of defined command {}'.format(ident)
+		)
 		parsed = p.parse(string)
 		p.context_pop()
 		return parsed
@@ -208,7 +216,7 @@ def cmd_label(preprocessor: Preprocessor, arg_string: str) -> str:
 		preprocessor.labels[lbl] = [preprocessor.current_position.begin]
 	return ""
 
-def cmd_date(p: Preprocessor, args: str) -> str:
+def cmd_date(_: Preprocessor, args: str) -> str:
 	"""the date command, prints the current date.
 	usage: date [format=YYYY-MM-DD]
 	  format specifies year with YYYY or YY, month with MM or M,
@@ -234,9 +242,9 @@ def cmd_date(p: Preprocessor, args: str) -> str:
 		("ss", "\000c", "{second:02}"),
 		("s", "\000d", "{second}"),
 	)
-	for val, placeholder, _ in replacements:
+	for val, placeholder, _ignore in replacements:
 		args = args.replace(val, placeholder)
-	for _, placeholder, repl in replacements:
+	for _ignore, placeholder, repl in replacements:
 		args = args.replace(placeholder, repl)
 	x = datetime.now()
 	return args.format(year = x.year, month = x.month, day = x.day,
@@ -280,5 +288,3 @@ def cmd_include(p: Preprocessor, args: str) -> str:
 		contents = p.parse(contents)
 		p.context_pop()
 	return contents
-
-# TODO extends,
