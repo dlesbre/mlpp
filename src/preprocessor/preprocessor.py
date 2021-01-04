@@ -274,6 +274,8 @@ class Preprocessor:
 						tokens[i][2],
 					)
 				i += 1
+		if self._context:
+			self._context[-1][0].add_dilatation(start, dilat)
 		for key in self.labels:
 			index_list = self.labels[key]
 			for i in range(len(index_list)):
@@ -399,10 +401,10 @@ class Preprocessor:
 			else:
 				self.send_error("command or block not recognized")
 			self.current_position = position
+			self.context_pop()
 			string = self.replace_string(
 				self.current_position.begin, end_pos, string, new_str, tokens
 			)
-			self.context_pop()
 			self.remove_leading_close_tokens(tokens)
 		# end while
 		if len(tokens) == 1:

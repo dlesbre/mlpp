@@ -133,7 +133,7 @@ class Context:
 		"""Returns the true position, taking dilatations
 		into account"""
 		for pos, value in self._dilatations[::-1]:
-			if pos < position:
+			if pos <= position:
 				position -= value
 		return position
 
@@ -154,7 +154,7 @@ class Context:
 		"""returns a copy of self sharing _line_break and _dilatations
 		but not desc"""
 		copy = Context(self.file, self._line_breaks, self.desc)
-		copy._dilatations = self._dilatations
+		copy._dilatations = self._dilatations.copy()
 		return copy
 
 

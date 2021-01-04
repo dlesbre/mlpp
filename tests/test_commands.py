@@ -18,7 +18,9 @@ class TestCommands:
 	def test_command(self):
 		test = [
 			("{% file %}", self.file_name),
-			#("{% line %}\n\n\n{% line %}", "1\n\n\n4"),
+			("{% line %}\n\n\n{% line %}", "1\n\n\n4"),
+			("{% void %}{% def a \"booyouhou\\n\" %}\n\n\n\n{% endvoid %}{% line %}{% a %}{% a %}{% line %}", "5booyouhou\nbooyouhou\n5"),
+			("{% line %}{% repeat 5 %}\t\n{% endrepeat %}µ{% line %}", "1\t\n\t\n\t\n\t\n\t\nµ2"),
 		]
 		self.runtests(test)
 
