@@ -46,7 +46,7 @@ def cmd_strip_trailing_whitespace(preprocessor: Preprocessor, s: str) -> str:
 	preprocessor.post_actions.append(pst_strip_trailing_whitespace)
 	return ""
 
-def pst_empty_last_line(p: Preprocessor, string: str) -> str:
+def pst_fix_last_line(p: Preprocessor, string: str) -> str:
 	"""post action to ensures file ends with an empty line if
 	it is not empty"""
 	if string and string[-1] != "\n":
@@ -58,14 +58,36 @@ def pst_empty_last_line(p: Preprocessor, string: str) -> str:
 		string = string[:ii+2]
 	return string
 
-def cmd_empty_last_line(preprocessor: Preprocessor, s: str) -> str:
-	"""the empty_last_line command
-	queues pst_empty_last_line to preprocessor.post_actions"""
+def cmd_fix_last_line(preprocessor: Preprocessor, s: str) -> str:
+	"""the fix_last_line command
+	queues pst_fix_last_line to preprocessor.post_actions"""
 	if s.strip() != "":
-		preprocessor.send_warning("empty_last_line takes no arguments")
-	preprocessor.post_actions.append(pst_empty_last_line)
+		preprocessor.send_warning("fix_last_line takes no arguments")
+	preprocessor.post_actions.append(pst_fix_last_line)
 	return ""
 
+def pst_fix_first_line(p: Preprocessor, string: str) -> str:
+	"""post action to ensures file starts with a non-empty
+	non-whitespace line (if it is not empty)"""
+	while string != "":
+		pos = string.find("\n")
+		if pos == -1:
+			if string.isspace():
+				return ""
+			return string
+		elif string[:pos+1].isspace():
+			string = string[pos+1:]
+		else:
+			break
+	return string
+
+def cmd_fix_first_line(preprocessor: Preprocessor, s: str) -> str:
+	"""the fix_first_line command
+	queues pst_fix_first_line to preprocessor.post_actions"""
+	if s.strip() != "":
+		preprocessor.send_warning("fix_last_line takes no arguments")
+	preprocessor.post_actions.append(pst_fix_first_line)
+	return ""
 
 # ============================================================
 # replace command

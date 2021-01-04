@@ -51,12 +51,14 @@ class TestCommands:
 			("{% strip_empty_lines %}\n\t\nhello\n  \n  \nhi\n", "\nhello\nhi\n"),
 			("{% strip_trailing_whitespace %}hello \n my name is johnd\t\t \nc\n", "hello\n my name is johnd\nc\n"),
 			("{% strip_leading_whitespace %}hello \n  my name\n\t \t is johnc\n", "hello \nmy name\nis johnc\n"),
-			("{% empty_last_line %}", ""),
-			("{% empty_last_line %}hello", "hello\n"),
-			("{% empty_last_line %}hello\n\n\n", "hello\n"),
+			("{% fix_last_line %}", ""),
+			("{% fix_last_line %}hello", "hello\n"),
+			("{% fix_last_line %}hello\n\n\n", "hello\n"),
+			("{% fix_first_line %}", ""),
+			("{% fix_first_line %}\nhello", "hello"),
+			("{% fix_first_line %}  \n\t\f\nhello\n\n\n", "hello\n\n\n"),
 		]
 		self.runtests(test)
-		self.pre.post_actions = Preprocessor.post_actions.copy()
 
 	def test_include(self):
 		path = "test.out"
