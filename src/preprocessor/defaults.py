@@ -38,3 +38,4 @@ Preprocessor.blocks["block"] = blck_block
 Preprocessor.blocks["verbatim"] = blck_verbatim
 Preprocessor.blocks["repeat"] = blck_repeat
 Preprocessor.blocks["atlabel"] = blck_atlabel
+Preprocessor.blocks["for"] = blck_for

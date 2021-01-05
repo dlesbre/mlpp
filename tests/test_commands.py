@@ -10,7 +10,9 @@ class TestCommands:
 	file_name = "my_file"
 
 	def runtests(self, test):
-		for in_str, out_str in test:
+		for i, x in enumerate(test):
+			print("============= test {} ==============".format(i))
+			in_str, out_str = x
 			self.pre.context_new(Context(self.file_name, in_str), 0)
 			assert self.pre.parse(in_str) == out_str
 			self.pre.context_pop()
@@ -88,11 +90,27 @@ class TestCommands:
 		]
 		self.runtests(test)
 
+	def test_for(self):
+		test = [
+			("{% for x in range(10) %}{% x %},{% endfor %}", "0,1,2,3,4,5,6,7,8,9,"),
+			("{% for x in range(2,10) %}{% x %},{% endfor %}", "2,3,4,5,6,7,8,9,"),
+			("{% for x in range(2_0,10) %}{% x %},{% endfor %}", ""),
+			("{% for x in range(2_0,10,-1) %}{% x %},{% endfor %}", "20,19,18,17,16,15,14,13,12,11,"),
+			("{% for x in  a\n b c \" def \" %}'{% x %}',{% endfor %}", "'a','b','c',' def ',"),
+		]
+		self.runtests(test)
+
 	def test_block(self):
 		test = [
 			("text{% void %}{% def name john %}hello this is a comment{% endvoid %}\n{% name %}", "text\njohn"),
 			("{% verbatim %}{% hello %}{% endverbatim %}", "{% hello %}"),
 			("{% repeat 5 %}yo{% endrepeat %}", "yoyoyoyoyo"),
-			("{% label foo %}lala{% atlabel foo %}bar{% endatlabel %}yoyo{% label foo %}oups", "barlalayoyobaroups"),
+			#("{% label foo %}lala{% atlabel foo %}bar{% endatlabel %}yoyo{% label foo %}oups", "barlalayoyobaroups"),
+			#("{% atlabel yo %}bonjour{% endatlabel %}{% label yo %}", "bonjour"),
+			#("{% atlabel yo %}bjr{% endatlabel %}{% label yo %}..{% label yo %}", "bjr..bjr"),
+			#("{% atlabel yo %}bjrst{% endatlabel %}{% block %}hi{% label yo %}yy{% endblock %}", "hibjrstyy"),
+			#("{% atlabel yo %}bonjour{% endatlabel %}{% label yo %}***\n\n{% block %}nested:{% label yo %}{% endblock %}\n{% repeat 2 %}{% label yo %}{% endrepeat %}***{% label yo %}",
+			# "bonjour***\n\nnested:bonjour\nbonjour***bonjour"
+			#)
 		]
 		self.runtests(test)

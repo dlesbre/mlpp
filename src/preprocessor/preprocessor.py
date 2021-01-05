@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import re
 from sys import stderr
-from typing import Any, Callable, Dict, List, Optional, Tuple, cast
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from .defs import *
 
@@ -157,11 +157,10 @@ class Preprocessor:
 		Returns:
 			tuple str, str, int - identifier, rest_of_string, start_of_rest_of_string
 		  returns ("","", -1) if None found"""
-		match_opt = re.match(r"\s*({})({}.*$)".format(
+		match = re.match(r"\s*({})({}.*$)".format(
 			self.token_ident, self.token_ident_end), string, re.DOTALL)
-		if match_opt == None:
+		if match is None:
 			return ("", "", -1)
-		match = cast(re.Match, match_opt)
 		return match.group(1), match.group(2), match.start(2)
 
 	def find_tokens(self: "Preprocessor", string: str) -> TokenList:
@@ -226,19 +225,17 @@ class Preprocessor:
 		)
 		pos = 0
 		open_block = 0
-		match_begin_opt = re.search(startblock_regex, string, self.re_flags)
-		match_end_opt = re.search(endblock_regex, string, self.re_flags)
+		match_begin = re.search(startblock_regex, string, self.re_flags)
+		match_end = re.search(endblock_regex, string, self.re_flags)
 		while True:
-			if match_end_opt == None:
+			if match_end is None:
 				return -1, -1
-			match_end = cast(re.Match, match_end_opt)
-			if match_begin_opt == None:
+			if match_begin is None:
 				open_block -= 1
 				if open_block == -1:
 					return pos + match_end.start(), pos + match_end.end()
 				pos += match_end.end()
 			else:
-				match_begin = cast(re.Match, match_begin_opt)
 				if match_begin.start() < match_end.start():
 					open_block += 1
 					pos += match_begin.end()
@@ -247,8 +244,8 @@ class Preprocessor:
 					if open_block == -1:
 						return pos + match_end.start(), pos + match_end.end()
 					pos += match_end.end()
-			match_begin_opt = re.search(startblock_regex, string[pos:], self.re_flags)
-			match_end_opt = re.search(endblock_regex, string[pos:], self.re_flags)
+			match_begin = re.search(startblock_regex, string[pos:], self.re_flags)
+			match_end = re.search(endblock_regex, string[pos:], self.re_flags)
 
 	def add_dilatation(self: "Preprocessor", pos: int, value: int) -> None:
 		"""adds dilatation to tokens, labels and context

@@ -131,7 +131,7 @@ def cmd_def(preprocessor: Preprocessor, args_string : str) -> str:
 		p.context_pop()
 		return parsed
 	defined_command.__doc__ = """Defined command for {}""".format(ident)
-	defined_command.__name__ = """cmd_{}""".format(ident)
+	defined_command.__name__ = """def_cmd_{}""".format(ident)
 	preprocessor.commands[ident] = defined_command
 	return ""
 

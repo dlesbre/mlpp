@@ -11,6 +11,7 @@ REGEX_IDENTIFIER_WRAPPED: str = "(^|(?<=([^_a-zA-Z]))){}((?=([^_a-zA-Z0-9]))|$)"
 REGEX_IDENTIFIER_END:   str = "$|[^_a-zA-Z0-9]"
 REGEX_IDENTIFIER_BEGIN: str = "^|[^_a-zA-Z]"
 REGEX_STRING: str = '""|".*?[^\\\\]"'
+REGEX_INTEGER: str = r"-?\ *[0-9]+(?:[_0-9]*[0-9])?"
 
 
 class Position:

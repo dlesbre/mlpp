@@ -1,6 +1,14 @@
 # -*- coding: utf-8 -*-
 
+import re
+from typing import Iterable
+
+from .defs import REGEX_IDENTIFIER, REGEX_INTEGER
 from .preprocessor import Preprocessor
+
+# ============================================================
+# simple blocks (void, block, verbatim)
+# ============================================================
 
 
 def blck_void(p: Preprocessor, args: str, contents: str) -> str:
@@ -44,6 +52,12 @@ def blck_repeat(p: Preprocessor, args: str, contents: str) -> str:
 	p.context_pop()
 	return contents * nb
 
+
+# ============================================================
+# atlabel block
+# ============================================================
+
+
 def blck_atlabel(p: Preprocessor, args: str, contents: str) -> str:
 	"""the atlabel block
 	usage: atlabel <label>
@@ -82,3 +96,69 @@ def fnl_atlabel(pre: Preprocessor, string: str) -> str:
 		for lbl in deletions:
 			del pre.command_vars["atlabel"][lbl]
 	return string
+
+
+# ============================================================
+# for block
+# ============================================================
+
+def to_int(string: str) -> int:
+	"""convert a string matching REGEX_INTEGER to int"""
+	return int(string.replace(" ", "").replace("_", ""))
+
+def blck_for(pre: Preprocessor, args: str, contents: str) -> str:
+	"""The for block, simple for loop
+	usage: for <ident> in range(stop)
+	                      range(start, stop)
+	                      range(start, stop, step)
+	       for <ident> in space separated list " argument with spaces"
+	"""
+	match = re.match(r"^\s*({})\s+in\s+".format(REGEX_IDENTIFIER), args)
+	if match is None:
+		pre.send_error(
+			"Invalid syntax.\n"
+			"usage: for <ident> in range(stop)\n"
+	    "                      range(start, stop)\n"
+			"                      range(start, stop, step)\n"
+			"       for <ident> in space separated list \" argument with spaces\""
+		)
+		return ""
+	ident = match.group(1)
+	args = args[match.end():].strip()
+	iterator: Iterable = []
+	if args[0:5] == "range":
+		regex = r"range\((?:\s*({nb})\s*,)?\s*({nb})\s*(?:,\s*({nb})\s*)?\)".format(
+			nb = REGEX_INTEGER)
+		match = re.match(regex, args)
+		if match is None:
+			pre.send_error(
+				"Invalid range syntax in for.\n"
+				"usage: range(stop) or range(start, stop) or range(start, stop, step)\n"
+				"  start, stop and step, should be integers (contain only 0-9 or _, with an optional leading -)"
+			)
+			return ""
+		groups = match.groups()
+		start = 0
+		step = 1
+		stop = to_int(groups[1])
+		if groups[0] is not None:
+			start = to_int(groups[0])
+			if groups[2] is not None:
+				step = to_int(groups[2])
+		iterator = range(start, stop, step)
+	else:
+		iterator = pre.split_args(args)
+	result = ""
+	for value in iterator:
+		def defined_value(pr: Preprocessor, args: str) -> str:
+			"""new command defined in for block"""
+			if args.strip() != "":
+				pr.send_warning("Extra arguments.\nThe command {} defined in for loop takes no arguments".format(ident))
+			return str(value)
+		defined_value.__name__ = "for_cmd_{}".format(ident)
+		defined_value.__doc__ = "Command defined in for loop: {} = '{}'".format(ident, value)
+		pre.commands[ident] = defined_value
+		pre.context_update(pre.current_position.end, "in for block")
+		result += pre.parse(contents)
+		pre.context_pop()
+	return result
