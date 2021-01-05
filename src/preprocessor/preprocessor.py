@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 import re
 from sys import stderr
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Tuple
 
+from .context import ContextStack, FileDescriptor
 from .defs import *
 
 TokenList = List[Tuple[int, int, TokenMatch]]
@@ -36,13 +37,14 @@ class Preprocessor:
 
 	# private attributes
 	_recursion_depth: int = 0
-	_context: List[Tuple[Context, int, bool]] = []
 
 	# commands and blocks
 	commands: Dict[str, TypeCommand] = dict()
 	blocks: Dict[str, TypeBlock] = dict()
 	_final_actions: List[Tuple[int, RunActionAt, TypeFinalAction]] = []
 	labels: Dict[str, List[int]] = dict()
+	context: ContextStack = ContextStack()
+
 
 	# usefull variables
 	current_position: Position = Position()
@@ -53,7 +55,7 @@ class Preprocessor:
 		self.blocks = Preprocessor.blocks.copy()
 		self._final_actions = Preprocessor._final_actions.copy()
 		self.command_vars = Preprocessor.command_vars.copy()
-		self._context = Preprocessor._context.copy()
+		self.context = ContextStack()
 
 	def _print_stderr_msg(self: "Preprocessor", desc: str, msg: str) -> None:
 		"""Pretty printing to stderr using self._context
@@ -61,23 +63,7 @@ class Preprocessor:
 		 - desc should be "error" or "warning"
 		 - msg the message to print"""
 		msg = msg.replace("\n", "\n  ") # add indent to following lines
-		if self._context:
-			len_ctxt = len(self._context)
-			for i, ctxt_tu in enumerate(self._context):
-				if i + 1 == len_ctxt or self._context[i+1][2]:
-					ctxt = ctxt_tu[0]
-					line_nb, char = ctxt.line_number(ctxt_tu[1])
-					if ctxt.desc:
-						print("{}:{}:{}: {}".format(
-							ctxt.file, line_nb, char, ctxt.desc),
-							file=stderr
-						)
-			print("{}:{}:{}: {}: {}".format(
-				ctxt.file, line_nb, char, desc, msg),
-				file=stderr
-			)
-		else:
-			print(" {}: {}".format(desc, msg), file=stderr)
+		print("{} {}: {}".format(self.context.trace(), desc, msg), file=stderr)
 
 	def send_error(self: "Preprocessor", error_msg: str) -> None:
 		"""Handles errors
@@ -261,7 +247,7 @@ class Preprocessor:
 						tokens[i][2],
 					)
 				i += 1
-		self.get_context().add_dilatation(start, dilat)
+		self.context.add_dilatation(start, dilat)
 		non_rel_end = self.current_position.from_relative(end)
 		for key in self.labels:
 			index_list = self.labels[key]
@@ -278,32 +264,6 @@ class Preprocessor:
 			del tokens[0]
 			if self.warn_unmatch_close:
 				self.send_warning("unmatch closing token \"{}\".".format(self.token_end))
-
-	def context_new(self: "Preprocessor", context: Context, pos: int) -> None:
-		"""Adds a new context. This is used to traceback errors
-		Inputs:
-		  context object indicates file and description
-		  pos is the relative (dilated) position in the file
-		    (can be obtained from self.current_position)
-		"""
-		self._context.append((context, pos, True))
-
-	def context_update(self: "Preprocessor", pos: int, desc: Optional[str] = None) -> None:
-		"""Updates the current context
-		can change the position and, optionnaly, the description
-		"""
-		new_context = self.get_context()
-		if isinstance(desc, str):
-			new_context.desc = desc
-		self._context.append((new_context, pos, False))
-
-	def context_pop(self : "Preprocessor") -> None:
-		"""Removes the last context_new of context_update
-		from the _context stack"""
-		if len(self._context) != 0:
-			self._context.pop()
-		else:
-			raise EmptyContextStack
 
 	def safe_call(self: "Preprocessor", function, *args, **kwargs) -> str:
 		"""safely calls function (returning string)
@@ -336,13 +296,11 @@ class Preprocessor:
 			self.send_error("recursion depth exceeded.")
 
 		# context init
-		empty_context = False
-		if self._context == []:
-			self.context_new(NO_CONTEXT, 0)
+		if self.context.is_empty():
+			self.context.new(FileDescriptor("NO FILE", ""), 0)
 			self.current_position.offset = 0
-			empty_context = True # used to remove added context when doe
 		else:
-			self.current_position.offset = self._context[-1][1]
+			self.current_position.offset = self.context.get_top().position
 
 		tokens: TokenList = self._find_tokens(string)
 
@@ -366,16 +324,16 @@ class Preprocessor:
 			ident, arg_string, i = get_identifier_name(substring)
 			self.current_position.relative_cmd_argbegin = i
 			end_pos = self.current_position.relative_end
-			self.context_update(self.current_position.begin)
+			self.context.update(self.current_position.begin)
 			new_str = ""
 			position = self.current_position.copy()
 			if ident == "":
 				self.send_error("invalid command name: \"{}\".".format(substring))
 			elif ident in self.commands:
-				self.context_update(self.current_position.cmd_begin, "in command {}".format(ident))
+				self.context.update(self.current_position.cmd_begin, "in command {}".format(ident))
 				command = self.commands[ident]
 				new_str = self.safe_call(command, self, arg_string)
-				self.context_pop()
+				self.context.pop()
 			elif ident in self.blocks:
 				endblock_b, endblock_e = self._find_matching_endblock(ident, string[self.current_position.end:])
 				if endblock_b == -1:
@@ -388,15 +346,15 @@ class Preprocessor:
 				end_pos = self.current_position.relative_endblock_end
 				block = self.blocks[ident]
 
-				self.context_update(self.current_position.cmd_begin, "in {} block".format(ident))
+				self.context.update(self.current_position.cmd_begin, "in block {}".format(ident))
 
 				new_str = self.safe_call(block, self, arg_string, block_content)
 
-				self.context_pop()
+				self.context.pop()
 			else:
 				self.send_error("undefined command or block: \"{}\".".format(ident))
 			self.current_position = position
-			self.context_pop()
+			self.context.pop()
 			string = self.replace_string(
 				self.current_position.relative_begin, end_pos, string, new_str, tokens
 			)
@@ -412,8 +370,6 @@ class Preprocessor:
 		string = self._handle_final_actions(nb_actions, string)
 
 		self._recursion_depth -= 1
-		if empty_context:
-			self._context = []
 
 		return string
 
@@ -421,7 +377,7 @@ class Preprocessor:
 		"""handles final actions: run those at current level
 		and then removes those that shouldn't propagate upwards
 		nb_preserved action is the number of action to keep (inherited from parent)"""
-		self.context_update(self.current_position.from_relative(0), "in final actions")
+		self.context.update(self.current_position.from_relative(0), "in final actions")
 		new_actions = []
 		for i, (level, run_at, action) in enumerate(self._final_actions):
 			# run action
@@ -433,7 +389,7 @@ class Preprocessor:
 			elif bool(run_at & RunActionAt.STRICT_PARENT_LEVELS):
 				new_actions.append((level - 1, run_at, action))
 		self._final_actions = new_actions
-		self.context_pop()
+		self.context.pop()
 		return string
 
 	def _runs_at_current_level(self: "Preprocessor", level: int, run_at: RunActionAt) -> bool:
@@ -454,10 +410,3 @@ class Preprocessor:
 	) -> None:
 		"""adds a final action at the current level"""
 		self._final_actions.append((self._recursion_depth, run_at, action))
-
-	def get_context(self: "Preprocessor") -> Context:
-		"""returns the latest context,
-		raises EmptyContextStack if no such context exists"""
-		if len(self._context) != 0:
-			return self._context[-1][0]
-		raise EmptyContextStack

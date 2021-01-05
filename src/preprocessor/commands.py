@@ -3,6 +3,7 @@ import argparse
 import re
 from datetime import datetime
 
+from .context import FileDescriptor
 from .defs import *
 from .preprocessor import Preprocessor
 
@@ -40,13 +41,15 @@ def cmd_file(p: Preprocessor, args: str) -> str:
 	"""the file command - prints the current file name"""
 	if args.strip() != "":
 		p.send_warning("the file command takes no arguments")
-	return p.get_context().file
+	return p.context.get_top().file.filename
 
 def cmd_line(p: Preprocessor, args: str) -> str:
 	"""the line command - prints the current line number"""
 	if args.strip() != "":
 		p.send_warning("the line command takes no arguments")
-	return str(p.get_context().line_number(p.current_position.begin)[0])
+	context = p.context.get_top()
+	pos = context.true_position(p.current_position.begin)
+	return str(context.file.line_number(pos)[0])
 
 # ============================================================
 # def/undef
@@ -123,12 +126,12 @@ def cmd_def(preprocessor: Preprocessor, args_string : str) -> str:
 				repl = arguments.vars[i]
 				string = re.sub(pattern, repl, string, flags=re.MULTILINE)
 
-		p.context_update(
+		p.context.update(
 			p.current_position.cmd_argbegin,
 			'in expansion of defined command {}'.format(ident)
 		)
 		parsed = p.parse(string)
-		p.context_pop()
+		p.context.pop()
 		return parsed
 	defined_command.__doc__ = """Defined command for {}""".format(ident)
 	defined_command.__name__ = """def_cmd_{}""".format(ident)
@@ -235,11 +238,11 @@ def cmd_paste(pre: Preprocessor, args: str) -> str:
 	):
 		pre.send_warning("trying to paste undefined clipboard")
 		return ""
-	context, pos, text = pre.command_vars["clipboard"][clipboard]
+	context, text = pre.command_vars["clipboard"][clipboard]
 	if not arguments.verbatim:
-		pre.context_new(context, pos)
+		pre.context.new(context.file, context.position, context.description)
 		text = pre.parse(text)
-		pre.context_pop()
+		pre.context.pop()
 	return text
 
 
@@ -313,7 +316,7 @@ def cmd_include(p: Preprocessor, args: str) -> str:
 	except Exception:
 		p.send_error('can\'t open file "{}"'.format(arguments.file_path))
 	if not arguments.verbatim:
-		p.context_new(Context(arguments.file_path, contents, "in included file"), 0)
+		p.context.new(FileDescriptor(arguments.file_path, contents), 0, "in included file")
 		contents = p.parse(contents)
-		p.context_pop()
+		p.context.pop()
 	return contents

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from os import remove
 
-from preprocessor import Context, Preprocessor  # type: ignore
+from preprocessor import FileDescriptor, Preprocessor  # type: ignore
 
 
 class TestCommands:
@@ -13,9 +13,9 @@ class TestCommands:
 		for i, x in enumerate(test):
 			print("============= test {} ==============".format(i))
 			in_str, out_str = x
-			self.pre.context_new(Context(self.file_name, in_str), 0)
+			self.pre.context.new(FileDescriptor("my_file", in_str), 0)
 			assert self.pre.parse(in_str) == out_str
-			self.pre.context_pop()
+			self.pre.context.pop()
 
 	def test_commands(self):
 		test = [

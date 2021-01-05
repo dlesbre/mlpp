@@ -1,22 +1,14 @@
 # -*- coding: utf-8 -*-
-from preprocessor import (Context, Preprocessor, TokenMatch,  # type: ignore
-                          get_identifier_name)
+from preprocessor import (FileDescriptor, Preprocessor,  # type: ignore
+                          TokenMatch, get_identifier_name)
 
 
 def test_context():
 	s = """This is a string
 With line breaks
 and some unispired text"""
-	a = Context("", s)
+	a = FileDescriptor("", s)
 	assert a._line_breaks == [16, 33]
-	line, char = a.line_number(s.find("some"))
-	assert line == 3
-	assert char == 5
-	line, char = a.line_number(s.find("line"))
-	assert line == 2
-	assert char == 6
-	a.add_dilatation(s.find("line"), 6)
-	s = s.replace("line", "longerline")
 	line, char = a.line_number(s.find("some"))
 	assert line == 3
 	assert char == 5

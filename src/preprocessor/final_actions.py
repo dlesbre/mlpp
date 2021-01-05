@@ -140,9 +140,9 @@ def cmd_replace(p: Preprocessor, args: str) -> str:
 		try:
 			return re.sub(pattern, repl, string, count=count, flags = flags)
 		except re.error as err:
-			p.context_update(pos)
+			p.context.update(pos)
 			p.send_error("replace regex error: {}".format(err.msg))
-			p.context_pop()
+			p.context.pop()
 			return ""
 	fnl_replace.__name__ = "fnl_replace_lambda"
 	fnl_replace.__doc__ = "final action for replace {}".format(args)

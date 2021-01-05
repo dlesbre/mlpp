@@ -15,9 +15,9 @@ def blck_void(p: Preprocessor, args: str, contents: str) -> str:
 	"""The void block, processes commands inside it but prints nothing"""
 	if args.strip() != "":
 		p.send_warning("the void block takes no arguments")
-	p.context_update(p.current_position.end, "in void block")
+	p.context.update(p.current_position.end, "in void block")
 	contents = p.parse(contents)
-	p.context_pop()
+	p.context.pop()
 	return ""
 
 def blck_block(p: Preprocessor, args: str, contents: str) -> str:
@@ -25,9 +25,9 @@ def blck_block(p: Preprocessor, args: str, contents: str) -> str:
 	declared in this block don't affect the rest of the file"""
 	if args.strip() != "":
 		p.send_warning("the block block takes no arguments")
-	p.context_update(p.current_position.end, "in block block")
+	p.context.update(p.current_position.end, "in block block")
 	contents = p.parse(contents)
-	p.context_pop()
+	p.context.pop()
 	return contents
 
 def blck_verbatim(p: Preprocessor, args: str, contents: str) -> str:
@@ -47,9 +47,9 @@ def blck_repeat(p: Preprocessor, args: str, contents: str) -> str:
 	nb = int(args)
 	if nb <= 0:
 		p.send_error("invalid argument. Usage: repeat [uint > 0]")
-	p.context_update(p.current_position.end, "in block repeat")
+	p.context.update(p.current_position.end, "in block repeat")
 	contents = p.parse(contents)
-	p.context_pop()
+	p.context.pop()
 	return contents * nb
 
 
@@ -72,9 +72,9 @@ def blck_atlabel(p: Preprocessor, args: str, contents: str) -> str:
 	else:
 		p.command_vars["atlabel"] = dict()
 
-	p.context_update(p.current_position.end, "in block atlabel")
+	p.context.update(p.current_position.end, "in block atlabel")
 	p.command_vars["atlabel"][lbl] = p.parse(contents)
-	p.context_pop()
+	p.context.pop()
 	return ""
 
 def fnl_atlabel(pre: Preprocessor, string: str) -> str:
@@ -86,7 +86,6 @@ def fnl_atlabel(pre: Preprocessor, string: str) -> str:
 				pre.send_warning('No matching label for atlabel block "{}"'.format(lbl))
 			else:
 				indexes = pre.labels[lbl]
-				print(lbl, indexes)
 				for index in indexes:
 					string = pre.replace_string(
 						index, index, string, pre.command_vars["atlabel"][lbl], []
@@ -160,9 +159,9 @@ def blck_for(pre: Preprocessor, args: str, contents: str) -> str:
 		defined_value.__name__ = "for_cmd_{}".format(ident)
 		defined_value.__doc__ = "Command defined in for loop: {} = '{}'".format(ident, value)
 		pre.commands[ident] = defined_value
-		pre.context_update(pre.current_position.end, "in for block")
+		pre.context.update(pre.current_position.end, "in for block")
 		result += pre.parse(contents)
-		pre.context_pop()
+		pre.context.pop()
 	return result
 
 
@@ -189,14 +188,13 @@ def blck_cut(pre: Preprocessor, args: str, contents: str) -> str:
 		pre.send_error("invalid argument.\nusage: cut [--pre-render|-p] [<clipboard_name>]")
 	clipboard = arguments.clipboard
 	pos = pre.current_position.end
-	context = pre.get_context().copy()
-	context.desc = "in pasted block"
+	context = pre.context.get_top().copy(pos, "in pasted block")
 	if arguments.pre_render:
-		pre.context_update(pos, "in cut block")
+		pre.context.update(pos, "in cut block")
 		contents = pre.parse(contents)
-		pre.context_pop()
+		pre.context.pop()
 	if "clipboard" not in pre.command_vars:
-		pre.command_vars["clipboard"] = {clipboard: (context, pos, contents)}
+		pre.command_vars["clipboard"] = {clipboard: (context, contents)}
 	else:
-		pre.command_vars["clipboard"][clipboard] = (context, pos, contents)
+		pre.command_vars["clipboard"][clipboard] = (context, contents)
 	return ""
