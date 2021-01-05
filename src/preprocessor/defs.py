@@ -105,12 +105,18 @@ class Position:
 		return new
 
 
-class EmptyContextStack(Exception):
-	pass
+class EmptyContextStack(ValueError):
+	"""Exception raised when context stack
+	is empty"""
 
 
 @enum.unique
 class WarningMode(enum.Enum):
+	"""Preprocessor warning modes:
+	| HIDE -> do nothing
+	| PRINT -> print to stderr
+	| RAISE -> raise python warning
+	| AS_ERROR -> passes to send_error()"""
 	HIDE = 1
 	PRINT = 2
 	RAISE = 3
@@ -119,21 +125,28 @@ class WarningMode(enum.Enum):
 
 @enum.unique
 class TokenMatch(enum.IntEnum):
+	"""Used to represent Open/Closed tokens"""
 	OPEN = 0
 	CLOSE = 1
 
 
 class RunActionAt(enum.IntFlag):
+	"""Used to determine where to queue post actions
+	(at current, sublevels and/or parent levels)"""
 	NO_LEVEL = 0
 	CURRENT_LEVEL = enum.auto()
 	STRICT_SUB_LEVELS = enum.auto()
 	STRICT_PARENT_LEVELS = enum.auto()
+	PARRALLEL_CHILDREN = enum.auto()
 	CURRENT_AND_SUB_LEVELS = CURRENT_LEVEL | STRICT_SUB_LEVELS
 	CURRENT_AND_PARENT_LEVELS = CURRENT_LEVEL | STRICT_PARENT_LEVELS
 	ALL_LEVELS = CURRENT_LEVEL | STRICT_PARENT_LEVELS | STRICT_SUB_LEVELS
 
 
 class Context:
+	"""Context for error tracing
+	store file names, line breaks and dilatation
+	to recover the initial position"""
 
 	file: str = ""
 	desc: str = ""

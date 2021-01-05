@@ -369,7 +369,7 @@ class Preprocessor:
 		tokens: TokenList = self.find_tokens(string)
 
 		# save original length to avoid deleting preexisting actions
-		nb_original_final_actions = len(self._final_actions.copy())
+		nb_actions = len(self._final_actions.copy())
 
 		while len(tokens) > 1:  # needs two tokens to make a pair
 
@@ -431,23 +431,31 @@ class Preprocessor:
 				)
 			)
 
-		# Post actions
-		self.context_update(self.current_position.from_relative(0), "in final actions")
-		ii = 0
-		while ii < len(self._final_actions):
-			level, run_at, action = self._final_actions[ii]
-			if self._runs_at_current_level(level, run_at):
-				string = self.safe_call(action, self, string)
-			if ii >= nb_original_final_actions and not bool(run_at & RunActionAt.STRICT_PARENT_LEVELS):
-				del self._final_actions[ii]
-			else:
-				ii += 1
-		self.context_pop()
+		string = self._handle_final_actions(nb_actions, string)
 
 		self._recursion_depth -= 1
 		if empty_context:
 			self._context = []
 
+		return string
+
+	def _handle_final_actions(self: "Preprocessor", nb_preserved_actions: int, string: str) -> str:
+		"""handles final actions: run those at current level
+		and then removes those that shouldn't propagate upwards
+		nb_preserved action is the number of action to keep (inherited from parent)"""
+		self.context_update(self.current_position.from_relative(0), "in final actions")
+		new_actions = []
+		for i, (level, run_at, action) in enumerate(self._final_actions):
+			# run action
+			if self._runs_at_current_level(level, run_at):
+				string = self.safe_call(action, self, string)
+			# keep relevant action only
+			if i < nb_preserved_actions or bool(run_at & RunActionAt.PARRALLEL_CHILDREN):
+				new_actions.append((level, run_at, action))
+			elif bool(run_at & RunActionAt.STRICT_PARENT_LEVELS):
+				new_actions.append((level - 1, run_at, action))
+		self._final_actions = new_actions
+		self.context_pop()
 		return string
 
 	def _runs_at_current_level(self: "Preprocessor", level: int, run_at: RunActionAt) -> bool:
