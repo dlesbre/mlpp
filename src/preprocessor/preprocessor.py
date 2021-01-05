@@ -298,7 +298,7 @@ class Preprocessor:
 		while tokens and tokens[0][2] == TokenMatch.CLOSE:
 			del tokens[0]
 			if self.warn_unmatch_close:
-				self.send_warning("Unmatch close token")
+				self.send_warning("unmatch closing token \"{}\".".format(self.token_end))
 
 	def context_new(self: "Preprocessor", context: Context, pos: int) -> None:
 		"""Adds a new context. This is used to traceback errors
@@ -326,6 +326,18 @@ class Preprocessor:
 		else:
 			raise EmptyContextStack
 
+	def safe_call(self: "Preprocessor", function, *args, **kwargs) -> str:
+		"""safely calls function (returning string)
+		catches exceptions and warnings"""
+		string = ""
+		try:
+			string = function(*args, **kwargs)
+		except Warning as warn:
+			self.send_warning("internal warning.\n" + str(warn))
+		except Exception as error:
+			self.send_error("internal error.\n" + str(error))
+		return string
+
 	def parse(self: "Preprocessor", string: str) -> str:
 		"""parses the string, calling the command and blocks it contains
 		calls post_actions when parsing is done
@@ -340,7 +352,7 @@ class Preprocessor:
 		# Recursion check
 		self._recursion_depth += 1
 		if self._recursion_depth == self.max_recursion_depth:
-			self.send_error("recursion depth exceeded")
+			self.send_error("recursion depth exceeded.")
 
 		# context init
 		empty_context = False
@@ -377,16 +389,16 @@ class Preprocessor:
 			new_str = ""
 			position = self.current_position.copy()
 			if ident == "":
-				self.send_error("unrecognized command name '{}'".format(substring))
+				self.send_error("invalid command name: \"{}\".".format(substring))
 			elif ident in self.commands:
 				self.context_update(self.current_position.cmd_begin, "in command {}".format(ident))
 				command = self.commands[ident]
-				new_str = command(self, arg_string)
+				new_str = self.safe_call(command, self, arg_string)
 				self.context_pop()
 			elif ident in self.blocks:
 				endblock_b, endblock_e = self.find_matching_endblock(ident, string[self.current_position.end:])
 				if endblock_b == -1:
-					self.send_error('no matching endblock for {} block'.format(ident))
+					self.send_error('no matching endblock for {} block.'.format(ident))
 				self.current_position.endblock_begin = endblock_b + self.current_position.end
 				self.current_position.endblock_end = endblock_e + self.current_position.end
 				block_content = string[
@@ -397,11 +409,11 @@ class Preprocessor:
 
 				self.context_update(self.current_position.cmd_begin, "in {} block".format(ident))
 
-				new_str = block(self, arg_string, block_content)
+				new_str = self.safe_call(block, self, arg_string, block_content)
 
 				self.context_pop()
 			else:
-				self.send_error("command or block not recognized")
+				self.send_error("undefined command or block: \"{}\".".format(ident))
 			self.current_position = position
 			self.context_pop()
 			string = self.replace_string(
@@ -411,7 +423,7 @@ class Preprocessor:
 		# end while
 		if len(tokens) == 1:
 			self.send_error(
-				'lonely token, use "{}begin{}" or "{}end{}" to place it'.format(
+				'Unmatched "{}" token.\nAdd matching "{}" or use "{}begin{}" to place it.'.format(
 					self.token_begin, self.token_end, self.token_begin, self.token_end
 				)
 			)
@@ -422,7 +434,7 @@ class Preprocessor:
 		while ii < len(self._final_actions):
 			level, run_at, action = self._final_actions[ii]
 			if self._runs_at_current_level(level, run_at):
-				string = action(self, string)
+				string = self.safe_call(action, self, string)
 			if ii >= nb_original_final_actions and not bool(run_at & RunActionAt.STRICT_PARENT_LEVELS):
 				del self._final_actions[ii]
 			else:
