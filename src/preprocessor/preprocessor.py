@@ -21,6 +21,7 @@ class Preprocessor:
 	token_ident_end: str = REGEX_IDENTIFIER_END
 	re_flags: int = re.MULTILINE
 	exit_code: int = 2
+	safe_calls: bool = True
 
 	# change to warnings and error to remove ansi sequences
 	warning_str: str = "\033[35mwarning\033[39m"
@@ -329,14 +330,16 @@ class Preprocessor:
 	def safe_call(self: "Preprocessor", function, *args, **kwargs) -> str:
 		"""safely calls function (returning string)
 		catches exceptions and warnings"""
-		string = ""
-		try:
-			string = function(*args, **kwargs)
-		except Warning as warn:
-			self.send_warning("internal warning.\n" + str(warn))
-		except Exception as error:
-			self.send_error("internal error.\n" + str(error))
-		return string
+		if self.safe_calls:
+			string = ""
+			try:
+				string = function(*args, **kwargs)
+			except Warning as warn:
+				self.send_warning("internal warning.\n" + str(warn))
+			except Exception as error:
+				self.send_error("internal error.\n" + str(error))
+			return string
+		return function(*args, **kwargs)
 
 	def parse(self: "Preprocessor", string: str) -> str:
 		"""parses the string, calling the command and blocks it contains
