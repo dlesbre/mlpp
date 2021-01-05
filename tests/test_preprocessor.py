@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-from preprocessor import Context, Preprocessor, TokenMatch  # type: ignore
+from preprocessor import (Context, Preprocessor, TokenMatch,  # type: ignore
+                          get_identifier_name)
 
 
 def test_context():
@@ -41,7 +42,7 @@ class TestPreProcMethods:
 			("    _hidden_12||", ("_hidden_12", "||", 14)),
 		]
 		for test_in, test_out in tests:
-			assert self.pre.get_identifier_name(test_in) == test_out
+			assert get_identifier_name(test_in) == test_out
 
 	def test_find_tokens(self):
 		"""Unit test for Preprovessor.find_tokens"""
@@ -60,7 +61,7 @@ class TestPreProcMethods:
 			]),
 		]
 		for test_in, test_out in tests:
-			assert self.pre.find_tokens(test_in) == test_out
+			assert self.pre._find_tokens(test_in) == test_out
 
 	def test_find_matching_pair(self):
 		"""Unit test for Preprovessor.find_matchin_pair"""
@@ -81,7 +82,7 @@ class TestPreProcMethods:
 			([(0,1, TokenMatch.CLOSE), (1,2, TokenMatch.OPEN)], -1),
 		]
 		for test_in, test_out in tests:
-			assert self.pre.find_matching_pair(test_in) == test_out
+			assert self.pre._find_matching_pair(test_in) == test_out
 
 	def test_find_matching_endblock(self):
 		test = [
@@ -94,7 +95,7 @@ class TestPreProcMethods:
 			("i", "(i) (ei)", (-1,-1)),
 		]
 		for arg0, arg1, rep in test:
-			assert self.pre.find_matching_endblock(arg0, arg1) == rep
+			assert self.pre._find_matching_endblock(arg0, arg1) == rep
 
 	def test_split_args(self):
 		test = [

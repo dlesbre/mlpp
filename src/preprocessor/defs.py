@@ -229,5 +229,21 @@ def process_string(string: str) -> str:
 
 
 class ArgumentParserNoExit(argparse.ArgumentParser):
+	"""subclass of argparse.ArgumentParser which
+	raises an error rather than exiting when parsing fails"""
 	def error(self, message):
 		raise argparse.ArgumentError(None, message)
+
+
+def get_identifier_name(string: str) -> Tuple[str, str, int]:
+	"""finds the first identifier in string:
+	Returns:
+		tuple str, str, int - identifier, rest_of_string, start_of_rest_of_string
+		returns ("","", -1) if None found"""
+	match = re.match(
+		r"\s*({})({}.*$)".format(REGEX_IDENTIFIER, REGEX_IDENTIFIER_END),
+		string, re.DOTALL
+	)
+	if match is None:
+		return ("", "", -1)
+	return match.group(1), match.group(2), match.start(2)

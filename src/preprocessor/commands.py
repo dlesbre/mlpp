@@ -3,8 +3,7 @@ import argparse
 import re
 from datetime import datetime
 
-from .defs import (PREPROCESSOR_VERSION, REGEX_IDENTIFIER_WRAPPED,
-                   ArgumentParserNoExit, Context, process_string)
+from .defs import *
 from .preprocessor import Preprocessor
 
 # ============================================================
@@ -65,7 +64,7 @@ def cmd_def(preprocessor: Preprocessor, args_string : str) -> str:
 		def <ident> " replacement with leading/trailin space  "
 		def <ident>(<ident1>, <ident2>) replacement
 			defines a macro"""
-	ident, text, _ = preprocessor.get_identifier_name(args_string)
+	ident, text, _ = get_identifier_name(args_string)
 	if ident == "":
 		preprocessor.send_error("invalid identifier")
 
@@ -140,7 +139,7 @@ def cmd_undef(preprocessor: Preprocessor, args_string: str) -> str:
 	"""The undef command, removes commands or blocks
 	from preprocessor.commands and preprocessor.blocks
 	usage: undef <command-name>"""
-	ident = preprocessor.get_identifier_name(args_string)[0]
+	ident = get_identifier_name(args_string)[0]
 	if ident == "":
 		preprocessor.send_error("invalid identifier")
 	if ident in preprocessor.commands:

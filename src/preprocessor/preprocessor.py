@@ -17,8 +17,6 @@ class Preprocessor:
 	token_begin: str = "{% "
 	token_end: str = " %}"
 	token_endblock: str = "end"
-	token_ident: str = REGEX_IDENTIFIER
-	token_ident_end: str = REGEX_IDENTIFIER_END
 	re_flags: int = re.MULTILINE
 	exit_code: int = 2
 	safe_calls: bool = True
@@ -153,18 +151,7 @@ class Preprocessor:
 			arg_list.append(args[last_blank:ii].replace("\\ ", " "))
 		return arg_list
 
-	def get_identifier_name(self: "Preprocessor", string: str) -> Tuple[str, str, int]:
-		"""finds the first identifier in string:
-		Returns:
-			tuple str, str, int - identifier, rest_of_string, start_of_rest_of_string
-		  returns ("","", -1) if None found"""
-		match = re.match(r"\s*({})({}.*$)".format(
-			self.token_ident, self.token_ident_end), string, re.DOTALL)
-		if match is None:
-			return ("", "", -1)
-		return match.group(1), match.group(2), match.start(2)
-
-	def find_tokens(self: "Preprocessor", string: str) -> TokenList:
+	def _find_tokens(self: "Preprocessor", string: str) -> TokenList:
 		"""Find all tokens (begin/end) in string
 		Inputs:
 			string: str - the string to search for tokens
@@ -181,7 +168,8 @@ class Preprocessor:
 		tokens.sort(key=lambda x: x[0] + 0.5 * int(x[2]))
 		return tokens
 
-	def find_matching_pair(self: "Preprocessor", tokens: TokenList) -> int:
+	@staticmethod
+	def _find_matching_pair(tokens: TokenList) -> int:
 		"""find the first innermost OPEN CLOSE pair in tokens
 		Inputs:
 		  tokens - list of tuples containing 4 elements
@@ -203,7 +191,7 @@ class Preprocessor:
 				return -1
 		return token_index
 
-	def find_matching_endblock(
+	def _find_matching_endblock(
 		self: "Preprocessor", block_name: str, string: str
 	) -> Tuple[int, int]:
 		"""Finds the matching endblock
@@ -222,7 +210,7 @@ class Preprocessor:
 		)
 		startblock_regex = r"{}\s*{}(?:{}|{})".format(
 			re.escape(self.token_begin), block_name,
-			re.escape(self.token_end), self.token_ident_end
+			re.escape(self.token_end), REGEX_IDENTIFIER_END
 		)
 		pos = 0
 		open_block = 0
@@ -247,16 +235,6 @@ class Preprocessor:
 					pos += match_end.end()
 			match_begin = re.search(startblock_regex, string[pos:], self.re_flags)
 			match_end = re.search(endblock_regex, string[pos:], self.re_flags)
-
-	def add_dilatation(self: "Preprocessor", pos: int, value: int) -> None:
-		"""adds dilatation to tokens, labels and context
-		Inputs:
-			pos - the position relative to start of source
-				(Position.XXX and not Position.relative_XXX)
-			value - the dilatation amount (>0 for adding text, <0 for removing)
-		"""
-
-
 
 	def replace_string(self: "Preprocessor",
 		start: int, end: int, string: str, replacement: str, tokens: TokenList,
@@ -366,7 +344,7 @@ class Preprocessor:
 		else:
 			self.current_position.offset = self._context[-1][1]
 
-		tokens: TokenList = self.find_tokens(string)
+		tokens: TokenList = self._find_tokens(string)
 
 		# save original length to avoid deleting preexisting actions
 		nb_actions = len(self._final_actions.copy())
@@ -374,7 +352,7 @@ class Preprocessor:
 		while len(tokens) > 1:  # needs two tokens to make a pair
 
 			# find innermost (nested pair)
-			token_index = self.find_matching_pair(tokens)
+			token_index = self._find_matching_pair(tokens)
 			if token_index == -1:
 				self.send_error("no matching open/close pair found")
 
@@ -385,7 +363,7 @@ class Preprocessor:
 			substring = string[
 				self.current_position.relative_cmd_begin : self.current_position.relative_cmd_end
 			]
-			ident, arg_string, i = self.get_identifier_name(substring)
+			ident, arg_string, i = get_identifier_name(substring)
 			self.current_position.relative_cmd_argbegin = i
 			end_pos = self.current_position.relative_end
 			self.context_update(self.current_position.begin)
@@ -399,7 +377,7 @@ class Preprocessor:
 				new_str = self.safe_call(command, self, arg_string)
 				self.context_pop()
 			elif ident in self.blocks:
-				endblock_b, endblock_e = self.find_matching_endblock(ident, string[self.current_position.end:])
+				endblock_b, endblock_e = self._find_matching_endblock(ident, string[self.current_position.end:])
 				if endblock_b == -1:
 					self.send_error('no matching endblock for {} block.'.format(ident))
 				self.current_position.endblock_begin = endblock_b + self.current_position.end
