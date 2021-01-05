@@ -19,6 +19,7 @@ Preprocessor.commands["warning"] = cmd_warning
 Preprocessor.commands["version"] = cmd_version
 Preprocessor.commands["file"] = cmd_file
 Preprocessor.commands["line"] = cmd_line
+Preprocessor.commands["paste"] = cmd_paste
 
 Preprocessor.commands["strip_empty_lines"] = cmd_strip_empty_lines
 Preprocessor.commands["strip_leading_whitespace"] = cmd_strip_leading_whitespace
@@ -39,3 +40,4 @@ Preprocessor.blocks["verbatim"] = blck_verbatim
 Preprocessor.blocks["repeat"] = blck_repeat
 Preprocessor.blocks["atlabel"] = blck_atlabel
 Preprocessor.blocks["for"] = blck_for
+Preprocessor.blocks["cut"] = blck_cut

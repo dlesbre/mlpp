@@ -110,8 +110,9 @@ def cmd_replace(p: Preprocessor, args: str) -> str:
 	usage: replace [-r|--regex] [-i|--ignore-case] [-w|--whole-word]
 	               [-c|--count <number>] pattern replacement
 	"""
+	split = p.split_args(args)
 	try:
-		arguments = replace_parser.parse_args(p.split_args(args))
+		arguments = replace_parser.parse_args(split)
 	except argparse.ArgumentError:
 		p.send_error(
 			"invalid argument.\n"

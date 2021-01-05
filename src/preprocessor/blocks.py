@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-
+import argparse
 import re
 from typing import Iterable
 
-from .defs import REGEX_IDENTIFIER, REGEX_INTEGER
+from .defs import REGEX_IDENTIFIER, REGEX_INTEGER, ArgumentParserNoExit
 from .preprocessor import Preprocessor
 
 # ============================================================
@@ -153,7 +153,9 @@ def blck_for(pre: Preprocessor, args: str, contents: str) -> str:
 		def defined_value(pr: Preprocessor, args: str) -> str:
 			"""new command defined in for block"""
 			if args.strip() != "":
-				pr.send_warning("Extra arguments.\nThe command {} defined in for loop takes no arguments".format(ident))
+				pr.send_warning(
+					"Extra arguments.\nThe command {} defined in for loop takes no arguments".format(ident)
+				)
 			return str(value)
 		defined_value.__name__ = "for_cmd_{}".format(ident)
 		defined_value.__doc__ = "Command defined in for loop: {} = '{}'".format(ident, value)
@@ -162,3 +164,39 @@ def blck_for(pre: Preprocessor, args: str, contents: str) -> str:
 		result += pre.parse(contents)
 		pre.context_pop()
 	return result
+
+
+# ============================================================
+# cut block
+# ============================================================
+
+
+cut_parser = ArgumentParserNoExit(prog="cut", add_help=False)
+cut_parser.add_argument("--pre-render", "-p", action="store_true")
+cut_parser.add_argument("clipboard", nargs="?", default="")
+
+def blck_cut(pre: Preprocessor, args: str, contents: str) -> str:
+	"""the cut block.
+	usage: cut [--pre-render|-p] [<clipboard_name>]
+		if --pre-render - renders the block here
+		  (will be rerendered at time of pasting, unless using paste -v|--verbatim)
+		clipboard is a string identifying the clipboard, default is ""
+	"""
+	split = pre.split_args(args)
+	try:
+		arguments = cut_parser.parse_args(split)
+	except argparse.ArgumentError:
+		pre.send_error("invalid argument.\nusage: cut [--pre-render|-p] [<clipboard_name>]")
+	clipboard = arguments.clipboard
+	pos = pre.current_position.end
+	context = pre.get_context().copy()
+	context.desc = "in pasted block"
+	if arguments.pre_render:
+		pre.context_update(pos, "in cut block")
+		contents = pre.parse(contents)
+		pre.context_pop()
+	if "clipboard" not in pre.command_vars:
+		pre.command_vars["clipboard"] = {clipboard: (context, pos, contents)}
+	else:
+		pre.command_vars["clipboard"][clipboard] = (context, pos, contents)
+	return ""

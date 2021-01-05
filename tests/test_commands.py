@@ -100,6 +100,20 @@ class TestCommands:
 		]
 		self.runtests(test)
 
+	def test_cut_paste(self):
+		test = [
+			("{% cut %}hello there!{% endcut %}hello:{% paste %}", "hello:hello there!"),
+			("{% cut a %}content a{% endcut %}{% cut b %}content b{% endcut %}{% paste a %}{% paste b %}",
+			 "content acontent b"),
+			("{% def foo hi %}{% cut %}{% def foo bar1 %}{% endcut %}{% foo %}{% paste %}{% foo %}",
+			 "hibar1"),
+			("{% def foo hi %}{% cut --pre-render %}{% def foo bar1 %}{% endcut %}{% foo %}{% paste %}{% foo %}",
+			 "bar1bar1"),
+			("{% def foo hi %}{% cut %}{% def foo bar1 %}{% endcut %}{% foo %}{% paste --verbatim %}{% foo %}",
+			 "hi{% def foo bar1 %}hi"),
+		]
+		self.runtests(test)
+
 	def test_block(self):
 		test = [
 			("text{% void %}{% def name john %}hello this is a comment{% endvoid %}\n{% name %}", "text\njohn"),

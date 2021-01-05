@@ -101,8 +101,9 @@ def cmd_def(preprocessor: Preprocessor, args_string : str) -> str:
 	def defined_command(p: Preprocessor, args_string: str) -> str:
 		string = text
 		if is_macro:
+			split = p.split_args(args_string)
 			try:
-				arguments = macro_parser.parse_args(p.split_args(args_string))
+				arguments = macro_parser.parse_args(split)
 			except argparse.ArgumentError:
 				p.send_error("invalid argument for macro.\nusage: {} {}".format(ident, " ".join(args)))
 			if len(arguments.vars) != len(args):
@@ -194,6 +195,12 @@ def cmd_end(preprocessor: Preprocessor, args_string: str) -> str:
 	else:
 		return preprocessor.token_begin + "end " + str(level-1) + preprocessor.token_end
 
+
+# ============================================================
+# label/paste
+# ============================================================
+
+
 def cmd_label(preprocessor: Preprocessor, arg_string: str) -> str:
 	"""the label command
 	usage: label label_name
@@ -208,6 +215,35 @@ def cmd_label(preprocessor: Preprocessor, arg_string: str) -> str:
 	else:
 		preprocessor.labels[lbl] = [preprocessor.current_position.begin]
 	return ""
+
+
+paste_parser = ArgumentParserNoExit(prog="cut", add_help=False)
+paste_parser.add_argument("--verbatim", "-v", action="store_true")
+paste_parser.add_argument("clipboard", nargs="?", default="")
+
+def cmd_paste(pre: Preprocessor, args: str) -> str:
+	"""the paste command
+	usage: paste [-v|--verbatim] [<clipboard_name>]"""
+	split = pre.split_args(args)
+	try:
+		arguments = paste_parser.parse_args(split)
+	except argparse.ArgumentError:
+		pre.send_error("invalid argument.\nusage: paste [-v|--verbatim] [<clipboard_name>]")
+	clipboard = arguments.clipboard
+	if (
+		("clipboard" not in pre.command_vars)
+		or (clipboard not in pre.command_vars["clipboard"])
+	):
+		pre.send_warning("trying to paste undefined clipboard")
+		return ""
+	context, pos, text = pre.command_vars["clipboard"][clipboard]
+	if not arguments.verbatim:
+		pre.context_new(context, pos)
+		text = pre.parse(text)
+		pre.context_pop()
+	return text
+
+
 
 def cmd_date(_: Preprocessor, args: str) -> str:
 	"""the date command, prints the current date.
@@ -263,8 +299,9 @@ def cmd_include(p: Preprocessor, args: str) -> str:
 	usage: include [-v|--verbatim] file_path
 	  places the contents of the file at file_path
 		parse them by default, doesn't parse when verbatim is set"""
+	split = p.split_args(args)
 	try:
-		arguments = include_parser.parse_args(p.split_args(args))
+		arguments = include_parser.parse_args(split)
 	except argparse.ArgumentError:
 		p.send_error("invalid argument.\nusage: include [-v|--verbatim] file_path")
 	try:
