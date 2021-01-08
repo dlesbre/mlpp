@@ -5,6 +5,7 @@ from typing import Any, Callable, Dict, List, Tuple
 
 from .context import ContextStack, FileDescriptor
 from .defs import *
+from .labels import LabelStack
 
 TokenList = List[Tuple[int, int, TokenMatch]]
 TypeCommand = Callable[["Preprocessor", str], str]
@@ -36,14 +37,14 @@ class Preprocessor:
 	warn_unmatch_close: bool = False
 
 	# private attributes
-	_recursion_depth: int = 0
+	_recursion_depth: int
 
 	# commands and blocks
 	commands: Dict[str, TypeCommand] = dict()
 	blocks: Dict[str, TypeBlock] = dict()
 	_final_actions: List[Tuple[int, RunActionAt, TypeFinalAction]] = []
-	labels: Dict[str, List[int]] = dict()
-	context: ContextStack = ContextStack()
+	labels: LabelStack
+	context: ContextStack
 
 
 	# usefull variables
@@ -56,6 +57,8 @@ class Preprocessor:
 		self._final_actions = Preprocessor._final_actions.copy()
 		self.command_vars = Preprocessor.command_vars.copy()
 		self.context = ContextStack()
+		self.labels = LabelStack()
+		self._recursion_depth = -1
 
 	def _print_stderr_msg(self: "Preprocessor", desc: str, msg: str) -> None:
 		"""Pretty printing to stderr using self._context
@@ -227,6 +230,11 @@ class Preprocessor:
 	) -> str:
 		"""replaces string[start:end] with replacement
 		also add offset to token requiring them
+		Inputs:
+			start, end - indexes of the string to replace (relative to start of string)
+			string - the string in which to replace
+			replacement - the replacement string to place between start and end
+			tokens - list of tokens to add dilation
 		Returns:
 			str = string[:start] + replacement + string[end:]
 		Effect:
@@ -248,16 +256,14 @@ class Preprocessor:
 					)
 				i += 1
 		self.context.add_dilatation(start, dilat)
-		non_rel_end = self.current_position.from_relative(end)
-		for key in self.labels:
-			index_list = self.labels[key]
-			for i in range(len(index_list)):
-				if index_list[i] >= non_rel_end:
-					index_list[i] += dilat
-
+		self.labels.dilate_level(self._recursion_depth, end, dilat)
+		# only remove level if it wasn't explicitly removed
+		print("label height ", self.labels.height, self._recursion_depth)
+		if self.labels.height > self._recursion_depth + 1:
+			self.labels.pop_level(start)
 		return string[:start] + replacement + string[end:]
 
-	def remove_leading_close_tokens(self: "Preprocessor", tokens: TokenList) -> None:
+	def _remove_leading_close_tokens(self: "Preprocessor", tokens: TokenList) -> None:
 		"""removes leading close tokens from tokens
 		if self.warn_unmatch_close is true, issues a warning"""
 		while tokens and tokens[0][2] == TokenMatch.CLOSE:
@@ -294,13 +300,16 @@ class Preprocessor:
 		self._recursion_depth += 1
 		if self._recursion_depth == self.max_recursion_depth:
 			self.send_error("recursion depth exceeded.")
-
+		# add label level if none present
+		print(self.labels.height, self._recursion_depth)
+		if self.labels.height <= self._recursion_depth:
+			self.labels.new_level()
 		# context init
 		if self.context.is_empty():
 			self.context.new(FileDescriptor("NO FILE", ""), 0)
 			self.current_position.offset = 0
 		else:
-			self.current_position.offset = self.context.get_top().position
+			self.current_position.offset = self.context.top.position
 
 		tokens: TokenList = self._find_tokens(string)
 
@@ -358,7 +367,7 @@ class Preprocessor:
 			string = self.replace_string(
 				self.current_position.relative_begin, end_pos, string, new_str, tokens
 			)
-			self.remove_leading_close_tokens(tokens)
+			self._remove_leading_close_tokens(tokens)
 		# end while
 		if len(tokens) == 1:
 			self.send_error(
@@ -370,7 +379,8 @@ class Preprocessor:
 		string = self._handle_final_actions(nb_actions, string)
 
 		self._recursion_depth -= 1
-
+		if self._recursion_depth == -1:
+			self.labels = LabelStack()
 		return string
 
 	def _handle_final_actions(self: "Preprocessor", nb_preserved_actions: int, string: str) -> str:
@@ -403,7 +413,7 @@ class Preprocessor:
 		action: TypeFinalAction, run_at: RunActionAt = RunActionAt.CURRENT_LEVEL
 	) -> None:
 		"""adds a final action to the base class, will be a part of all new objects"""
-		Preprocessor._final_actions.append((1, run_at, action))
+		Preprocessor._final_actions.append((0, run_at, action))
 
 	def add_finalaction(self: "Preprocessor", action: TypeFinalAction,
 		run_at: RunActionAt = RunActionAt.CURRENT_LEVEL

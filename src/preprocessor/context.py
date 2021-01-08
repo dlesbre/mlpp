@@ -125,7 +125,8 @@ class ContextStack:
 		"""initializes a new context stack"""
 		self._stack = stack
 
-	def get_top(self: "ContextStack") -> ContextElement:
+	@property
+	def top(self: "ContextStack") -> ContextElement:
 		"""returns the top element
 		raises EmptyContextStack if empty"""
 		if self._stack:
@@ -143,7 +144,7 @@ class ContextStack:
 		"""adds a new context element based on the previous one on top of the stack
 		pos: position relative to start of file
 		desc: optional string description"""
-		self._stack.append(self.get_top().copy(pos, desc))
+		self._stack.append(self.top.copy(pos, desc))
 
 	def pop(self: "ContextStack") -> None:
 		"""removes the topmost Context from the stack"""
@@ -157,7 +158,7 @@ class ContextStack:
 		It indicates that positions after pos are increased/decreased by value
 		Ex when changing "bar foo bar" to "bar newfoo bar"
 		  add a dilatation (pos = 4, value = len("newfoo") - len("foo"))"""
-		self.get_top().add_dilatation(pos, value)
+		self.top.add_dilatation(pos, value)
 
 	def trace(self: "ContextStack") -> str:
 		"""Returns a string trace for error solving.
@@ -175,7 +176,7 @@ class ContextStack:
 					elem.file.filename, line, char, elem.description
 				)
 		if self._stack:
-			elem = self.get_top()
+			elem = self.top
 			line, char = elem.file.line_number(elem.true_position(elem.position))
 			trace += "{}:{}:{}:".format(elem.file.filename, line, char)
 		else:

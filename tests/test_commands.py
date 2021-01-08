@@ -119,12 +119,12 @@ class TestCommands:
 			("text{% void %}{% def name john %}hello this is a comment{% endvoid %}\n{% name %}", "text\njohn"),
 			("{% verbatim %}{% hello %}{% endverbatim %}", "{% hello %}"),
 			("{% repeat 5 %}yo{% endrepeat %}", "yoyoyoyoyo"),
-			#("{% label foo %}lala{% atlabel foo %}bar{% endatlabel %}yoyo{% label foo %}oups", "barlalayoyobaroups"),
-			#("{% atlabel yo %}bonjour{% endatlabel %}{% label yo %}", "bonjour"),
-			#("{% atlabel yo %}bjr{% endatlabel %}{% label yo %}..{% label yo %}", "bjr..bjr"),
-			#("{% atlabel yo %}bjrst{% endatlabel %}{% block %}hi{% label yo %}yy{% endblock %}", "hibjrstyy"),
-			#("{% atlabel yo %}bonjour{% endatlabel %}{% label yo %}***\n\n{% block %}nested:{% label yo %}{% endblock %}\n{% repeat 2 %}{% label yo %}{% endrepeat %}***{% label yo %}",
-			# "bonjour***\n\nnested:bonjour\nbonjour***bonjour"
-			#)
+			("{% label foo %}lala{% atlabel foo %}bar{% endatlabel %}yoyo{% label foo %}oups", "barlalayoyobaroups"),
+			("{% atlabel yo %}bonjour{% endatlabel %}{% label yo %}", "bonjour"),
+			("{% atlabel yo %}bjr{% endatlabel %}{% label yo %}..{% label yo %}", "bjr..bjr"),
+			("{% atlabel yo %}bjrst{% endatlabel %}{% block %}hi{% label yo %}yy{% endblock %}", "hibjrstyy"),
+			("{% atlabel yo %}bonjour{% endatlabel %}{% label yo %}***\n\n{% block %}nested:{% label yo %}{% endblock %}\n{% repeat 2 %}{% label yo %}{% endrepeat %}***{% label yo %}",
+			 "bonjour***\n\nnested:bonjour\nbonjour***bonjour"
+			)
 		]
 		self.runtests(test)

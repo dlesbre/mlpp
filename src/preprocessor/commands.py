@@ -41,13 +41,13 @@ def cmd_file(p: Preprocessor, args: str) -> str:
 	"""the file command - prints the current file name"""
 	if args.strip() != "":
 		p.send_warning("the file command takes no arguments")
-	return p.context.get_top().file.filename
+	return p.context.top.file.filename
 
 def cmd_line(p: Preprocessor, args: str) -> str:
 	"""the line command - prints the current line number"""
 	if args.strip() != "":
 		p.send_warning("the line command takes no arguments")
-	context = p.context.get_top()
+	context = p.context.top
 	pos = context.true_position(p.current_position.begin)
 	return str(context.file.line_number(pos)[0])
 
@@ -212,10 +212,7 @@ def cmd_label(preprocessor: Preprocessor, arg_string: str) -> str:
 	lbl = arg_string.strip()
 	if lbl == "":
 		preprocessor.send_error("empty label name")
-	if lbl in preprocessor.labels:
-		preprocessor.labels[lbl].append(preprocessor.current_position.begin)
-	else:
-		preprocessor.labels[lbl] = [preprocessor.current_position.begin]
+	preprocessor.labels.add_label(lbl, preprocessor.current_position.relative_begin)
 	return ""
 
 

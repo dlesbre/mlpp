@@ -79,18 +79,20 @@ def blck_atlabel(p: Preprocessor, args: str, contents: str) -> str:
 
 def fnl_atlabel(pre: Preprocessor, string: str) -> str:
 	"""places atlabel blocks at all matching labels"""
+	print("atlabel called", string, pre.labels._stack, pre._recursion_depth)
 	if "atlabel" in pre.command_vars:
 		deletions = []
 		for lbl in pre.command_vars["atlabel"]:
-			if not lbl in pre.labels:
+			print("  parsing ", lbl)
+			nb_labels = len(pre.labels.get_label(lbl))
+			if nb_labels == 0:
 				pre.send_warning('No matching label for atlabel block "{}"'.format(lbl))
-			else:
-				indexes = pre.labels[lbl]
-				for index in indexes:
-					string = pre.replace_string(
-						index, index, string, pre.command_vars["atlabel"][lbl], []
-					)
-				del pre.labels[lbl]
+			for i in range(nb_labels):
+				index = pre.labels.get_label(lbl)[i]
+				string = pre.replace_string(
+					index, index, string, pre.command_vars["atlabel"][lbl], []
+				)
+				print("    ", pre.labels._stack)
 			deletions.append(lbl)
 		for lbl in deletions:
 			del pre.command_vars["atlabel"][lbl]
@@ -188,7 +190,7 @@ def blck_cut(pre: Preprocessor, args: str, contents: str) -> str:
 		pre.send_error("invalid argument.\nusage: cut [--pre-render|-p] [<clipboard_name>]")
 	clipboard = arguments.clipboard
 	pos = pre.current_position.end
-	context = pre.context.get_top().copy(pos, "in pasted block")
+	context = pre.context.top.copy(pos, "in pasted block")
 	if arguments.pre_render:
 		pre.context.update(pos, "in cut block")
 		contents = pre.parse(contents)
