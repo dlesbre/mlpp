@@ -3,7 +3,8 @@ import argparse
 import re
 from typing import Iterable
 
-from .defs import REGEX_IDENTIFIER, REGEX_INTEGER, ArgumentParserNoExit
+from .defs import (REGEX_IDENTIFIER, REGEX_INTEGER, ArgumentParserNoExit,
+                   to_integer)
 from .preprocessor import Preprocessor
 
 # ============================================================
@@ -103,9 +104,6 @@ def fnl_atlabel(pre: Preprocessor, string: str) -> str:
 # for block
 # ============================================================
 
-def to_int(string: str) -> int:
-	"""convert a string matching REGEX_INTEGER to int"""
-	return int(string.replace(" ", "").replace("_", ""))
 
 def blck_for(pre: Preprocessor, args: str, contents: str) -> str:
 	"""The for block, simple for loop
@@ -141,11 +139,11 @@ def blck_for(pre: Preprocessor, args: str, contents: str) -> str:
 		groups = match.groups()
 		start = 0
 		step = 1
-		stop = to_int(groups[1])
+		stop = to_integer(groups[1])
 		if groups[0] is not None:
-			start = to_int(groups[0])
+			start = to_integer(groups[0])
 			if groups[2] is not None:
-				step = to_int(groups[2])
+				step = to_integer(groups[2])
 		iterator = range(start, stop, step)
 	else:
 		iterator = pre.split_args(args)

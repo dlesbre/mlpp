@@ -90,13 +90,14 @@ class TestCommands:
 		]
 		self.runtests(test)
 
-	def test_for(self):
+	def test_for_deflist(self):
 		test = [
 			("{% for x in range(10) %}{% x %},{% endfor %}", "0,1,2,3,4,5,6,7,8,9,"),
 			("{% for x in range(2,10) %}{% x %},{% endfor %}", "2,3,4,5,6,7,8,9,"),
 			("{% for x in range(2_0,10) %}{% x %},{% endfor %}", ""),
 			("{% for x in range(2_0,10,-1) %}{% x %},{% endfor %}", "20,19,18,17,16,15,14,13,12,11,"),
 			("{% for x in  a\n b c \" def \" %}'{% x %}',{% endfor %}", "'a','b','c',' def ',"),
+			("{% deflist list a b c d %}{% list 0 %}{% list -1 %}", "ad"),
 		]
 		self.runtests(test)
 

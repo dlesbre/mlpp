@@ -9,6 +9,7 @@ from .preprocessor import Preprocessor
 
 Preprocessor.commands["def"] = cmd_def
 Preprocessor.commands["undef"] = cmd_undef
+Preprocessor.commands["deflist"] = cmd_deflist
 Preprocessor.commands["begin"] = cmd_begin
 Preprocessor.commands["end"] = cmd_end
 Preprocessor.commands["label"] = cmd_label

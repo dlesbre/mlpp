@@ -163,3 +163,13 @@ def get_identifier_name(string: str) -> Tuple[str, str, int]:
 	if match is None:
 		return ("", "", -1)
 	return match.group(1), match.group(2), match.start(2)
+
+
+def is_integer(string: str) -> bool:
+	"""returns True if string can safely be converted
+	to a integer with to_integer(string)"""
+	return re.match(REGEX_INTEGER, string.strip()) is not None
+
+def to_integer(string: str) -> int:
+	"""converts string to integer"""
+	return int(string.strip().replace(" ", "").replace("_", ""))

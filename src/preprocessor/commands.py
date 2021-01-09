@@ -153,6 +153,43 @@ def cmd_undef(preprocessor: Preprocessor, args_string: str) -> str:
 		del preprocessor.commands[ident]
 	return ""
 
+def cmd_deflist(preprocessor: Preprocessor, args_string: str) -> str:
+	"""The deflist command, used to define lists
+	usage: deflist <list_name> space separated list "element with spaces"
+		list_name must be a valid identifier
+
+	Defines a new command list_name such that
+		list_name prints the lists
+		list_name n prints the n-th element (n must be a between -lenght+1,length+1)
+	"""
+	ident, text, _ = get_identifier_name(args_string)
+	if ident == "":
+		preprocessor.send_error(
+			"invalid identifier.\ndeflist needs a valid identifier, got \"{}\"".format(args_string)
+		)
+	defined_list = preprocessor.split_args(text)
+	def defined_command(pre: Preprocessor, args: str) -> str:
+		args = args.strip()
+		if is_integer(args):
+			index = to_integer(args)
+			list_len = len(defined_list)
+			if index <= - list_len or index >= list_len:
+				pre.send_error(
+					"invalid index.\nDefined list {} has length {}, can't access element {}.".format(
+						ident, list_len, index
+					)
+				)
+			return defined_list[index]
+		if args == "":
+			return text
+		pre.send_error(
+			"invalid argument for defined list \"{}\".\nusage {} [<number>]".format(
+				args, ident)
+		)
+		return ""
+	preprocessor.commands[ident] = defined_command
+	return ""
+
 
 # ============================================================
 # begin/end
