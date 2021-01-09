@@ -30,9 +30,9 @@ class FileDescriptor:
 	- file initial contents
 	- line breaks"""
 
-	filename: str = ""
-	contents: str = ""
-	_line_breaks: List[int] = []
+	filename: str
+	contents: str
+	_line_breaks: List[int]
 
 	def __init__(self: "FileDescriptor", filename: str, contents: str) -> None:
 		"""initialises the FileDescriptor element and computes linebreaks"""
@@ -69,11 +69,11 @@ class ContextElement:
 	- dilatations (how are indexes shifted by insertions/deletions)
 	It is used to recover the initial position for error traceback"""
 
-	file: FileDescriptor = FileDescriptor("", "")
-	description: str = ""
-	position: int = 0
-	is_new: bool = True
-	_dilatations: List[Tuple[int, int]] = []
+	file: FileDescriptor
+	description: str
+	position: int
+	is_new: bool
+	_dilatations: List[Tuple[int, int]]
 
 	def __init__(
 		self: "ContextElement", file: FileDescriptor, desc: str, pos: int, is_new: bool = True
@@ -119,7 +119,7 @@ class EmptyContextStack(ValueError):
 
 class ContextStack:
 	"""Class used to store context information to print in traceback"""
-	_stack: List[ContextElement] = []
+	_stack: List[ContextElement]
 
 	def __init__(self: "ContextStack", stack: List[ContextElement] = []) -> None:
 		"""initializes a new context stack"""
@@ -129,10 +129,9 @@ class ContextStack:
 	def top(self: "ContextStack") -> ContextElement:
 		"""returns the top element
 		raises EmptyContextStack if empty"""
-		if self._stack:
+		if not self.is_empty():
 			return self._stack[-1]
-		else:
-			raise EmptyContextStack
+		raise EmptyContextStack
 
 	def new(self: "ContextStack", file: FileDescriptor, pos: int, desc: str = "") -> None:
 		"""adds context relative to a new file on top of the stack
@@ -185,4 +184,5 @@ class ContextStack:
 
 
 	def is_empty(self: "ContextStack") -> bool:
+		"""returns True if stack is empty, False otherwise"""
 		return self._stack == []

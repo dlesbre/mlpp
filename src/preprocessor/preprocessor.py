@@ -38,24 +38,25 @@ class Preprocessor:
 
 	# private attributes
 	_recursion_depth: int
+	_final_actions: List[Tuple[int, RunActionAt, TypeFinalAction]] = []
 
 	# commands and blocks
 	commands: Dict[str, TypeCommand] = dict()
 	blocks: Dict[str, TypeBlock] = dict()
-	_final_actions: List[Tuple[int, RunActionAt, TypeFinalAction]] = []
+	command_vars: Dict[str, Any] = dict()
+
+	# useful variables
 	labels: LabelStack
 	context: ContextStack
+	current_position: Position
 
-
-	# usefull variables
-	current_position: Position = Position()
-	command_vars: Dict[str, Any] = dict()
 
 	def __init__(self):
 		self.commands = Preprocessor.commands.copy()
 		self.blocks = Preprocessor.blocks.copy()
 		self._final_actions = Preprocessor._final_actions.copy()
 		self.command_vars = Preprocessor.command_vars.copy()
+		self.current_position = Position()
 		self.context = ContextStack()
 		self.labels = LabelStack()
 		self._recursion_depth = -1
