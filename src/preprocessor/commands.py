@@ -313,9 +313,10 @@ def cmd_date(_: Preprocessor, args: str) -> str:
 		args = args.replace(val, placeholder)
 	for _ignore, placeholder, repl in replacements:
 		args = args.replace(placeholder, repl)
-	x = datetime.now()
-	return args.format(year = x.year, month = x.month, day = x.day,
-		hour = x.hour, minute = x.minute, second = x.second, year2 = x.year % 100
+	date = datetime.now()
+	return args.format(year = date.year, month = date.month, day = date.day,
+		hour = date.hour, minute = date.minute, second = date.second,
+		year2 = date.year % 100
 	)
 
 
