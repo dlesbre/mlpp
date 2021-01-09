@@ -11,44 +11,44 @@ from .preprocessor import Preprocessor
 # simple commands
 # ============================================================
 
-def cmd_error(p: Preprocessor, args: str) -> str:
+def cmd_error(preprocessor: Preprocessor, args: str) -> str:
 	"""the error command - raises an error
 	usage: error [msg]"""
 	args = args.strip()
 	if args == "":
-		p.send_error("raised by error command")
+		preprocessor.send_error("raised by error command.")
 	else:
-		p.send_error("raised by error command: {}".format(args))
+		preprocessor.send_error("raised by error command.\n{}".format(args))
 	return ""
 
-def cmd_warning(p: Preprocessor, args: str) -> str:
+def cmd_warning(preprocessor: Preprocessor, args: str) -> str:
 	"""the warning command - raises a warning
 	usage: warning [msg]"""
 	args = args.strip()
 	if args == "":
-		p.send_warning("raised by warning command")
+		preprocessor.send_warning("raised by warning command.")
 	else:
-		p.send_warning("raised by warning command: {}".format(args))
+		preprocessor.send_warning("raised by warning command.\n{}".format(args))
 	return ""
 
-def cmd_version(p: Preprocessor, args: str) -> str:
+def cmd_version(preprocessor: Preprocessor, args: str) -> str:
 	"""the version command - prints the preprocessor version"""
 	if args.strip() != "":
-		p.send_warning("the version command takes no arguments")
+		preprocessor.send_warning("the version command takes no arguments")
 	return PREPROCESSOR_VERSION
 
-def cmd_file(p: Preprocessor, args: str) -> str:
+def cmd_file(preprocessor: Preprocessor, args: str) -> str:
 	"""the file command - prints the current file name"""
 	if args.strip() != "":
-		p.send_warning("the file command takes no arguments")
-	return p.context.top.file.filename
+		preprocessor.send_warning("the file command takes no arguments")
+	return preprocessor.context.top.file.filename
 
-def cmd_line(p: Preprocessor, args: str) -> str:
+def cmd_line(preprocessor: Preprocessor, args: str) -> str:
 	"""the line command - prints the current line number"""
 	if args.strip() != "":
-		p.send_warning("the line command takes no arguments")
-	context = p.context.top
-	pos = context.true_position(p.current_position.begin)
+		preprocessor.send_warning("the line command takes no arguments")
+	context = preprocessor.context.top
+	pos = context.true_position(preprocessor.current_position.begin)
 	return str(context.file.line_number(pos)[0])
 
 # ============================================================
@@ -69,7 +69,9 @@ def cmd_def(preprocessor: Preprocessor, args_string : str) -> str:
 			defines a macro"""
 	ident, text, _ = get_identifier_name(args_string)
 	if ident == "":
-		preprocessor.send_error("invalid identifier")
+		preprocessor.send_error(
+			"invalid identifier.\ndef needs a valid identifier, got \"{}\"".format(args_string)
+		)
 
 	# removed trailing\leading whitespace
 	text = text.strip()
@@ -100,16 +102,16 @@ def cmd_def(preprocessor: Preprocessor, args_string : str) -> str:
 	if len(text) >= 2 and text[0] == '"' and text[-1] == '"':
 		text = process_string(text[1:-1])
 
-	def defined_command(p: Preprocessor, args_string: str) -> str:
+	def defined_command(pre: Preprocessor, args_string: str) -> str:
 		string = text
 		if is_macro:
-			split = p.split_args(args_string)
+			split = pre.split_args(args_string)
 			try:
 				arguments = macro_parser.parse_args(split)
 			except argparse.ArgumentError:
-				p.send_error("invalid argument for macro.\nusage: {} {}".format(ident, " ".join(args)))
+				pre.send_error("invalid argument for macro.\nusage: {} {}".format(ident, " ".join(args)))
 			if len(arguments.vars) != len(args):
-				p.send_error((
+				pre.send_error((
 					"invalid number of arguments for macro (expected {} got {}).\n"
 					"usage: {} {}").format(
 						len(args), len(arguments.vars), ident, " ".join(args)
@@ -126,12 +128,12 @@ def cmd_def(preprocessor: Preprocessor, args_string : str) -> str:
 				repl = arguments.vars[i]
 				string = re.sub(pattern, repl, string, flags=re.MULTILINE)
 
-		p.context.update(
-			p.current_position.cmd_argbegin,
+		pre.context.update(
+			pre.current_position.cmd_argbegin,
 			'in expansion of defined command {}'.format(ident)
 		)
-		parsed = p.parse(string)
-		p.context.pop()
+		parsed = pre.parse(string)
+		pre.context.pop()
 		return parsed
 	defined_command.__doc__ = """Defined command for {}""".format(ident)
 	defined_command.__name__ = """def_cmd_{}""".format(ident)
@@ -293,27 +295,27 @@ include_parser = ArgumentParserNoExit(
 include_parser.add_argument("--verbatim", "-v", action="store_true")
 include_parser.add_argument("file_path")
 
-def cmd_include(p: Preprocessor, args: str) -> str:
+def cmd_include(preprocessor: Preprocessor, args: str) -> str:
 	"""the include command
 	usage: include [-v|--verbatim] file_path
 	  places the contents of the file at file_path
 		parse them by default, doesn't parse when verbatim is set"""
-	split = p.split_args(args)
+	split = preprocessor.split_args(args)
 	try:
 		arguments = include_parser.parse_args(split)
 	except argparse.ArgumentError:
-		p.send_error("invalid argument.\nusage: include [-v|--verbatim] file_path")
+		preprocessor.send_error("invalid argument.\nusage: include [-v|--verbatim] file_path")
 	try:
 		with open(arguments.file_path, "r") as file:
 			contents = file.read()
 	except FileNotFoundError:
-		p.send_error('file not found "{}"'.format(arguments.file_path))
+		preprocessor.send_error('file not found "{}"'.format(arguments.file_path))
 	except PermissionError:
-		p.send_error('can\'t open file "{}", permission denied'.format(arguments.file_path))
+		preprocessor.send_error('can\'t open file "{}", permission denied'.format(arguments.file_path))
 	except Exception:
-		p.send_error('can\'t open file "{}"'.format(arguments.file_path))
+		preprocessor.send_error('can\'t open file "{}"'.format(arguments.file_path))
 	if not arguments.verbatim:
-		p.context.new(FileDescriptor(arguments.file_path, contents), 0, "in included file")
-		contents = p.parse(contents)
-		p.context.pop()
+		preprocessor.context.new(FileDescriptor(arguments.file_path, contents), 0, "in included file")
+		contents = preprocessor.parse(contents)
+		preprocessor.context.pop()
 	return contents
