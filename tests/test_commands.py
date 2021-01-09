@@ -98,6 +98,9 @@ class TestCommands:
 			("{% for x in range(2_0,10,-1) %}{% x %},{% endfor %}", "20,19,18,17,16,15,14,13,12,11,"),
 			("{% for x in  a\n b c \" def \" %}'{% x %}',{% endfor %}", "'a','b','c',' def ',"),
 			("{% deflist list a b c d %}{% list 0 %}{% list -1 %}", "ad"),
+			("{% deflist list a b c d %}{% deflist list2 1 2 3 4 %}"
+			 "{% for x in range(4) %}{% list {% x %} %}{% list2 {% x %} %}{% endfor %}",
+			 "a1b2c3d4"),
 		]
 		self.runtests(test)
 
