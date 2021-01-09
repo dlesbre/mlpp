@@ -192,7 +192,7 @@ def cmd_deflist(preprocessor: Preprocessor, args_string: str) -> str:
 
 
 # ============================================================
-# begin/end
+# begin/end/call
 # ============================================================
 
 
@@ -235,6 +235,11 @@ def cmd_end(preprocessor: Preprocessor, args_string: str) -> str:
 		return preprocessor.token_end
 	else:
 		return preprocessor.token_begin + "end " + str(level-1) + preprocessor.token_end
+
+def cmd_call(preprocessor: Preprocessor, args_string: str) -> str:
+	"""The call command: used to print begin and end tokens
+	usage: {% call foo bar ... %} -> {% foo bar ... %}"""
+	return preprocessor.token_begin + args_string + preprocessor.token_end
 
 
 # ============================================================
