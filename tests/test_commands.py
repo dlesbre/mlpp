@@ -8,13 +8,13 @@ from preprocessor import (FileDescriptor, Preprocessor,  # type: ignore
 class TestCommands:
 
 	pre = Preprocessor()
-	file_name = "my_file"
+	file_name = "test_commands"
 
 	def runtests(self, test):
 		for i, x in enumerate(test):
 			print("============= test {} ==============".format(i))
 			in_str, out_str = x
-			self.pre.context.new(FileDescriptor("my_file", in_str), 0)
+			self.pre.context.new(FileDescriptor(self.file_name, in_str), 0)
 			assert self.pre.parse(in_str) == out_str
 			self.pre.context.pop()
 
@@ -77,7 +77,9 @@ class TestCommands:
 		for content, in_str, out_str in test:
 			with open(path, "w") as file:
 				file.write(content)
+			self.pre.context.new(FileDescriptor("test_include", in_str), 0)
 			assert self.pre.parse(in_str) == out_str
+			self.pre.context.pop()
 		remove(path)
 
 	def test_replace(self):

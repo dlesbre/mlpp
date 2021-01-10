@@ -304,9 +304,11 @@ class Preprocessor:
 		if self.labels.height <= self._recursion_depth:
 			self.labels.new_level()
 		# context init
+		empty_context = False
 		if self.context.is_empty():
 			self.context.new(FileDescriptor("NO FILE", ""), 0)
 			self.current_position.offset = 0
+			empty_context = True
 		else:
 			self.current_position.offset = self.context.top.position
 
@@ -380,6 +382,8 @@ class Preprocessor:
 		self._recursion_depth -= 1
 		if self._recursion_depth == -1:
 			self.labels = LabelStack()
+		if empty_context:
+			self.context = ContextStack()
 		return string
 
 	def _handle_final_actions(self: "Preprocessor", nb_preserved_actions: int, string: str) -> str:

@@ -106,7 +106,7 @@ class ContextElement:
 		"""returns a copy of self"""
 		if desc is None:
 			desc = self.description
-		copy = ContextElement(self.file, desc, pos)
+		copy = ContextElement(self.file, desc, pos, False)
 		for pos, value in self._dilatations:
 			copy.add_dilatation(pos, value)
 		return copy
