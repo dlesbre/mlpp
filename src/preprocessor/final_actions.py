@@ -104,11 +104,14 @@ replace_parser.add_argument("--whole-word", "-w", action="store_true")
 replace_parser.add_argument("--count", "-c", nargs='?', default=0, type=int)
 replace_parser.add_argument("pattern")
 replace_parser.add_argument("replacement")
+replace_parser.add_argument("text", nargs="?", default=None, action="store")
 
 def cmd_replace(preprocessor: Preprocessor, args: str) -> str:
 	"""the replace command
 	usage: replace [-r|--regex] [-i|--ignore-case] [-w|--whole-word]
-	               [-c|--count <number>] pattern replacement
+	               [-c|--count <number>] pattern replacement [text]
+		if text is present, replace in text and print
+		else queue final action to replace in current block
 	"""
 	split = preprocessor.split_args(args)
 	try:
@@ -116,8 +119,8 @@ def cmd_replace(preprocessor: Preprocessor, args: str) -> str:
 	except argparse.ArgumentError:
 		preprocessor.send_error(
 			"invalid argument.\n"
-			"usage: replace [-r|--regex] [-i|--ignore-case] [-w|--whole-word]"
-			"               [-c|--count <number>] pattern replacement")
+			"usage: replace [-r|--regex] [-i|--ignore-case] [-w|--whole-word]\n"
+			"               [-c|--count <number>] pattern replacement [text]")
 	flags = re.MULTILINE
 	pattern = arguments.pattern
 	repl = arguments.replacement
@@ -135,7 +138,13 @@ def cmd_replace(preprocessor: Preprocessor, args: str) -> str:
 	if count < 0:
 		preprocessor.send_error("invalid argument.\nthe replace --count argument must be positive")
 	pos = preprocessor.current_position.cmd_begin
-
+	if arguments.text is not None:
+		try:
+			return re.sub(pattern, repl, arguments.text, count=count, flags = flags)
+		except re.error as err:
+			preprocessor.send_error("replace regex error: {}".format(err.msg))
+			return ""
+	# no text, queue post action
 	def fnl_replace(preprocessor: Preprocessor, string: str) -> str:
 		try:
 			return re.sub(pattern, repl, string, count=count, flags = flags)

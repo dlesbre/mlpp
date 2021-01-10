@@ -92,6 +92,7 @@ class TestCommands:
 			("{% replace -w \"foo\" bar %}foo(afoo1foo+foo foo", "bar(afoo1foo+bar bar"),
 			(r'{% replace -r "([a-z]+)" "low(\\1)" %}hello hio', "low(hello) low(hio)"),
 			("{% replace -c 2 foo bar %}foo foo foo foo", "bar bar foo foo"),
+			("{% replace foo bar \"foo yo bafoo\" %}", "bar yo babar"),
 		]
 		self.runtests(test)
 
