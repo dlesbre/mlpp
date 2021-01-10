@@ -72,7 +72,8 @@ class TestCommands:
 			("hello", "bonjour:{% include test.out %}:guten tag", "bonjour:hello:guten tag"),
 			("{% def a b %}", "bonjour:{% include test.out %}:{% a %}", "bonjour::b"),
 			("{% def a b %}{% c %}", "bonjour{% def c d %}:{% include test.out %}:{% a %}", "bonjour:d:b"),
-			("{% def a b %}{% c %}", "bonjour{% def c d %}:{% include -v test.out %}:{% a %}", "bonjour:{% def a b %}{% c %}:b"),
+			("{% def a b %}{% c %}", "bonjour{% def c d %}:{% include -v test.out %}:", "bonjour:{% def a b %}{% c %}:"),
+			("<def a b><c>", "bonjour{% def c d %}:{% include -b < -e > test.out %}:{% a %}", "bonjour:d:b"),
 		]
 		for content, in_str, out_str in test:
 			with open(path, "w") as file:

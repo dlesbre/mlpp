@@ -336,13 +336,17 @@ include_parser = ArgumentParserNoExit(
 )
 
 include_parser.add_argument("--verbatim", "-v", action="store_true")
+include_parser.add_argument("--begin", "-b", nargs="?", default=None)
+include_parser.add_argument("--end", "-e", nargs="?", default=None)
 include_parser.add_argument("file_path")
 
 def cmd_include(preprocessor: Preprocessor, args: str) -> str:
 	"""the include command
-	usage: include [-v|--verbatim] file_path
+	usage: include [-v|--verbatim] [-b|--begin <str>] [-e|--end <str>] file_path
 	  places the contents of the file at file_path
-		parse them by default, doesn't parse when verbatim is set"""
+		--verbatim specifies that the file should not be parsed, it is parsed by default
+		--begin and --end can be used to set different preprocessor tokens
+			for the file being included"""
 	split = preprocessor.split_args(args)
 	try:
 		arguments = include_parser.parse_args(split)
@@ -358,7 +362,15 @@ def cmd_include(preprocessor: Preprocessor, args: str) -> str:
 	except Exception:
 		preprocessor.send_error('can\'t open file "{}"'.format(arguments.file_path))
 	if not arguments.verbatim:
+		begin = preprocessor.token_begin
+		end = preprocessor.token_end
+		if arguments.begin is not None:
+			preprocessor.token_begin = arguments.begin
+		if arguments.end is not None:
+			preprocessor.token_end = arguments.end
 		preprocessor.context.new(FileDescriptor(arguments.file_path, contents), 0, "in included file")
 		contents = preprocessor.parse(contents)
 		preprocessor.context.pop()
+		preprocessor.token_begin = begin
+		preprocessor.token_end = end
 	return contents
