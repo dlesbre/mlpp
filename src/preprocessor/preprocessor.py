@@ -259,7 +259,6 @@ class Preprocessor:
 		self.context.add_dilatation(start, dilat)
 		self.labels.dilate_level(self._recursion_depth, end, dilat)
 		# only remove level if it wasn't explicitly removed
-		print("label height ", self.labels.height, self._recursion_depth)
 		if self.labels.height > self._recursion_depth + 1:
 			self.labels.pop_level(start)
 		return string[:start] + replacement + string[end:]
@@ -302,7 +301,6 @@ class Preprocessor:
 		if self._recursion_depth == self.max_recursion_depth:
 			self.send_error("recursion depth exceeded.")
 		# add label level if none present
-		print(self.labels.height, self._recursion_depth)
 		if self.labels.height <= self._recursion_depth:
 			self.labels.new_level()
 		# context init
@@ -345,7 +343,7 @@ class Preprocessor:
 				new_str = self.safe_call(command, self, arg_string)
 				self.context.pop()
 			elif ident in self.blocks:
-				endblock_b, endblock_e = self._find_matching_endblock(ident, string[self.current_position.end:])
+				endblock_b, endblock_e = self._find_matching_endblock(ident, string[self.current_position.relative_end:])
 				if endblock_b == -1:
 					self.send_error('no matching endblock for {} block.'.format(ident))
 				self.current_position.endblock_begin = endblock_b + self.current_position.end

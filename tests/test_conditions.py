@@ -19,7 +19,7 @@ def test_conditions():
 		(" hello == \thello", True), (" hi == hello", False),
 		(" hello != \thello", False), (" hi != hello", True),
 		(" def label", True), (" def qffqfze", False),
-		(" undef label", False), (" undef qffqfze", True),
+		(" ndef label", False), (" ndef qffqfze", True),
 		("(def label)", True), ("(a == a and b != a)", True),
 	]
 	for string, result in test:

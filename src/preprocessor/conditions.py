@@ -51,7 +51,6 @@ def condition_lexer(string : str) -> List[str]:
 		i += 1
 	if current_lexeme:
 		lexemes.append(current_lexeme)
-	print(lexemes)
 	return lexemes
 
 def find_matching_close_parenthese(tokens: List[str], start_index: int) -> int:
@@ -114,14 +113,13 @@ def simple_condition_evaluator(preproc: Preprocessor, tokens: List[str]) -> bool
 	"""evaluates a string of tokens into a boolean,
 	assumes the string of tokens doesn't contain "and", "or" and "not"
 	"""
-	print("   ", tokens)
 	len_tok = len(tokens)
 	if len_tok == 1:
 		return not(tokens[0] in ["false", "0", ""])
 	if len_tok == 2:
 		if tokens[0] == "def":
 			return tokens[1] in preproc.commands or tokens[1] in preproc.blocks
-		if tokens[0] == "undef":
+		if tokens[0] == "ndef":
 			return not (tokens[1] in preproc.commands or tokens[1] in preproc.blocks)
 	if len_tok == 3:
 		if tokens[1] == "==":
@@ -132,7 +130,7 @@ def simple_condition_evaluator(preproc: Preprocessor, tokens: List[str]) -> bool
 		"invalid condition syntax.\n"
 		"simple conditions are: \n"
 		"  | true | false | 1 | 0 | <string>\n"
-		"  | def <identifier> | undef <identifier>\n"
+		"  | def <identifier> | ndef <identifier>\n"
 		"  | <str> == <str> | <str> != <str>"
 	)
 	return False
@@ -143,7 +141,7 @@ def condition_eval(preproc: Preprocessor, string: str) -> bool:
 
 	simple_condition =
 		| true | false | 1 | 0 | <string>
-		| def <identifier> | undef <identifier>
+		| def <identifier> | ndef <identifier>
 		| <str> == <str> | <str> != <str>
 
 	condition =

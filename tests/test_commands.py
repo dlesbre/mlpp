@@ -136,7 +136,7 @@ class TestCommands:
 		]
 		self.runtests(test)
 
-	def test_if(self):
+	def test_if_find_elif(self):
 		test_match = [
 			("qmldkf", (-1,-1,None)),
 			("abcd{% else %}defg", (4, 14, None)),
@@ -148,3 +148,17 @@ class TestCommands:
 		for string, result in test_match:
 			print("====== TEST ======")
 			assert find_elifs_and_else(self.pre, string) == result
+
+	def test_if(self):
+		test = [
+			("{% if def if %}hello{% endif %}", "hello"),
+			("{% if not def if %}hello{% endif %}", ""),
+			("{% def foo bar %}{% if {% foo %}==bar %}yes{% def foo nn %}{% endif %}{% foo %}", "yesnn"),
+			("{% def foo bar %}{% if {% foo %}!=bar %}yes{% def foo nn %}{% endif %}{% foo %}", "bar"),
+			("{% if ndef if %}hello{% else %}there{% endif %}", "there"),
+			("{% if ndef if %}hello{% elif ndef def %}there{% elif def if %}general{% else %}kenobi{% endif %}", "general"),
+			("\n{% if ndef if %}\n\n{% elif ndef def %}\n\n{% elif def if %}{% line %}\n{% else %}kenobi{% endif %}", "\n6\n"),
+			("\n{% if ndef if %}\n\n{% elif ndef def %}some long test because reasons\n\n{% elif def if %}{% line %}\n{% else %}kenobi{% endif %}", "\n6\n"),
+			("""{% def foo bar %}{% if def foo %}{% if {% foo %}!=bar %}{% def foo si %}{% else %}{% def foo la %}{% endif %}{% else %}no foo{% endif %}{% foo %}""", "la"),
+		]
+		self.runtests(test)

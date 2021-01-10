@@ -222,7 +222,6 @@ def find_elifs_and_else(preproc: Preprocessor, string: str
 	)
 	else_regex = r"\s*else\s*{}".format(re.escape(preproc.token_end))
 	for i, (begin, end, token) in enumerate(tokens):
-		print("token: ", begin, end, token, depth)
 		if token == TokenMatch.OPEN:
 			if re.match(if_regex, string[end:], preproc.re_flags) is not None:
 				depth += 1
@@ -231,7 +230,6 @@ def find_elifs_and_else(preproc: Preprocessor, string: str
 			elif depth == 0:
 				match_else = re.match(else_regex, string[end:], preproc.re_flags)
 				match_elif = re.match(elif_regex, string[end:], preproc.re_flags)
-				print(match_else, match_elif)
 				if match_else is not None:
 					return (begin, end + match_else.end(), None)
 				if match_elif is not None:
@@ -257,4 +255,29 @@ def blck_if(preprocessor: Preprocessor, args: str, contents: str) -> str:
 				 {% endif %}
 	"""
 	value = condition_eval(preprocessor, args)
-	return ""
+	pos_0 = 0
+	desc = "in if block"
+	while True:
+		else_info = find_elifs_and_else(preprocessor, contents[pos_0:])
+		if value:
+			endelse = pos_0 + else_info[0] if else_info[0] != -1 else len(contents)
+			preprocessor.context.update(pos_0 + preprocessor.current_position.end, desc)
+			parsed = preprocessor.parse(contents[pos_0:endelse])
+			preprocessor.context.pop()
+			return parsed
+		if else_info[0] == -1:
+			# no matching else
+			return ""
+		if else_info[2] is None:
+			value = not value
+			desc = "in else"
+		else:
+			preprocessor.context.update(
+				pos_0 + else_info[0] + preprocessor.current_position.end,
+				"in elif evaluation"
+			)
+			args = preprocessor.parse(else_info[2])
+			preprocessor.context.pop()
+			value = condition_eval(preprocessor, args)
+			desc = "in elif"
+		pos_0 += else_info[1]

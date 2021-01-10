@@ -43,3 +43,4 @@ Preprocessor.blocks["repeat"] = blck_repeat
 Preprocessor.blocks["atlabel"] = blck_atlabel
 Preprocessor.blocks["for"] = blck_for
 Preprocessor.blocks["cut"] = blck_cut
+Preprocessor.blocks["if"] = blck_if
