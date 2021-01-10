@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 import argparse
 import re
-from typing import Iterable
+from typing import Iterable, List, Optional, Tuple
 
-from .defs import (REGEX_IDENTIFIER, REGEX_INTEGER, ArgumentParserNoExit,
-                   to_integer)
+from .conditions import condition_eval, find_matching_close_parenthese
+from .defs import (REGEX_IDENTIFIER, REGEX_IDENTIFIER_END, REGEX_INTEGER,
+                   ArgumentParserNoExit, TokenMatch, to_integer)
 from .preprocessor import Preprocessor
 
 # ============================================================
@@ -80,11 +81,9 @@ def blck_atlabel(p: Preprocessor, args: str, contents: str) -> str:
 
 def fnl_atlabel(pre: Preprocessor, string: str) -> str:
 	"""places atlabel blocks at all matching labels"""
-	print("atlabel called", string, pre.labels._stack, pre._recursion_depth)
 	if "atlabel" in pre.command_vars:
 		deletions = []
 		for lbl in pre.command_vars["atlabel"]:
-			print("  parsing ", lbl)
 			nb_labels = len(pre.labels.get_label(lbl))
 			if nb_labels == 0:
 				pre.send_warning('No matching label for atlabel block "{}"'.format(lbl))
@@ -93,7 +92,6 @@ def fnl_atlabel(pre: Preprocessor, string: str) -> str:
 				string = pre.replace_string(
 					index, index, string, pre.command_vars["atlabel"][lbl], []
 				)
-				print("    ", pre.labels._stack)
 			deletions.append(lbl)
 		for lbl in deletions:
 			del pre.command_vars["atlabel"][lbl]
@@ -197,4 +195,66 @@ def blck_cut(pre: Preprocessor, args: str, contents: str) -> str:
 		pre.command_vars["clipboard"] = {clipboard: (context, contents)}
 	else:
 		pre.command_vars["clipboard"][clipboard] = (context, contents)
+	return ""
+
+
+# ============================================================
+# if block
+# ============================================================
+
+def find_elifs_and_else(preproc: Preprocessor, string: str
+	) -> Tuple[int, int, Optional[str]]:
+	"""returns a tuple indicating the next elif/else:
+	(-1,-1,None) -> no matching elif/else
+	(begin, end, None) -> matching else at string[begin:end]
+	(begin, end, str) -> matchin elif with arguments str at string[begin:end]"""
+	tokens = preproc._find_tokens(string)
+	depth = 0
+	endif_regex = r"\s*{}if\s*{}".format(
+		re.escape(preproc.token_endblock),
+		re.escape(preproc.token_end)
+	)
+	if_regex = r"\s*if(?:{}|{})".format(
+		re.escape(preproc.token_end), REGEX_IDENTIFIER_END
+	)
+	elif_regex = r"\s*(elif)(?:{}|{})".format(
+		re.escape(preproc.token_end), REGEX_IDENTIFIER_END
+	)
+	else_regex = r"\s*else\s*{}".format(re.escape(preproc.token_end))
+	for i, (begin, end, token) in enumerate(tokens):
+		print("token: ", begin, end, token, depth)
+		if token == TokenMatch.OPEN:
+			if re.match(if_regex, string[end:], preproc.re_flags) is not None:
+				depth += 1
+			elif re.match(endif_regex, string[end:], preproc.re_flags) is not None:
+				depth -= 1
+			elif depth == 0:
+				match_else = re.match(else_regex, string[end:], preproc.re_flags)
+				match_elif = re.match(elif_regex, string[end:], preproc.re_flags)
+				print(match_else, match_elif)
+				if match_else is not None:
+					return (begin, end + match_else.end(), None)
+				if match_elif is not None:
+					parenthese = ["(" if x[2] == TokenMatch.OPEN else ")" for x in tokens]
+					j = find_matching_close_parenthese(parenthese, i)
+					if j == len(tokens):
+						preproc.context.update(begin + preproc.current_position.end, "in elif")
+						preproc.send_error(
+							'Unmatched "{}" token in endif.\n'
+							'Add matching "{}" or use "{}begin{}" to place it.'.format(
+							preproc.token_begin, preproc.token_end, preproc.token_begin, preproc.token_end
+						))
+						preproc.context.pop()
+					end += match_elif.end(1)
+					return (begin, tokens[j][1], string[end:tokens[j][0]])
+	return (-1, -1, None)
+
+def blck_if(preprocessor: Preprocessor, args: str, contents: str) -> str:
+	"""the if block
+	usage: {% if <condition> %} ...
+	       [{% elif <condition> %} ...]
+				 [{% else %}...]
+				 {% endif %}
+	"""
+	value = condition_eval(preprocessor, args)
 	return ""

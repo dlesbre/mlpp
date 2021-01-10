@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 from os import remove
 
-from preprocessor import FileDescriptor, Preprocessor  # type: ignore
+from preprocessor import (FileDescriptor, Preprocessor,  # type: ignore
+                          find_elifs_and_else)
 
 
 class TestCommands:
@@ -34,7 +35,7 @@ class TestCommands:
 			("{% def nom\" \"\\\"jean\" %}\nbonjour je suis {% nom %}","\nbonjour je suis  \"\"jean"),
 			("{% def nom jean %}{% def prenom nom %}\nbonjour je suis {% prenom %}","\nbonjour je suis nom"),
 			("{% def nom jean %}{% def prenom {% nom %} %}\nbonjour je suis {% prenom %}","\nbonjour je suis jean"),
-			("{% def add(a,b,c) (a+b+2c) %}hello{% add 1 2 3 %}", "hello(1+2+23)"),
+			("{% def add(a,b,c) (a+b+2c) %}hello{% add 1 2 3 %}", "hello(1+2+2c)"),
 			("{% def add(pha,alpha,lpha) (pha,alpha)lpha %}hello{% add 1 2 3 %}", "hello(1,2)3"),
 		]
 		self.runtests(test)
@@ -85,8 +86,8 @@ class TestCommands:
 			("foo{% block %}{% replace foo bar %}foo yfoo{% endblock %}foo", "foobar ybarfoo"),
 			("afoo{% replace foo bar %}{% replace aba yo %}fooabr", "yorbarabr"),
 			("afoo{% replace --ignore-case foo bar %}FoOfOo FOO", "abarbarbar bar"),
-			("{% replace -w foo bar %}foo(afoo1foo+foo foo", "bar(afoo1bar+bar bar"),
-			("{% replace -w \"foo\" bar %}foo(afoo1foo+foo foo", "bar(afoo1bar+bar bar"),
+			("{% replace -w foo bar %}foo(afoo1foo+foo foo foo", "bar(afoo1foo+bar bar bar"),
+			("{% replace -w \"foo\" bar %}foo(afoo1foo+foo foo", "bar(afoo1foo+bar bar"),
 			(r'{% replace -r "([a-z]+)" "low(\\1)" %}hello hio', "low(hello) low(hio)"),
 			("{% replace -c 2 foo bar %}foo foo foo foo", "bar bar foo foo"),
 		]
@@ -134,3 +135,16 @@ class TestCommands:
 			)
 		]
 		self.runtests(test)
+
+	def test_if(self):
+		test_match = [
+			("qmldkf", (-1,-1,None)),
+			("abcd{% else %}defg", (4, 14, None)),
+			("abcd{%  else\t\n %}defg", (4, 17, None)),
+			("{% if something %}blad{%  else\t\n %}defg{% endif %}", (-1, -1, None)),
+			("{% if something %}{% else %}{% endif %}{% else %}", (39, 49, None)),
+			("{% elif something %}", (0, 20, " something")),
+		]
+		for string, result in test_match:
+			print("====== TEST ======")
+			assert find_elifs_and_else(self.pre, string) == result

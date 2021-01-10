@@ -55,7 +55,7 @@ def condition_lexer(string : str) -> List[str]:
 	return lexemes
 
 def find_matching_close_parenthese(tokens: List[str], start_index: int) -> int:
-	"""find the ")" matching the opening parenthese "(" found at
+	"""finds the ")" matching the opening parenthese "(" found at
 	tokens[start_index]. returns len(tokens) if none exists"""
 	j = start_index + 1
 	depth = 0
