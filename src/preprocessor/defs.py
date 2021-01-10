@@ -4,6 +4,7 @@ import enum
 import re
 from typing import Tuple
 
+PREPROCESSOR_NAME = "preprocessor"
 PREPROCESSOR_VERSION = "0.1"
 
 REGEX_IDENTIFIER:       str = "[_a-zA-Z][_a-zA-Z0-9]*"
