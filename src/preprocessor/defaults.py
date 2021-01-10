@@ -29,6 +29,9 @@ Preprocessor.commands["strip_trailing_whitespace"] = cmd_strip_trailing_whitespa
 Preprocessor.commands["fix_last_line"] = cmd_fix_last_line
 Preprocessor.commands["fix_first_line"] = cmd_fix_first_line
 Preprocessor.commands["replace"] = cmd_replace
+Preprocessor.commands["upper"] = cmd_upper
+Preprocessor.commands["lower"] = cmd_lower
+Preprocessor.commands["capitalize"] = cmd_capitalize
 
 # default post action
 

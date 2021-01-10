@@ -95,6 +95,15 @@ class TestCommands:
 		]
 		self.runtests(test)
 
+	def test_upper(self):
+		test = [
+			("{% upper hello world %}", "HELLO WORLD"),
+			("{% lower Hello WOrld %}", "hello world"),
+			("{% capitalize hello world %}", "Hello world"),
+			("{% block %}some{% upper %} text{% endblock %} hello", "SOME TEXT hello"),
+		]
+		self.runtests(test)
+
 	def test_for_deflist(self):
 		test = [
 			("{% for x in range(10) %}{% x %},{% endfor %}", "0,1,2,3,4,5,6,7,8,9,"),

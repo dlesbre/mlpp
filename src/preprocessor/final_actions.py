@@ -148,3 +148,66 @@ def cmd_replace(preprocessor: Preprocessor, args: str) -> str:
 	fnl_replace.__doc__ = "final action for replace {}".format(args)
 	preprocessor.add_finalaction(fnl_replace)
 	return ""
+
+
+
+# ============================================================
+# upper/lower/capitalize commands
+# ============================================================
+
+def fnl_upper(_: Preprocessor, string: str) -> str:
+	"""Final action for upper, transforms
+	text in string to UPPER CASE"""
+	return string.upper()
+
+def cmd_upper(preprocessor: Preprocessor, args: str) -> str:
+	"""The upper command, switches text to UPPER CASE
+	usage: upper [text]
+		with text -> returns TEXT (ignores trailing/leading spaces)
+		without   -> queues final action to transform all text in current block
+			to UPPER CASE"""
+	args = args.strip()
+	if args:
+		if len(args) >= 2 and args[0] == '"' and args[-1] == '"':
+			args = args[0:-1]
+		return args.upper()
+	preprocessor.add_finalaction(fnl_upper)
+	return ""
+
+def fnl_lower(_: Preprocessor, string: str) -> str:
+	"""Final action for upper, transforms
+	text in string to lower case"""
+	return string.lower()
+
+def cmd_lower(preprocessor: Preprocessor, args: str) -> str:
+	"""The lower command, switches text to lower case
+	usage: lower [text]
+		with TEXT -> returns text (ignores trailing/leading spaces)
+		without   -> queues final action to transform all text in current block
+			to lower case"""
+	args = args.strip()
+	if args:
+		if len(args) >= 2 and args[0] == '"' and args[-1] == '"':
+			args = args[0:-1]
+		return args.lower()
+	preprocessor.add_finalaction(fnl_lower)
+	return ""
+
+def fnl_capitalize(_: Preprocessor, string: str) -> str:
+	"""Final action for upper, transforms
+	text in string to Capitalized Case"""
+	return string.capitalize()
+
+def cmd_capitalize(preprocessor: Preprocessor, args: str) -> str:
+	"""The capitalize command, switches text to lower case
+	usage: capitalize [text]
+		with text -> returns Text (ignores trailing/leading spaces)
+		without   -> queues final action to transform all text in current block
+			to Capitalized Case"""
+	args = args.strip()
+	if args:
+		if len(args) >= 2 and args[0] == '"' and args[-1] == '"':
+			args = args[0:-1]
+		return args.capitalize()
+	preprocessor.add_finalaction(fnl_capitalize)
+	return ""
