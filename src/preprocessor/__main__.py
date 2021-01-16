@@ -10,14 +10,19 @@ parser.add_argument("--end", "-e", nargs="?", default=None)
 parser.add_argument("--warnings", "-w", nargs="?", default=None, choices=("hide", "error"))
 parser.add_argument("--version", "-v", action="store_true")
 parser.add_argument("--output", "-o", nargs="?", type=argparse.FileType("w"), default=stdout)
+parser.add_argument("--help", "-h", nargs="?", const="", default=None)
 parser.add_argument("input", nargs="?", type=argparse.FileType("r"), default=stdin)
 
 preproc = Preprocessor()
 
 if __name__ == "__main__":
 	arguments = parser.parse_args()
+	preproc.commands["output"] = lambda *args: arguments.output.name
 	if arguments.version:
 		print("{} version {}".format(PREPROCESSOR_NAME, PREPROCESSOR_VERSION))
+		exit(0)
+	if arguments.help is not None:
+		print(preproc.get_help(arguments.help))
 		exit(0)
 	if arguments.begin is not None:
 		preproc.token_begin = arguments.begin
@@ -32,7 +37,7 @@ if __name__ == "__main__":
 
 	contents = arguments.input.read()
 
-	preproc.commands["output"] = lambda *args: arguments.output.name
+
 
 	preproc.context.new(FileDescriptor(arguments.input.name, contents), 0)
 	result = preproc.parse(contents)

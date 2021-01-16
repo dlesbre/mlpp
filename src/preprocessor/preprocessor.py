@@ -423,3 +423,42 @@ class Preprocessor:
 	) -> None:
 		"""adds a final action at the current level"""
 		self._final_actions.append((self._recursion_depth, run_at, action))
+
+	def get_help(self: "Preprocessor", help_msg: str) -> str:
+		"""used to get and display help on the command line
+		help_msg is either:
+			""         -> display program help
+			"commands" -> list all commands and blocks
+			<cmd_name> -> display help relative to a command or block
+		returns the help string
+		"""
+		if help_msg == "":
+			return trim("""
+				{name} version {version}
+				Simple program to preprocess files inspired by the C preprocessor
+
+				Files to process can contain:
+				 - preprocessor commands "{begin}command_name [args]{end}"
+				 - preprocessor blocks "{begin}block_name [args]{end}... {begin}endblock_name{end}"
+				A list of commands and blocks can be obtained with "--help commands"
+
+				Usage: {name} [--flags] [input_file]
+
+				Options:
+				  -o --output <file>   specifies a file to write output to
+				                       default is stdout
+				  -w --warnings <hide|error> choose whether to hide warnings
+				                       or have them raise an error. default is display
+				  -b --begin <string>  change the begin token (default is "{begin}")
+				  -e --end <string>    change the end token (default is "{end}")
+				  -v --version         show version and exit
+				  -h --help            show this help and exit
+				  -h --help "commands" show a list of commands and blocks and exit
+				  -h --help <cmd_name> show help for a specific command of block
+				""".format(
+					name = PREPROCESSOR_NAME, version = PREPROCESSOR_VERSION,
+					begin = "{% ", end = " %}"))
+		if help_msg == "commands":
+			return "Commands:\n  " + "\n  ".join(sorted(self.commands.keys())) +\
+				"\n\nBlocks:\n  " + "\n  ".join(sorted(self.blocks.keys()))
+		return ""
