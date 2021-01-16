@@ -32,6 +32,8 @@ if __name__ == "__main__":
 
 	contents = arguments.input.read()
 
+	preproc.commands["output"] = lambda *args: arguments.output.name
+
 	preproc.context.new(FileDescriptor(arguments.input.name, contents), 0)
 	result = preproc.parse(contents)
 	preproc.context.pop()
