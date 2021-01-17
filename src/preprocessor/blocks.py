@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import argparse
 import re
-from typing import Callable, Iterable, List, Optional, Tuple
+from typing import Iterable, Optional, Tuple
 
 from .conditions import condition_eval, find_matching_close_parenthese
 from .defs import (REGEX_IDENTIFIER, REGEX_IDENTIFIER_END, REGEX_INTEGER,
