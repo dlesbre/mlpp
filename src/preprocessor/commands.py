@@ -2,7 +2,7 @@
 import argparse
 import re
 from datetime import datetime
-from os.path import isfile, join
+from os.path import abspath, dirname, isfile, join
 
 from .context import FileDescriptor
 from .defs import *
@@ -377,6 +377,7 @@ def cmd_include(preprocessor: Preprocessor, args: str) -> str:
 			preprocessor.token_begin = arguments.begin
 		if arguments.end is not None:
 			preprocessor.token_end = arguments.end
+		preprocessor.include_path.append(dirname(abspath(filepath)))
 		preprocessor.context.new(FileDescriptor(arguments.file_path, contents), 0, "in included file")
 		contents = preprocessor.parse(contents)
 		preprocessor.context.pop()
