@@ -1,7 +1,7 @@
 import argparse
 from os.path import abspath, dirname
 from sys import stdin, stdout
-from typing import List
+from typing import List, Optional
 
 from .defaults import FileDescriptor, Preprocessor
 from .defs import PREPROCESSOR_NAME, PREPROCESSOR_VERSION, WarningMode
@@ -84,9 +84,17 @@ def process_options(preproc: Preprocessor, arguments: argparse.Namespace) -> Non
 	else:
 		preproc.warning_mode = WarningMode.PRINT
 
-if __name__ == "__main__":
+def preprocessor_main(argv: Optional[List[str]] = None) -> None:
+	"""main function for the preprocessor
+	handles arguments, reads contents from file
+	and write result to output file.
+	argv defaults to sys.argv
+	"""
 	preprocessor = Preprocessor()
-	args = parser.parse_args()
+	if argv is None:
+		args = parser.parse_args()
+	else:
+		args = parser.parse_args(argv)
 
 	process_options(preprocessor, args)
 
@@ -99,3 +107,7 @@ if __name__ == "__main__":
 	preprocessor.context.pop()
 
 	args.output.write(result)
+
+
+if __name__ == "__main__":
+	preprocessor_main()
