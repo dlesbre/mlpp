@@ -117,6 +117,9 @@ class TestCommands:
 			("{% deflist list a b c d %}{% deflist list2 1 2 3 4 %}"
 			 "{% for x in range(4) %}{% list {% x %} %}{% list2 {% x %} %}{% endfor %}",
 			 "a1b2c3d4"),
+			("{% deflist names alice john frank %}{% deflist ages 23 31 19 %}\n"
+			 "{% for i in range(3) %}{% names {% i %} %} (age {% ages {% i %} %})\n"
+	     "{% endfor %}", "\nalice (age 23)\njohn (age 31)\nfrank (age 19)\n")
 		]
 		self.runtests(test)
 
@@ -131,6 +134,11 @@ class TestCommands:
 			 "bar1bar1"),
 			("{% def foo hi %}{% cut %}{% def foo bar1 %}{% endcut %}{% foo %}{% paste --verbatim %}{% foo %}",
 			 "hi{% def foo bar1 %}hi"),
+			("{% cut %}foo is {% foo %}{% endcut %}\n"
+	  	 "{% def foo bar %}\n"
+	  	 "first paste: {% paste %}\n"
+	  	 "{% def foo notbar %}\n"
+	     "second paste: {% paste %}", "\n\nfirst paste: foo is bar\n\nsecond paste: foo is notbar"),
 		]
 		self.runtests(test)
 
@@ -138,6 +146,7 @@ class TestCommands:
 		test = [
 			("text{% void %}{% def name john %}hello this is a comment{% endvoid %}\n{% name %}", "text\njohn"),
 			("{% verbatim %}{% hello %}{% endverbatim %}", "{% hello %}"),
+			("{% verbatim %}some text with {% verbatim %}nested verbatim{% endverbatim %}{% endverbatim %}", "some text with {% verbatim %}nested verbatim{% endverbatim %}"),
 			("{% repeat 5 %}yo{% endrepeat %}", "yoyoyoyoyo"),
 			("{% label foo %}lala{% atlabel foo %}bar{% endatlabel %}yoyo{% label foo %}oups", "barlalayoyobaroups"),
 			("{% atlabel yo %}bonjour{% endatlabel %}{% label yo %}", "bonjour"),

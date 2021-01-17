@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import argparse
 import re
-from typing import Iterable, List, Optional, Tuple
+from typing import Callable, Iterable, List, Optional, Tuple
 
 from .conditions import condition_eval, find_matching_close_parenthese
 from .defs import (REGEX_IDENTIFIER, REGEX_IDENTIFIER_END, REGEX_INTEGER,
@@ -12,7 +12,6 @@ from .preprocessor import Preprocessor
 # simple blocks (void, block, verbatim)
 # ============================================================
 
-
 def blck_void(p: Preprocessor, args: str, contents: str) -> str:
 	"""The void block, processes commands inside it but prints nothing"""
 	if args.strip() != "":
@@ -21,6 +20,12 @@ def blck_void(p: Preprocessor, args: str, contents: str) -> str:
 	contents = p.parse(contents)
 	p.context.pop()
 	return ""
+
+blck_void.doc = ( # type: ignore
+	"""
+	This block is pared but not printed.
+	Use it to place comments or a bunch of def
+	without adding whitespace""")
 
 def blck_block(p: Preprocessor, args: str, contents: str) -> str:
 	"""The block block. It does nothing but ensure post action
@@ -32,12 +37,33 @@ def blck_block(p: Preprocessor, args: str, contents: str) -> str:
 	p.context.pop()
 	return contents
 
+blck_block.doc = ( # type: ignore
+	"""
+	Simple block used to restrict scope of final action commands
+	""")
+
 def blck_verbatim(p: Preprocessor, args: str, contents: str) -> str:
 	"""The verbatim block. It copies its content without parsing them
 	Stops at first {% endverbatim %} not matching a {% verbatim %}"""
 	if args.strip() != "":
 		p.send_warning("the verbatim block takes no arguments")
 	return contents
+
+blck_verbatim.doc = ( # type: ignore
+	"""
+	Used to paste contents without parsing them
+	Stops at first {% endverbatim %} not matching a {% verbatim %}.
+
+	Ex:
+	  "{% verbatim %}some text with symbols {% and %}{% endverbatim %}"
+	Prints:
+	  "some text with symbols {% and %}"
+
+	Ex:
+	  "{% verbatim %}some text with {% verbatim %}nested verbatim{% endverbatim %}{% endverbatim %}"
+	Prints:
+	  "some text with {% verbatim %}nested verbatim{% endverbatim %}"
+	""")
 
 def blck_repeat(p: Preprocessor, args: str, contents: str) -> str:
 	"""The repeat block.
@@ -53,6 +79,18 @@ def blck_repeat(p: Preprocessor, args: str, contents: str) -> str:
 	contents = p.parse(contents)
 	p.context.pop()
 	return contents * nb
+
+blck_repeat.doc = ( # type: ignore
+	"""
+	Used to repeat a block of text a number of times
+
+	Usage: repeat <number>
+
+	Ex: "{% repeat 4 %}a{% endrepeat %}" prints "aaaa".
+
+	Unlike {% for x in range(3) %}, {% repeat 3 %} only
+	  renders the block once and prints three copies.
+	""")
 
 
 # ============================================================
@@ -78,6 +116,31 @@ def blck_atlabel(p: Preprocessor, args: str, contents: str) -> str:
 	p.command_vars["atlabel"][lbl] = p.parse(contents)
 	p.context.pop()
 	return ""
+
+blck_atlabel.doc = ( # type: ignore
+	"""
+	Renders a chunk of text and places it at all labels matching
+	its label when processing is done.
+
+	Usage: atlabel <label>
+
+	It differs from the cut block in that:
+	- it will also print its content to calls of {% label XXX %} preceding it
+	- it canno't be overwritting (at most one atlabel block per label)
+	- the text is rendered in the block (and not in where the text is pared)
+
+	ex:
+	  "{% def foo bar %}
+	  first label: {% label my_label %}
+	  {% atlabel my_label %}foo is {% foo %}{% endatlabel %}
+		{% def foo notbar %}
+	  second label: {% label my_label %}"
+	prints:
+	  "
+	  first label: foo is bar
+
+	  second label: foo is bar"
+	""")
 
 def fnl_atlabel(pre: Preprocessor, string: str) -> str:
 	"""places atlabel blocks at all matching labels"""
@@ -156,11 +219,39 @@ def blck_for(pre: Preprocessor, args: str, contents: str) -> str:
 			return str(value)
 		defined_value.__name__ = "for_cmd_{}".format(ident)
 		defined_value.__doc__ = "Command defined in for loop: {} = '{}'".format(ident, value)
+		defined_value.doc = defined_value.__doc__ # type: ignore
 		pre.commands[ident] = defined_value
 		pre.context.update(pre.current_position.end, "in for block")
 		result += pre.parse(contents)
 		pre.context.pop()
 	return result
+
+blck_for.doc = ( # type: ignore
+	"""
+	Simple for loop used to render a chunk of text multiple times.
+	ex: "{% for x in range(2) %}{% x %},{% endfor %}" -> "1,2,"
+
+	Usage: for <ident> in range(stop)
+	                      range(start, stop)
+	                      range(start, stop, step)
+	       for <ident> in space separated list " argument with spaces"
+
+
+	range can be combined with the deflist command to iterate multiple lists:
+
+	  "{% deflist names alice john frank %} {% deflist ages 23 31 19 %}
+	  {% for i in range(3) %}{% names {% i %} %} (age {% ages {% i %} %})
+	  {% endfor %}"
+
+	prints:
+
+	  "
+	  alice (age 23)
+	  john (age 31)
+	  frank (age 19)
+	  "
+
+	""")
 
 
 # ============================================================
@@ -196,6 +287,30 @@ def blck_cut(pre: Preprocessor, args: str, contents: str) -> str:
 	else:
 		pre.command_vars["clipboard"][clipboard] = (context, contents)
 	return ""
+
+blck_cut.doc = ( # type: ignore
+	"""
+	Used to cut a section of text to paste elsewhere.
+	The text is processed when pasted, not when cut
+
+	Usage: cut [--pre-render|-p] [<clipboard_name>]
+	  if --pre-render - renders the block here
+	    (will be rerendered at time of pasting, unless using paste -v|--verbatim)
+	  clipboard is a string identifying the clipboard, default is ""
+
+	ex:
+	  {% cut %}foo is {% foo %}{% endcut %}
+	  {% def foo bar %}
+	  first paste: {% paste %}
+	  {% def foo notbar %}
+	  second paste: {% paste %}"
+	prints:
+	  "
+
+	  first paste: foo is bar
+
+	  second paste: foo is notbar"
+	""")
 
 
 # ============================================================
@@ -251,8 +366,8 @@ def blck_if(preprocessor: Preprocessor, args: str, contents: str) -> str:
 	"""the if block
 	usage: {% if <condition> %} ...
 	       [{% elif <condition> %} ...]
-				 [{% else %}...]
-				 {% endif %}
+	       [{% else %}...]
+	       {% endif %}
 	"""
 	value = condition_eval(preprocessor, args)
 	pos_0 = 0
@@ -281,3 +396,29 @@ def blck_if(preprocessor: Preprocessor, args: str, contents: str) -> str:
 			value = condition_eval(preprocessor, args)
 			desc = "in elif"
 		pos_0 += else_info[1]
+
+blck_if.doc = ( # type: ignore
+	"""
+	Used to select wether or not to render a chunk of text
+	based on simple conditions
+	ex :
+	  {% if def identifier %}, {% if ndef identifier %}...
+	  {% if {% var %}==str_value %}, {% if {% var %}!=str_value %}...
+
+	Usage: {% if <condition> %} ...
+	       [{% elif <condition> %} ...]
+	       [{% else %}...]
+	       {% endif %}
+
+	Condition syntax is as follows
+	  simple_condition =
+	    | true | false | 1 | 0 | <string>
+	    | def <identifier> | ndef <identifier>
+	    | <str> == <str> | <str> != <str>
+
+	  condition =
+	    | <simple_condition> | not <simple_condition>
+	    | <condition> and <condition>
+	    | <condition> or <condition>
+	    | (<condition>)
+	""")
