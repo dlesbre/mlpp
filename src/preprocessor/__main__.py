@@ -1,3 +1,8 @@
+"""
+This is the packages __main__. It defines the command-line argument parser
+and when run as main, executes the preprocessor using arguments from sys.argv
+"""
+
 import argparse
 from os.path import abspath, dirname
 from sys import stdin, stdout

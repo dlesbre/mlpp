@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-from preprocessor import (FileDescriptor, Preprocessor,  # type: ignore
-                          TokenMatch, get_identifier_name)
+from preprocessor import FileDescriptor, Preprocessor
+from preprocessor.defs import TokenMatch, get_identifier_name
 
 
 def test_context():
