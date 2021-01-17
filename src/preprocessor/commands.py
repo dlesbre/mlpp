@@ -2,6 +2,7 @@
 import argparse
 import re
 from datetime import datetime
+from os.path import isfile, join
 
 from .context import FileDescriptor
 from .defs import *
@@ -352,6 +353,14 @@ def cmd_include(preprocessor: Preprocessor, args: str) -> str:
 		arguments = include_parser.parse_args(split)
 	except argparse.ArgumentError:
 		preprocessor.send_error("invalid argument.\nusage: include [-v|--verbatim] file_path")
+	filepath = arguments.file_path
+	if not isfile(filepath):
+		for include in preprocessor.include_path:
+			if isfile(join(include, filepath)):
+				filepath = join(include, filepath)
+				break
+		else:
+			preprocessor.send_error('file not found "{}"'.format(arguments.file_path))
 	try:
 		with open(arguments.file_path, "r") as file:
 			contents = file.read()

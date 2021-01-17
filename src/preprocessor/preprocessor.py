@@ -49,6 +49,7 @@ class Preprocessor:
 	labels: LabelStack
 	context: ContextStack
 	current_position: Position
+	include_path: List[str]
 
 
 	def __init__(self):
@@ -60,6 +61,7 @@ class Preprocessor:
 		self.context = ContextStack()
 		self.labels = LabelStack()
 		self._recursion_depth = -1
+		self.include_path = list()
 
 	def _print_stderr_msg(self: "Preprocessor", desc: str, msg: str) -> None:
 		"""Pretty printing to stderr using self._context
@@ -443,6 +445,7 @@ class Preprocessor:
 				A list of commands and blocks can be obtained with "--help commands"
 
 				Usage: {name} [--flags] [input_file]
+				  default input_file is stdin
 
 				Options:
 				  -o --output <file>   specifies a file to write output to
@@ -451,6 +454,12 @@ class Preprocessor:
 				                       or have them raise an error. default is display
 				  -b --begin <string>  change the begin token (default is "{begin}")
 				  -e --end <string>    change the end token (default is "{end}")
+				  -d -D --define <name>[=<value>] defines a simple command
+				                       with name <name> which prints <value> (nothing if no value)
+				                       Can be used multiple times on command line
+				  -i -I --include <path> Adds paths to the INCLUDE_PATH.
+					                     default INCLUDE_PATH is [".", dir(input_file), dir(output_file)]
+				                       Can be used multiple times on command line
 				  -v --version         show version and exit
 				  -h --help            show this help and exit
 				  -h --help "commands" show a list of commands and blocks and exit
