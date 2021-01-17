@@ -461,4 +461,22 @@ class Preprocessor:
 		if help_msg == "commands":
 			return "Commands:\n  " + "\n  ".join(sorted(self.commands.keys())) +\
 				"\n\nBlocks:\n  " + "\n  ".join(sorted(self.blocks.keys()))
-		return ""
+		if help_msg in self.commands or help_msg in self.blocks:
+			cmd: Any
+			if help_msg in self.commands:
+				cmd = self.commands[help_msg]
+				cmd_type = "command"
+			else:
+				cmd = self.blocks[help_msg]
+				cmd_type = "block"
+			if hasattr(cmd, "doc"):
+				doc = cmd.doc
+			else:
+				doc = cmd.__doc__
+			doc = "  " + trim(doc).replace("\n", "\n  ")
+			if doc == "":
+				doc = "No help available"
+			return "{}: help on {} {}:\n{}".format(
+				PREPROCESSOR_NAME, cmd_type, help_msg, doc
+			)
+		return "{} help:\nUnknown command of block \"{}\"".format(PREPROCESSOR_NAME, help_msg)
