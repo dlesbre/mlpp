@@ -98,11 +98,11 @@ class Preprocessor:
 	def send_error(self: "Preprocessor", error_msg: str) -> None:
 		"""Handles errors
 		Inputs:
-      self - Preprocessor object
-      error_msg - string : an error message
+		  self - Preprocessor object
+		  error_msg - string : an error message
 		Effect:
-      if self.exit_on_error print message and exit
-      else raise an Exception
+		  if self.exit_on_error print message and exit
+		  else raise an Exception
 		"""
 		if self.exit_on_error:
 			self._print_stderr_msg(self.error_str, error_msg)
@@ -111,16 +111,16 @@ class Preprocessor:
 			raise Exception(error_msg)
 
 	def send_warning(self: "Preprocessor", warning_msg: str) -> None:
-		"""Handles errors
+		"""Handles warnings
 		Inputs:
-      self - Preprocessor object
-      warning_msg - string : the warning message
+		  self - Preprocessor object
+		  warning_msg - string : the warning message
 		Effect:
-      Depends on self.warning_mode:
-      | HIDE -> do nothing
-      | PRINT -> print to stderr
-      | RAISE -> raise python warning
-      | AS_ERROR -> passes to self.send_error()
+		  Depends on self.warning_mode:
+		  | HIDE -> do nothing
+		  | PRINT -> print to stderr
+		  | RAISE -> raise python warning
+		  | AS_ERROR -> passes to self.send_error()
 		"""
 		if self.warning_mode == WarningMode.PRINT:
 			self._print_stderr_msg(self.warning_str, warning_msg)
@@ -315,7 +315,7 @@ class Preprocessor:
 		"""parses the string, calling the command and blocks it contains
 		calls post_actions when parsing is done
 		Inputs:
-		  string - the string to parse
+			string - the string to parse
 		Expects:
 			self._context[-1][0] should contain a context describing the string
 			self._context[-1][1] is used to determine offset between string and source
