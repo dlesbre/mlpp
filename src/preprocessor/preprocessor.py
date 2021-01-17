@@ -1,4 +1,6 @@
-# -*- coding: utf-8 -*-
+"""
+Definitions of the actual Preprocessor class
+"""
 import re
 from sys import stderr
 from typing import Any, Callable, Dict, List, Tuple
@@ -13,6 +15,28 @@ TypeBlock = Callable[["Preprocessor", str, str], str]
 TypeFinalAction = Callable[["Preprocessor", str], str]
 
 class Preprocessor:
+	"""This class implements the preprocessor:
+
+	Useful attributes that can be configured:
+	- max_recursion_depth: int (default 20) - raises an error past this depth
+	- token_begin and token_end: str (default "{% " and " %}")
+	    use these to change the token used around preprocessor calls
+	    in the document.
+	    They should not be equal or be a simple double quote " or paranthese ( or )
+	- token_endblock: str (default "end")
+	    Used to specify what form the endblock command takes
+	    (with the regex <token_begin>\\s*<token_endblock><block_name>\\s*<token_end>)
+	- safe_calls: bool (default True)
+	    if True, catches exceptions raised by command or blocks
+	- exit_on_error: bool (default True)
+		  if False raises an error when one occurs
+	    if True prints to stderr and exit
+	- warning_mode: WarningMode (default print)
+      | HIDE -> do nothing
+      | PRINT -> print to stderr
+      | RAISE -> raise python warning
+      | AS_ERROR -> passes to self.send_error()
+	"""
 
 	# constants
 	max_recursion_depth: int = 20
@@ -347,7 +371,9 @@ class Preprocessor:
 				new_str = self.safe_call(command, self, arg_string)
 				self.context.pop()
 			elif ident in self.blocks:
-				endblock_b, endblock_e = self._find_matching_endblock(ident, string[self.current_position.relative_end:])
+				endblock_b, endblock_e = self._find_matching_endblock(
+					ident, string[self.current_position.relative_end:]
+				)
 				if endblock_b == -1:
 					self.send_error('no matching endblock for {} block.'.format(ident))
 				self.current_position.endblock_begin = endblock_b + self.current_position.end

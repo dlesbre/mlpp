@@ -1,4 +1,16 @@
-# -*- coding: utf-8 -*-
+"""
+This module contains various definitions and constants used by the preprocessor
+namely:
+- class ArgumentParserNoExit(argparse.ArgumentParser)
+  which raises an error rather than exit.
+- class Position to represent position to command
+- enum WarningMode to configure the Preprocessor
+- enum RunActionAt to configure final_actions
+- function trim to pretty-print docstrings
+- function process_string to process read string ("\\n" into newline)
+- functions is_integer or to_integer to get ints from strings
+- function get_identifier_name to find the first identifier in a string
+"""
 import argparse
 import enum
 import re

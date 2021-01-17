@@ -1,4 +1,7 @@
-# -*- coding: utf-8 -*-
+"""
+Definitions of default preprocessor final actions
+and the commands that trigger them
+"""
 import argparse
 import re
 

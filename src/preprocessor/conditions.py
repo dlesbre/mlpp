@@ -1,4 +1,4 @@
-"""This module encodes a simpel conditional
+"""This module encodes a simple conditional
 evaluation system"""
 
 from typing import List

@@ -1,11 +1,12 @@
 """
-This is the __init__.py file
-It imports:
-- the Preprocessor class from .preprocessor
-  and adds all the default commands and blocks from .default
-- constants PREPROCESSOR_NAME and PREPROCESSOR_VERSION from .defs
-- the WarningMode enum used to configure the Preprocessor from .defs
-- the FileDescriptor class used to initialize contexts from .context
+This package contains a simple preprocessor inspired by the C preprocessor.
+For more information, see: https://github.com/Lesbre/preprocessor/
+It contains:
+- the Preprocessor class - use to configure an run the preprocessor
+- constants PREPROCESSOR_NAME and PREPROCESSOR_VERSION
+- the WarningMode enum used to configure the Preprocessor class
+- the FileDescriptor class used to initialize contexts
+  (used to traceback errors to input files)
 """
 
 from .context import FileDescriptor

@@ -1,4 +1,6 @@
-# -*- coding: utf-8 -*-
+"""
+Definitions of default preprocessor commands
+"""
 import argparse
 import re
 from datetime import datetime
@@ -88,7 +90,8 @@ def cmd_def(preprocessor: Preprocessor, args_string : str) -> str:
 				'Enclose in quotes to have a paranthese as first character'
 			)
 		args = text[1:end].split(",")
-		for i in range(len(args)):
+		len_args = len(args)
+		for i in range(len_args):
 			args[i] = args[i].strip()
 			if not args[i].isidentifier():
 				preprocessor.send_error('in def {}: invalid macro parameter name "{}"'.format(ident, args[i]))

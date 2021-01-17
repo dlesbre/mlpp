@@ -1,4 +1,7 @@
-# -*- coding: utf-8 -*-
+"""
+This module add all default commands/blocks/final_actions to
+the Preprocessor class variables.
+"""
 
 from .blocks import *
 from .commands import *
