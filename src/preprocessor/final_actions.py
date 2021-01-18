@@ -25,6 +25,12 @@ def cmd_strip_empty_lines(preprocessor: Preprocessor, args: str) -> str:
 	preprocessor.add_finalaction(fnl_strip_empty_lines)
 	return ""
 
+cmd_strip_empty_lines.doc = ( # type: ignore
+	"""
+	Removes empty lines (lines containing only spaces)
+	from the current block and subblocks
+	""")
+
 def fnl_strip_leading_whitespace(_: Preprocessor, string: str) -> str:
 	"""final action to remove leading whitespace (indent) from string"""
 	return re.sub("^[ \t]*", "", string, flags = re.MULTILINE)
@@ -37,6 +43,12 @@ def cmd_strip_leading_whitespace(preprocessor: Preprocessor, args: str) -> str:
 	preprocessor.add_finalaction(fnl_strip_leading_whitespace)
 	return ""
 
+cmd_strip_leading_whitespace.doc = ( # type: ignore
+	"""
+	Removes leading whitespace (indent)
+	from the current block and subblocks
+	""")
+
 def fnl_strip_trailing_whitespace(_: Preprocessor, string: str) -> str:
 	"""final action to remove trailing whitespace (indent) from string"""
 	return re.sub("[ \t]*$", "", string, flags = re.MULTILINE)
@@ -48,6 +60,12 @@ def cmd_strip_trailing_whitespace(preprocessor: Preprocessor, args: str) -> str:
 		preprocessor.send_warning("strip_trailing_whitespace takes no arguments")
 	preprocessor.add_finalaction(fnl_strip_trailing_whitespace)
 	return ""
+
+cmd_strip_trailing_whitespace.doc = ( # type: ignore
+	"""
+	Removes trailing whitespace
+	from the current block and subblocks
+	""")
 
 def fnl_fix_last_line(_: Preprocessor, string: str) -> str:
 	"""final action to ensures file ends with an empty line if
@@ -68,6 +86,12 @@ def cmd_fix_last_line(preprocessor: Preprocessor, args: str) -> str:
 		preprocessor.send_warning("fix_last_line takes no arguments")
 	preprocessor.add_finalaction(fnl_fix_last_line)
 	return ""
+
+cmd_fix_last_line.doc = ( # type: ignore
+	"""
+	Ensurses the current blocks ends with a single empty
+	line (unless the block is empty)
+	""")
 
 def fnl_fix_first_line(_: Preprocessor, string: str) -> str:
 	"""final action to ensures file starts with a non-empty
@@ -91,6 +115,12 @@ def cmd_fix_first_line(preprocessor: Preprocessor, args: str) -> str:
 		preprocessor.send_warning("fix_last_line takes no arguments")
 	preprocessor.add_finalaction(fnl_fix_first_line)
 	return ""
+
+cmd_fix_first_line.doc = ( # type: ignore
+	"""
+	Ensurses the current blocks starts with a non-empty
+	line (unless the block is empty)
+	""")
 
 # ============================================================
 # replace command
@@ -161,7 +191,24 @@ def cmd_replace(preprocessor: Preprocessor, args: str) -> str:
 	preprocessor.add_finalaction(fnl_replace)
 	return ""
 
+cmd_replace.doc = ( # type: ignore
+	"""
+	Used to find and replace text
 
+	Usage: replace [--options] pattern replacement [text]
+
+	If text is present, replacement takes place in text.
+	else it takes place in the current block
+
+	Options:
+	  -c --count <number> number of occurences to replace (default all)
+	  -i --ignore-case    pattern search ignores case (foo will match foo,FoO,FOO...)
+	  -w --whole-word     pattern only matches full words, i.e. occurences not directly
+	                      preceded/followed by a letter/number/underscore.
+	  -r --regex          pattern is a regular expression, capture groups can be placed
+	                      in replacement with \\1, \\2,...
+	                      incomptatible with --whole-word
+	""")
 
 # ============================================================
 # upper/lower/capitalize commands
@@ -186,6 +233,16 @@ def cmd_upper(preprocessor: Preprocessor, args: str) -> str:
 	preprocessor.add_finalaction(fnl_upper)
 	return ""
 
+cmd_upper.doc = ( # type: ignore
+	"""
+	Converts text to UPPER CASE
+
+	Usage: upper [text]
+
+	If text is present, converts text
+	else converts everything in the current block.
+	""")
+
 def fnl_lower(_: Preprocessor, string: str) -> str:
 	"""Final action for upper, transforms
 	text in string to lower case"""
@@ -205,6 +262,16 @@ def cmd_lower(preprocessor: Preprocessor, args: str) -> str:
 	preprocessor.add_finalaction(fnl_lower)
 	return ""
 
+cmd_lower.doc = ( # type: ignore
+	"""
+	Converts text to lower case
+
+	Usage: lower [text]
+
+	If text is present, converts text
+	else converts everything in the current block.
+	""")
+
 def fnl_capitalize(_: Preprocessor, string: str) -> str:
 	"""Final action for upper, transforms
 	text in string to Capitalized Case"""
@@ -223,3 +290,13 @@ def cmd_capitalize(preprocessor: Preprocessor, args: str) -> str:
 		return args.capitalize()
 	preprocessor.add_finalaction(fnl_capitalize)
 	return ""
+
+cmd_capitalize.doc = ( # type: ignore
+	"""
+	Converts text to Capitalized case
+
+	Usage: capitalize [text]
+
+	If text is present, converts text
+	else converts everything in the current block.
+	""")
