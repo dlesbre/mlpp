@@ -24,6 +24,14 @@ def cmd_error(preprocessor: Preprocessor, args: str) -> str:
 		preprocessor.send_error("raised by error command.\n{}".format(args))
 	return ""
 
+cmd_error.doc = ( # type: ignore
+	"""
+	Raises an error.
+	Use with if block to raise errors if conditions are not met.
+
+	Usage: error [message]
+	""")
+
 def cmd_warning(preprocessor: Preprocessor, args: str) -> str:
 	"""the warning command - raises a warning
 	usage: warning [msg]"""
@@ -34,17 +42,35 @@ def cmd_warning(preprocessor: Preprocessor, args: str) -> str:
 		preprocessor.send_warning("raised by warning command.\n{}".format(args))
 	return ""
 
+cmd_warning.doc = ( # type: ignore
+	"""
+	Raises a warning.
+	Use with if block to raise warnings if conditions are not met.
+
+	Usage: warning [message]
+	""")
+
 def cmd_version(preprocessor: Preprocessor, args: str) -> str:
 	"""the version command - prints the preprocessor version"""
 	if args.strip() != "":
 		preprocessor.send_warning("the version command takes no arguments")
 	return PREPROCESSOR_VERSION
 
+cmd_version.doc = ( # type: ignore
+	"""
+	Prints the preprocessor version.
+	""")
+
 def cmd_file(preprocessor: Preprocessor, args: str) -> str:
 	"""the file command - prints the current file name"""
 	if args.strip() != "":
 		preprocessor.send_warning("the file command takes no arguments")
 	return preprocessor.context.top.file.filename
+
+cmd_file.doc = ( # type: ignore
+	"""
+	Prints the name of the current file being parsed.
+	""")
 
 def cmd_line(preprocessor: Preprocessor, args: str) -> str:
 	"""the line command - prints the current line number"""
@@ -53,6 +79,13 @@ def cmd_line(preprocessor: Preprocessor, args: str) -> str:
 	context = preprocessor.context.top
 	pos = context.true_position(preprocessor.current_position.begin)
 	return str(context.file.line_number(pos)[0])
+
+cmd_file.doc = ( # type: ignore
+	"""
+	Prints the current line number.
+	This is the line number of the command in the input file, the line
+	in the output file may differ due to insertions/deletions.
+	""")
 
 # ============================================================
 # def/undef
@@ -157,6 +190,14 @@ def cmd_undef(preprocessor: Preprocessor, args_string: str) -> str:
 		del preprocessor.commands[ident]
 	return ""
 
+cmd_undef.doc = ( # type: ignore
+	"""
+	Undefines a command or block.
+	This is irreversible and can undefine builtins commands and blocks.
+
+	Usage: undef name
+	""")
+
 def cmd_deflist(preprocessor: Preprocessor, args_string: str) -> str:
 	"""The deflist command, used to define lists
 	usage: deflist <list_name> space separated list "element with spaces"
@@ -164,7 +205,7 @@ def cmd_deflist(preprocessor: Preprocessor, args_string: str) -> str:
 
 	Defines a new command list_name such that
 		list_name prints the lists
-		list_name n prints the n-th element (n must be a between -lenght+1,length+1)
+		list_name n prints the n-th element (n must be a between -length+1,length+1)
 	"""
 	ident, text, _ = get_identifier_name(args_string)
 	if ident == "":
@@ -194,6 +235,19 @@ def cmd_deflist(preprocessor: Preprocessor, args_string: str) -> str:
 	preprocessor.commands[ident] = defined_command
 	return ""
 
+cmd_deflist.doc = ( # type: ignore
+	"""
+	Defines a new command.
+
+	Usage: deflist list_name space separated list " element with spaces "
+
+	Defines list_name such that
+		list_name          prints the lists
+		list_name <number> prints the n-th element
+		                   (number must be a between -length+1,length+1)
+
+	You can use this in combination to for block to iterate multiple lists in a loop.
+	""")
 
 # ============================================================
 # begin/end/call
@@ -217,8 +271,18 @@ def cmd_begin(preprocessor: Preprocessor, args_string: str) -> str:
 			preprocessor.send_error("invalid argument: usage begin [uint]")
 	if level == 0:
 		return preprocessor.token_begin
-	else:
-		return preprocessor.token_begin + "begin " + str(level-1) + preprocessor.token_end
+	return preprocessor.token_begin + "begin " + str(level-1) + preprocessor.token_end
+
+cmd_begin.doc = ( # type: ignore
+	"""
+	Prints the current begin token (default "{% ")
+
+	Usage: begin [<number>]
+	The optional number is used for recursion calls
+	  begin     -> "{% "
+		begin 0   -> "{% "
+		begin <n> -> "{% begin <n-1> %}"
+	""")
 
 def cmd_end(preprocessor: Preprocessor, args_string: str) -> str:
 	"""The end command, inserts token_end
@@ -240,11 +304,32 @@ def cmd_end(preprocessor: Preprocessor, args_string: str) -> str:
 	else:
 		return preprocessor.token_begin + "end " + str(level-1) + preprocessor.token_end
 
+cmd_end.doc = ( # type: ignore
+	"""
+	Prints the current end token (default " %}")
+
+	Usage: begin [<number>]
+	The optional number is used for recursion calls
+	  begin     -> " %}"
+		begin 0   -> " %}"
+		begin <n> -> "{% end <n-1> %}"
+	""")
+
 def cmd_call(preprocessor: Preprocessor, args_string: str) -> str:
 	"""The call command: used to print begin and end tokens
 	usage: {% call foo bar ... %} -> {% foo bar ... %}"""
+	args_string = args_string.lstrip()
 	return preprocessor.token_begin + args_string + preprocessor.token_end
 
+cmd_call.doc = ( # type: ignore
+	"""
+	Prints a call to its arguments.
+
+	Ex: "{% call my_command my_args %}" -> "{% my_command my_args %}"
+	Useful in defs to use recursive calls.
+	For recursion you can stack calls:
+	"{% call call ... %}" -> "{% call ... %}"
+	""")
 
 # ============================================================
 # label/paste
@@ -263,6 +348,16 @@ def cmd_label(preprocessor: Preprocessor, arg_string: str) -> str:
 	preprocessor.labels.add_label(lbl, preprocessor.current_position.relative_begin)
 	return ""
 
+cmd_label.doc = ( # type: ignore
+	"""
+	Adds a label at the current position
+
+	Usage: label <label_name>
+	Where label_name must be a valid identifier.
+
+	Can be used in combination with the atlabel block
+	to place text at all occurences of a label.
+	""")
 
 paste_parser = ArgumentParserNoExit(prog="cut", add_help=False)
 paste_parser.add_argument("--verbatim", "-v", action="store_true")
@@ -290,14 +385,22 @@ def cmd_paste(pre: Preprocessor, args: str) -> str:
 		pre.context.pop()
 	return text
 
+cmd_paste.doc = ( # type: ignore
+	"""
+	Pastes the contents of a clipboard (defined in a cut block)
 
+	Usage: paste [-v|--verbatim] [clipboard]
+	  if --verbatim is set, paste the text as is, without rendering it
+	  clipboard is a string identifiyng the clipboard (default "").
+	  it must match a previous cut block clipboard argument
+	""")
 
 def cmd_date(_: Preprocessor, args: str) -> str:
 	"""the date command, prints the current date.
 	usage: date [format=YYYY-MM-DD]
 	  format specifies year with YYYY or YY, month with MM or M,
-		day with DD or D, hour with hh or h, minutes with mm or m
-		seconds with ss or s"""
+	  day with DD or D, hour with hh or h, minutes with mm or m
+	  seconds with ss or s"""
 	args = args.strip()
 	if args == "":
 		args = "YYYY-MM-DD"
@@ -327,6 +430,16 @@ def cmd_date(_: Preprocessor, args: str) -> str:
 		hour = date.hour, minute = date.minute, second = date.second,
 		year2 = date.year % 100
 	)
+
+cmd_date.doc = ( # type: ignore
+	"""
+	Prints the current date.
+
+	Usage: date [format=YYYY-MM-DD]
+	  format specifies year with YYYY or YY, month with MM or M,
+	  day with DD or D, hour with hh or h, minutes with mm or m
+	  seconds with ss or s
+	""")
 
 
 # ============================================================
@@ -387,3 +500,20 @@ def cmd_include(preprocessor: Preprocessor, args: str) -> str:
 		preprocessor.token_begin = begin
 		preprocessor.token_end = end
 	return contents
+
+cmd_include.doc = ( # type: ignore
+	"""
+	Includes the content of another file.
+
+	Usage: include [--options] path
+	  path can be absolute or relative to
+	  any path in include_path: [current_working_dir, input_file_dir, output_file_dir]
+	  paths can be added to include_path with the --include/-i/-I preprocessor option
+
+	Options:
+	  -b --begin <string> specify the begin token ("{% ")
+	                      defaults to the same as current file
+		-e --end   <string> specify the end token (" %}")
+	                      defaults to the same as current file
+		-v --verbatim       when present, includes files as is, without parsing.
+	""")

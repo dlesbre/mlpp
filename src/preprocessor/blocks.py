@@ -142,6 +142,9 @@ blck_atlabel.doc = ( # type: ignore
 	  first label: foo is bar
 
 	  second label: foo is bar"
+
+	Can be used in combination with include to create files inheriting
+	from a common base.
 	""")
 
 def fnl_atlabel(preprocessor: Preprocessor, string: str) -> str:

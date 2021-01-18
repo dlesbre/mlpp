@@ -45,7 +45,7 @@ class TestCommands:
 			("{% begin %}", "{% "),
 			("{% end %}", " %}"),
 			("{% begin 12 %}", "{% begin 11 %}"),
-			("{% call foo bar ...\t %}", "{%  foo bar ...\t %}"),
+			("{% call foo bar ...\t %}", "{% foo bar ...\t %}"),
 			("{% def hello {% begin 1 %} %}{% hello %}", "{% "),
 			("{% def foo bar %}{% def hello {% begin %}foo{% end %} %}{% hello %}", "bar"),
 			("{% def foo bar %}{% def foo2 {% call foo %} %}{% foo2 %}{% def foo yoyo %}{% foo2 %}", "baryoyo"),
