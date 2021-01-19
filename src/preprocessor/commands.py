@@ -173,9 +173,46 @@ def cmd_def(preprocessor: Preprocessor, args_string : str) -> str:
 		pre.context.pop()
 		return parsed
 	defined_command.__doc__ = """Defined command for {}""".format(ident)
+	defined_command.doc = defined_command.__doc__ # type: ignore
 	defined_command.__name__ = """def_cmd_{}""".format(ident)
 	preprocessor.commands[ident] = defined_command
 	return ""
+
+cmd_def.doc = ( # type: ignore
+	"""
+	Defines a new command or macro.
+
+	Usage:
+	 def foo               -> defines empty foo command (prints nothing)
+	 def foo   some text   -> {% foo %} prints "some text"
+	                          (strips trailing/leading space)
+	 def foo " some text " -> {% foo %} prints " some text "
+	 def foo(arg1, arg2) text with arg1 and arg2
+	    -> {% foo bar "hi there" %} prints "text with bar and hi there"
+
+	def overwrites old commands and blocks irreversibly.
+	All defs are global, including those comming from subblocks and included files.
+
+	defs can use nesting and recursive calls using command like call, begin and end.
+
+	  {% def name john %}
+
+	  // name is evaluated before def
+	  {% def rec1 {% name %} %}
+
+	  // call evaluated before def, prints {% name %}
+	  // which will be evaluated when define is called
+	  {% def rec2 {% call name %} %}
+
+	  // 1rst call evaluated in define, prints {% call name %}
+	  // which will be evaluated when define is called
+	  {% def rec3 {% call call name %} %}
+
+	  {% def name alice %}
+	  {% rec1 %} -> prints john
+	  {% rec2 %} -> prints alice
+	  {% rec3 %} -> prints {% name %}
+	""")
 
 def cmd_undef(preprocessor: Preprocessor, args_string: str) -> str:
 	"""The undef command, removes commands or blocks
