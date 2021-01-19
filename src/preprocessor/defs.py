@@ -119,32 +119,6 @@ class Position:
 
 
 @enum.unique
-class WarningMode(enum.Enum):
-	"""Preprocessor warning modes:
-	| HIDE -> do nothing
-	| PRINT -> print to stderr
-	| PRINT_AND_RAISE -> print to stderr and raise warning
-	| RAISE -> raise python warning
-	| AS_ERROR -> passes to send_error()"""
-	HIDE = 1
-	PRINT = 2
-	PRINT_AND_RAISE = 3
-	RAISE = 4
-	AS_ERROR = 5
-
-
-@enum.unique
-class ErrorMode(enum.Enum):
-	"""Preprocessor error modes:
-	| PRINT_AND_EXIT -> print to stderr and exit
-	| PRINT_AND_RAISE -> print to stderr and raise exception
-	| RAISE -> raise exception"""
-	PRINT_AND_EXIT = 1
-	PRINT_AND_RAISE = 2
-	RAISE = 3
-
-
-@enum.unique
 class TokenMatch(enum.IntEnum):
 	"""Used to represent Open/Closed tokens"""
 	OPEN = 0

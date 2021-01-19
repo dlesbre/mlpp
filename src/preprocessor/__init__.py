@@ -5,11 +5,13 @@ It contains:
 - the Preprocessor class - use to configure an run the preprocessor
 - constants PREPROCESSOR_NAME and PREPROCESSOR_VERSION
 - the WarningMode enum used to configure the Preprocessor class
+- the ErrorMode enum used to configure the Preprocessor class
 - the FileDescriptor class used to initialize contexts
   (used to traceback errors to input files)
 """
 
 from .context import FileDescriptor
 from .defaults import Preprocessor
-from .defs import (PREPROCESSOR_NAME, PREPROCESSOR_VERSION, ErrorMode,
-                   WarningMode)
+from .defs import PREPROCESSOR_NAME, PREPROCESSOR_VERSION
+from .errors import (ErrorMode, PreprocessorError, PreprocessorWarning,
+                     WarningMode)

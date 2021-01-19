@@ -7,6 +7,8 @@ from typing import Any, Callable, Dict, List, Tuple
 
 from .context import ContextStack, FileDescriptor
 from .defs import *
+from .errors import (ErrorMode, PreprocessorError, PreprocessorWarning,
+                     WarningMode)
 from .labels import LabelStack
 
 TokenList = List[Tuple[int, int, TokenMatch]]
@@ -86,13 +88,6 @@ class Preprocessor:
 		self._recursion_depth = -1
 		self.include_path = list()
 
-	def _print_stderr_msg(self: "Preprocessor", desc: str, msg: str) -> None:
-		"""Pretty printing to stderr using self._context
-		Inputs:
-		 - desc should be "error" or "warning"
-		 - msg the message to print"""
-		msg = msg.replace("\n", "\n  ") # add indent to following lines
-		print("{} {}: {}".format(self.context.trace(), desc, msg), file=stderr)
 
 	def send_error(self: "Preprocessor", error_msg: str) -> None:
 		"""Handles errors
@@ -103,12 +98,13 @@ class Preprocessor:
 		  if self.exit_on_error print message and exit
 		  else raise an Exception
 		"""
+		error = PreprocessorError("", error_msg, self.context)
 		if self.error_mode == ErrorMode.PRINT_AND_EXIT:
-			self._print_stderr_msg(self.error_str, error_msg)
+			print(error.pretty_message(), file = stderr)
 			exit(self.exit_code)
 		if self.error_mode == ErrorMode.PRINT_AND_RAISE:
-			self._print_stderr_msg(self.error_str, error_msg)
-		raise Exception(error_msg)
+			print(error.pretty_message(), file = stderr)
+		raise error
 
 	def send_warning(self: "Preprocessor", warning_msg: str) -> None:
 		"""Handles warnings
@@ -123,10 +119,11 @@ class Preprocessor:
 		  | RAISE -> raise python warning
 		  | AS_ERROR -> passes to self.send_error()
 		"""
+		warning = PreprocessorWarning("", warning_msg, self.context)
 		if self.warning_mode == WarningMode.PRINT or self.warning_mode == WarningMode.PRINT_AND_RAISE:
-			self._print_stderr_msg(self.warning_str, warning_msg)
+			print(warning.pretty_message(), file = stderr)
 		if self.warning_mode == WarningMode.RAISE or self.warning_mode == WarningMode.PRINT_AND_RAISE:
-			raise Warning(warning_msg)
+			raise warning
 		if self.warning_mode == WarningMode.AS_ERROR:
 			self.send_error(warning_msg)
 
