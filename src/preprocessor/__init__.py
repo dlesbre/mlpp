@@ -11,4 +11,5 @@ It contains:
 
 from .context import FileDescriptor
 from .defaults import Preprocessor
-from .defs import PREPROCESSOR_NAME, PREPROCESSOR_VERSION, WarningMode
+from .defs import (PREPROCESSOR_NAME, PREPROCESSOR_VERSION, ErrorMode,
+                   WarningMode)

@@ -28,10 +28,11 @@ class Preprocessor:
 	    (with the regex <token_begin>\\s*<token_endblock><block_name>\\s*<token_end>)
 	- safe_calls: bool (default True)
 	    if True, catches exceptions raised by command or blocks
-	- exit_on_error: bool (default True)
-		  if False raises an error when one occurs
-	    if True prints to stderr and exit
-	- warning_mode: WarningMode (default print)
+	- error_mode: ErrorMode (default RAISE)
+	    | PRINT_AND_EXIT -> print to stderr and exit
+	    | PRINT_AND_RAISE -> print to stderr and raise exception
+	    | RAISE -> raise exception"
+	- warning_mode: WarningMode (default RAISE)
       | HIDE -> do nothing
       | PRINT -> print to stderr
       | RAISE -> raise python warning
@@ -51,12 +52,10 @@ class Preprocessor:
 	warning_str: str = "\033[35mwarning\033[39m"
 	error_str: str   = "\033[31merror\033[39m"
 
-	# if False raises an error
-	# if True print to stderr and exit
-	exit_on_error: bool = True
+	# warning and error modes
+	error_mode: ErrorMode = ErrorMode.RAISE
+	warning_mode: WarningMode = WarningMode.RAISE
 
-	# if True, handle warnings as errors
-	warning_mode: WarningMode = WarningMode.PRINT
   # if True, warning when finding unmatch token_end
 	warn_unmatch_close: bool = False
 
@@ -104,11 +103,12 @@ class Preprocessor:
 		  if self.exit_on_error print message and exit
 		  else raise an Exception
 		"""
-		if self.exit_on_error:
+		if self.error_mode == ErrorMode.PRINT_AND_EXIT:
 			self._print_stderr_msg(self.error_str, error_msg)
 			exit(self.exit_code)
-		else:
-			raise Exception(error_msg)
+		if self.error_mode == ErrorMode.PRINT_AND_RAISE:
+			self._print_stderr_msg(self.error_str, error_msg)
+		raise Exception(error_msg)
 
 	def send_warning(self: "Preprocessor", warning_msg: str) -> None:
 		"""Handles warnings
@@ -119,14 +119,15 @@ class Preprocessor:
 		  Depends on self.warning_mode:
 		  | HIDE -> do nothing
 		  | PRINT -> print to stderr
+			| PRINT_AND_RAISE -> print to stderr and raise warning
 		  | RAISE -> raise python warning
 		  | AS_ERROR -> passes to self.send_error()
 		"""
-		if self.warning_mode == WarningMode.PRINT:
+		if self.warning_mode == WarningMode.PRINT or self.warning_mode == WarningMode.PRINT_AND_RAISE:
 			self._print_stderr_msg(self.warning_str, warning_msg)
-		elif self.warning_mode == WarningMode.RAISE:
+		if self.warning_mode == WarningMode.RAISE or self.warning_mode == WarningMode.PRINT_AND_RAISE:
 			raise Warning(warning_msg)
-		elif self.warning_mode == WarningMode.AS_ERROR:
+		if self.warning_mode == WarningMode.AS_ERROR:
 			self.send_error(warning_msg)
 
 	def split_args(self: "Preprocessor", args: str) -> List[str]:
