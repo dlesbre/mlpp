@@ -58,9 +58,6 @@ class Preprocessor:
 	error_mode: ErrorMode = ErrorMode.RAISE
 	warning_mode: WarningMode = WarningMode.RAISE
 
-  # if True, warning when finding unmatch token_end
-	warn_unmatch_close: bool = False
-
 	# private attributes
 	_recursion_depth: int
 	_final_actions: List[Tuple[int, RunActionAt, TypeFinalAction]] = []
@@ -89,16 +86,17 @@ class Preprocessor:
 		self.include_path = list()
 
 
-	def send_error(self: "Preprocessor", error_msg: str) -> None:
+	def send_error(self: "Preprocessor", name: str, error_msg: str) -> None:
 		"""Handles errors
 		Inputs:
 		  self - Preprocessor object
+		  name - warning name (lowercase-no-space: ex extra-arguments)
 		  error_msg - string : an error message
 		Effect:
 		  if self.exit_on_error print message and exit
 		  else raise an Exception
 		"""
-		error = PreprocessorError("", error_msg, self.context)
+		error = PreprocessorError(name, error_msg, self.context)
 		if self.error_mode == ErrorMode.PRINT_AND_EXIT:
 			print(error.pretty_message(), file = stderr)
 			exit(self.exit_code)
@@ -106,10 +104,11 @@ class Preprocessor:
 			print(error.pretty_message(), file = stderr)
 		raise error
 
-	def send_warning(self: "Preprocessor", warning_msg: str) -> None:
+	def send_warning(self: "Preprocessor", name: str, warning_msg: str) -> None:
 		"""Handles warnings
 		Inputs:
 		  self - Preprocessor object
+		  name - warning name (lowercase-no-space: ex extra-arguments)
 		  warning_msg - string : the warning message
 		Effect:
 		  Depends on self.warning_mode:
@@ -119,13 +118,13 @@ class Preprocessor:
 		  | RAISE -> raise python warning
 		  | AS_ERROR -> passes to self.send_error()
 		"""
-		warning = PreprocessorWarning("", warning_msg, self.context)
+		warning = PreprocessorWarning(name, warning_msg, self.context)
 		if self.warning_mode == WarningMode.PRINT or self.warning_mode == WarningMode.PRINT_AND_RAISE:
 			print(warning.pretty_message(), file = stderr)
 		if self.warning_mode == WarningMode.RAISE or self.warning_mode == WarningMode.PRINT_AND_RAISE:
 			raise warning
 		if self.warning_mode == WarningMode.AS_ERROR:
-			self.send_error(warning_msg)
+			self.send_error("from-warning-"+name, warning_msg)
 
 	def split_args(self: "Preprocessor", args: str) -> List[str]:
 		"""Splits args along space like on the command line
@@ -160,7 +159,7 @@ class Preprocessor:
 			ii += 1
 		# end while
 		if in_string:
-			self.send_error("Unterminated string \"... in arguments")
+			self.send_error("unmatched-open-quote", "Unterminated string \"... in arguments")
 		if last_blank != ii:
 			arg_list.append(args[last_blank:ii].replace("\\ ", " "))
 		return arg_list
@@ -292,8 +291,7 @@ class Preprocessor:
 		if self.warn_unmatch_close is true, issues a warning"""
 		while tokens and tokens[0][2] == TokenMatch.CLOSE:
 			del tokens[0]
-			if self.warn_unmatch_close:
-				self.send_warning("unmatch closing token \"{}\".".format(self.token_end))
+			self.send_warning("unmatched-close-token","unmatch closing token \"{}\".".format(self.token_end))
 
 	def safe_call(self: "Preprocessor", function, *args, **kwargs) -> str:
 		"""safely calls function (returning string)
@@ -303,9 +301,9 @@ class Preprocessor:
 			try:
 				string = function(*args, **kwargs)
 			except Warning as warn:
-				self.send_warning("internal warning.\n" + str(warn))
+				self.send_warning("internal-warning", "unexpected warning in command or block.\n" + str(warn))
 			except Exception as error:
-				self.send_error("internal error.\n" + str(error))
+				self.send_error("internal-error", "unexpected error in command or block.\n" + str(error))
 			return string
 		return function(*args, **kwargs)
 
@@ -323,7 +321,7 @@ class Preprocessor:
 		# Recursion check
 		self._recursion_depth += 1
 		if self._recursion_depth == self.max_recursion_depth:
-			self.send_error("recursion depth exceeded.")
+			self.send_error("recursion-depth", "recursion depth exceeded.")
 		# add label level if none present
 		if self.labels.height <= self._recursion_depth:
 			self.labels.new_level()
@@ -346,7 +344,7 @@ class Preprocessor:
 			# find innermost (nested pair)
 			token_index = self._find_matching_pair(tokens)
 			if token_index == -1:
-				self.send_error("no matching open/close pair found")
+				self.send_error("no-valid-token-pair", "no matching open/close pair found")
 
 			self.current_position.relative_begin = tokens[token_index][0]
 			self.current_position.relative_cmd_begin = tokens[token_index][1]
@@ -362,7 +360,7 @@ class Preprocessor:
 			new_str = ""
 			position = self.current_position.copy()
 			if ident == "":
-				self.send_error("invalid command name: \"{}\".".format(substring))
+				self.send_error("invalid-command", "invalid command name: \"{}\".".format(substring))
 			elif ident in self.commands:
 				self.context.update(self.current_position.cmd_begin, "in command {}".format(ident))
 				command = self.commands[ident]
@@ -373,7 +371,7 @@ class Preprocessor:
 					ident, string[self.current_position.relative_end:]
 				)
 				if endblock_b == -1:
-					self.send_error('no matching endblock for {} block.'.format(ident))
+					self.send_error("unmatched-start-block", "no matching endblock for {} block.".format(ident))
 				self.current_position.endblock_begin = endblock_b + self.current_position.end
 				self.current_position.endblock_end = endblock_e + self.current_position.end
 				block_content = string[
@@ -388,7 +386,7 @@ class Preprocessor:
 
 				self.context.pop()
 			else:
-				self.send_error("undefined command or block: \"{}\".".format(ident))
+				self.send_error("undefined-command", "undefined command or block: \"{}\".".format(ident))
 			self.current_position = position
 			self.context.pop()
 			string = self.replace_string(
@@ -397,7 +395,7 @@ class Preprocessor:
 			self._remove_leading_close_tokens(tokens)
 		# end while
 		if len(tokens) == 1:
-			self.send_error(
+			self.send_error("unmatched-open-token",
 				'Unmatched "{}" token.\nAdd matching "{}" or use "{}begin{}" to place it.'.format(
 					self.token_begin, self.token_end, self.token_begin, self.token_end
 				)

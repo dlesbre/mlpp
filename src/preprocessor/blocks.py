@@ -17,7 +17,7 @@ from .preprocessor import Preprocessor
 def blck_void(preprocessor: Preprocessor, args: str, contents: str) -> str:
 	"""The void block, processes commands inside it but prints nothing"""
 	if args.strip() != "":
-		preprocessor.send_warning("the void block takes no arguments")
+		preprocessor.send_warning("extra-arguments", "the void block takes no arguments")
 	preprocessor.context.update(preprocessor.current_position.end, "in void block")
 	contents = preprocessor.parse(contents)
 	preprocessor.context.pop()
@@ -33,7 +33,7 @@ def blck_block(preprocessor: Preprocessor, args: str, contents: str) -> str:
 	"""The block block. It does nothing but ensure post action
 	declared in this block don't affect the rest of the file"""
 	if args.strip() != "":
-		preprocessor.send_warning("the block block takes no arguments")
+		preprocessor.send_warning("extra-arguments", "the block block takes no arguments")
 	preprocessor.context.update(preprocessor.current_position.end, "in block block")
 	contents = preprocessor.parse(contents)
 	preprocessor.context.pop()
@@ -48,7 +48,7 @@ def blck_verbatim(preprocessor: Preprocessor, args: str, contents: str) -> str:
 	"""The verbatim block. It copies its content without parsing them
 	Stops at first {% endverbatim %} not matching a {% verbatim %}"""
 	if args.strip() != "":
-		preprocessor.send_warning("the verbatim block takes no arguments")
+		preprocessor.send_warning("extra-arguments", "the verbatim block takes no arguments")
 	return contents
 
 blck_verbatim.doc = ( # type: ignore
@@ -73,10 +73,10 @@ def blck_repeat(preprocessor: Preprocessor, args: str, contents: str) -> str:
 		renders its contents one and copies them number times"""
 	args = args.strip()
 	if not args.isnumeric():
-		preprocessor.send_error("invalid argument. Usage: repeat [uint > 0]")
+		preprocessor.send_error("invalid-argument", "invalid argument. Usage: repeat [uint > 0]")
 	number = int(args)
 	if number <= 0:
-		preprocessor.send_error("invalid argument. Usage: repeat [uint > 0]")
+		preprocessor.send_error("invalid-argument", "invalid argument. Usage: repeat [uint > 0]")
 	preprocessor.context.update(preprocessor.current_position.end, "in block repeat")
 	contents = preprocessor.parse(contents)
 	preprocessor.context.pop()
@@ -107,10 +107,12 @@ def blck_atlabel(preprocessor: Preprocessor, args: str, contents: str) -> str:
 	add a post action to place itself at all labels <label>"""
 	lbl = args.strip()
 	if lbl == "":
-		preprocessor.send_error("empty label name")
+		preprocessor.send_error("invalid-label", "empty label name")
 	if "atlabel" in preprocessor.command_vars:
 		if lbl in preprocessor.command_vars["atlabel"]:
-			preprocessor.send_error('Multiple atlabel blocks with same label "{}"'.format(lbl))
+			preprocessor.send_error("atlabel-conflict",
+				'Multiple atlabel blocks with same label "{}"'.format(lbl)
+			)
 	else:
 		preprocessor.command_vars["atlabel"] = dict()
 
@@ -154,7 +156,9 @@ def fnl_atlabel(preprocessor: Preprocessor, string: str) -> str:
 		for lbl in preprocessor.command_vars["atlabel"]:
 			nb_labels = len(preprocessor.labels.get_label(lbl))
 			if nb_labels == 0:
-				preprocessor.send_warning('No matching label for atlabel block "{}"'.format(lbl))
+				preprocessor.send_warning("unplaced-atlabel",
+					'No matching label for atlabel block "{}"'.format(lbl)
+				)
 			for i in range(nb_labels):
 				index = preprocessor.labels.get_label(lbl)[i]
 				string = preprocessor.replace_string(
@@ -180,7 +184,7 @@ def blck_for(preprocessor: Preprocessor, args: str, contents: str) -> str:
 	"""
 	match = re.match(r"^\s*({})\s+in\s+".format(REGEX_IDENTIFIER), args)
 	if match is None:
-		preprocessor.send_error(
+		preprocessor.send_error("invalid-argument",
 			"Invalid syntax.\n"
 			"usage: for <ident> in range(stop)\n"
 	    "                      range(start, stop)\n"
@@ -196,7 +200,7 @@ def blck_for(preprocessor: Preprocessor, args: str, contents: str) -> str:
 			nb = REGEX_INTEGER)
 		match = re.match(regex, args)
 		if match is None:
-			preprocessor.send_error(
+			preprocessor.send_error("invalid-argument",
 				"Invalid range syntax in for.\n"
 				"usage: range(stop) or range(start, stop) or range(start, stop, step)\n"
 				"  start, stop and step, should be integers (contain only 0-9 or _, with an optional leading -)"
@@ -218,7 +222,7 @@ def blck_for(preprocessor: Preprocessor, args: str, contents: str) -> str:
 		def defined_value(preproc: Preprocessor, args: str) -> str:
 			"""new command defined in for block"""
 			if args.strip() != "":
-				preproc.send_warning(
+				preproc.send_warning("extra-arguments",
 					"Extra arguments.\nThe command {} defined in for loop takes no arguments".format(ident)
 				)
 			return str(value)
@@ -279,7 +283,9 @@ def blck_cut(preprocessor: Preprocessor, args: str, contents: str) -> str:
 	try:
 		arguments = cut_parser.parse_args(split)
 	except argparse.ArgumentError:
-		preprocessor.send_error("invalid argument.\nusage: cut [--pre-render|-p] [<clipboard_name>]")
+		preprocessor.send_error("invalid-argument",
+			"invalid argument.\nusage: cut [--pre-render|-p] [<clipboard_name>]"
+		)
 	clipboard = arguments.clipboard
 	pos = preprocessor.current_position.end
 	context = preprocessor.context.top.copy(pos, "in pasted block")
@@ -357,7 +363,7 @@ def find_elifs_and_else(preproc: Preprocessor, string: str
 					j = find_matching_close_parenthese(parenthese, i)
 					if j == len(tokens):
 						preproc.context.update(begin + preproc.current_position.end, "in elif")
-						preproc.send_error(
+						preproc.send_error("unmatched-open-token",
 							'Unmatched "{}" token in endif.\n'
 							'Add matching "{}" or use "{}begin{}" to place it.'.format(
 							preproc.token_begin, preproc.token_end, preproc.token_begin, preproc.token_end

@@ -19,9 +19,9 @@ def cmd_error(preprocessor: Preprocessor, args: str) -> str:
 	usage: error [msg]"""
 	args = args.strip()
 	if args == "":
-		preprocessor.send_error("raised by error command.")
+		preprocessor.send_error("manual-error", "raised by error command.")
 	else:
-		preprocessor.send_error("raised by error command.\n{}".format(args))
+		preprocessor.send_error("manual-error", "raised by error command.\n{}".format(args))
 	return ""
 
 cmd_error.doc = ( # type: ignore
@@ -37,9 +37,9 @@ def cmd_warning(preprocessor: Preprocessor, args: str) -> str:
 	usage: warning [msg]"""
 	args = args.strip()
 	if args == "":
-		preprocessor.send_warning("raised by warning command.")
+		preprocessor.send_warning("manual-warning", "raised by warning command.")
 	else:
-		preprocessor.send_warning("raised by warning command.\n{}".format(args))
+		preprocessor.send_warning("manual-warning", "raised by warning command.\n{}".format(args))
 	return ""
 
 cmd_warning.doc = ( # type: ignore
@@ -53,7 +53,7 @@ cmd_warning.doc = ( # type: ignore
 def cmd_version(preprocessor: Preprocessor, args: str) -> str:
 	"""the version command - prints the preprocessor version"""
 	if args.strip() != "":
-		preprocessor.send_warning("the version command takes no arguments")
+		preprocessor.send_warning("extra-arguments", "the version command takes no arguments")
 	return PREPROCESSOR_VERSION
 
 cmd_version.doc = ( # type: ignore
@@ -64,7 +64,7 @@ cmd_version.doc = ( # type: ignore
 def cmd_file(preprocessor: Preprocessor, args: str) -> str:
 	"""the file command - prints the current file name"""
 	if args.strip() != "":
-		preprocessor.send_warning("the file command takes no arguments")
+		preprocessor.send_warning("extra-arguments", "the file command takes no arguments")
 	return preprocessor.context.top.file.filename
 
 cmd_file.doc = ( # type: ignore
@@ -75,7 +75,7 @@ cmd_file.doc = ( # type: ignore
 def cmd_line(preprocessor: Preprocessor, args: str) -> str:
 	"""the line command - prints the current line number"""
 	if args.strip() != "":
-		preprocessor.send_warning("the line command takes no arguments")
+		preprocessor.send_warning("extra-arguments", "the line command takes no arguments")
 	context = preprocessor.context.top
 	pos = context.true_position(preprocessor.current_position.begin)
 	return str(context.file.line_number(pos)[0])
@@ -105,7 +105,7 @@ def cmd_def(preprocessor: Preprocessor, args_string : str) -> str:
 			defines a macro"""
 	ident, text, _ = get_identifier_name(args_string)
 	if ident == "":
-		preprocessor.send_error(
+		preprocessor.send_error("invalid-identifier",
 			"invalid identifier.\ndef needs a valid identifier, got \"{}\"".format(args_string)
 		)
 
@@ -118,7 +118,7 @@ def cmd_def(preprocessor: Preprocessor, args_string : str) -> str:
 		is_macro = True
 		end = text.find(")")
 		if end == -1:
-			preprocessor.send_error(
+			preprocessor.send_error("unmatched-open-parenthese",
 				'no matching closing ")" in macro definition\n'
 				'Enclose in quotes to have a paranthese as first character'
 			)
@@ -127,10 +127,12 @@ def cmd_def(preprocessor: Preprocessor, args_string : str) -> str:
 		for i in range(len_args):
 			args[i] = args[i].strip()
 			if not args[i].isidentifier():
-				preprocessor.send_error('in def {}: invalid macro parameter name "{}"'.format(ident, args[i]))
+				preprocessor.send_error("invalid-identifier",
+					'in def {}: invalid macro parameter name "{}"'.format(ident, args[i])
+				)
 		for arg in args:
 			if args.count(arg) > 1:
-				preprocessor.send_error(
+				preprocessor.send_error("invalid-identifier",
 					'in def {}: multiple macro parameters with same name "{}"'.format(ident, arg)
 				)
 		text = text[end+1:].strip()
@@ -146,9 +148,11 @@ def cmd_def(preprocessor: Preprocessor, args_string : str) -> str:
 			try:
 				arguments = macro_parser.parse_args(split)
 			except argparse.ArgumentError:
-				pre.send_error("invalid argument for macro.\nusage: {} {}".format(ident, " ".join(args)))
+				pre.send_error("invalid-argument",
+					"invalid argument for macro.\nusage: {} {}".format(ident, " ".join(args))
+				)
 			if len(arguments.vars) != len(args):
-				pre.send_error((
+				pre.send_error("invalid-argument",(
 					"invalid number of arguments for macro (expected {} got {}).\n"
 					"usage: {} {}").format(
 						len(args), len(arguments.vars), ident, " ".join(args)
@@ -220,11 +224,20 @@ def cmd_undef(preprocessor: Preprocessor, args_string: str) -> str:
 	usage: undef <command-name>"""
 	ident = get_identifier_name(args_string)[0]
 	if ident == "":
-		preprocessor.send_error("invalid identifier")
+		preprocessor.send_error("invalid-identifier",
+			"invalid identifier in undef: \"{}\"".format(args_string)
+		)
+	undefined = False
 	if ident in preprocessor.commands:
 		del preprocessor.commands[ident]
+		undefined = True
 	if ident in preprocessor.blocks:
 		del preprocessor.commands[ident]
+		undefined = True
+	if not undefined:
+		preprocessor.send_warning("aldready-undefined",
+			"canno't undef \"{}\", identifier is aldready undefined.".format(ident)
+		)
 	return ""
 
 cmd_undef.doc = ( # type: ignore
@@ -246,7 +259,7 @@ def cmd_deflist(preprocessor: Preprocessor, args_string: str) -> str:
 	"""
 	ident, text, _ = get_identifier_name(args_string)
 	if ident == "":
-		preprocessor.send_error(
+		preprocessor.send_error("invalid-identifier",
 			"invalid identifier.\ndeflist needs a valid identifier, got \"{}\"".format(args_string)
 		)
 	defined_list = preprocessor.split_args(text)
@@ -256,7 +269,7 @@ def cmd_deflist(preprocessor: Preprocessor, args_string: str) -> str:
 			index = to_integer(args)
 			list_len = len(defined_list)
 			if index <= - list_len or index >= list_len:
-				pre.send_error(
+				pre.send_error("invalid-index",
 					"invalid index.\nDefined list {} has length {}, can't access element {}.".format(
 						ident, list_len, index
 					)
@@ -264,7 +277,7 @@ def cmd_deflist(preprocessor: Preprocessor, args_string: str) -> str:
 			return defined_list[index]
 		if args == "":
 			return text
-		pre.send_error(
+		pre.send_error("invalid-argument",
 			"invalid argument for defined list \"{}\".\nusage {} [<number>]".format(
 				args, ident)
 		)
@@ -303,9 +316,9 @@ def cmd_begin(preprocessor: Preprocessor, args_string: str) -> str:
 		if args_string.isnumeric():
 			level = int(args_string)
 		else:
-			preprocessor.send_error("invalid argument: usage begin [uint]")
+			preprocessor.send_error("invalid-argument","invalid argument: usage begin [uint]")
 		if level < 0:
-			preprocessor.send_error("invalid argument: usage begin [uint]")
+			preprocessor.send_error("invalid-argument","invalid argument: usage begin [uint]")
 	if level == 0:
 		return preprocessor.token_begin
 	return preprocessor.token_begin + "begin " + str(level-1) + preprocessor.token_end
@@ -333,9 +346,9 @@ def cmd_end(preprocessor: Preprocessor, args_string: str) -> str:
 		if args_string.isnumeric():
 			level = int(args_string)
 		else:
-			preprocessor.send_error("invalid argument. Usage: end [uint]")
+			preprocessor.send_error("invalid-argument","invalid argument. Usage: end [uint]")
 		if level < 0:
-			preprocessor.send_error("invalid argument. Usage: end [uint]")
+			preprocessor.send_error("invalid-argument","invalid argument. Usage: end [uint]")
 	if level == 0:
 		return preprocessor.token_end
 	else:
@@ -355,8 +368,10 @@ cmd_end.doc = ( # type: ignore
 def cmd_call(preprocessor: Preprocessor, args_string: str) -> str:
 	"""The call command: used to print begin and end tokens
 	usage: {% call foo bar ... %} -> {% foo bar ... %}"""
-	args_string = args_string.lstrip()
-	return preprocessor.token_begin + args_string + preprocessor.token_end
+	args_string = args_string.strip()
+	if len(args_string) >= 2 and args_string[0] == '"' and args_string[-1] == '"':
+		args_string = args_string[1:-1]
+	return preprocessor.token_begin + args_string  + preprocessor.token_end
 
 cmd_call.doc = ( # type: ignore
 	"""
@@ -381,7 +396,7 @@ def cmd_label(preprocessor: Preprocessor, arg_string: str) -> str:
 	"""
 	lbl = arg_string.strip()
 	if lbl == "":
-		preprocessor.send_error("empty label name")
+		preprocessor.send_error("invalid-label", "empty label name")
 	preprocessor.labels.add_label(lbl, preprocessor.current_position.relative_begin)
 	return ""
 
@@ -407,13 +422,15 @@ def cmd_paste(pre: Preprocessor, args: str) -> str:
 	try:
 		arguments = paste_parser.parse_args(split)
 	except argparse.ArgumentError:
-		pre.send_error("invalid argument.\nusage: paste [-v|--verbatim] [<clipboard_name>]")
+		pre.send_error("invalid-argument",
+			"invalid argument.\nusage: paste [-v|--verbatim] [<clipboard_name>]"
+		)
 	clipboard = arguments.clipboard
 	if (
 		("clipboard" not in pre.command_vars)
 		or (clipboard not in pre.command_vars["clipboard"])
 	):
-		pre.send_warning("trying to paste undefined clipboard")
+		pre.send_warning("paste-undefined", "trying to paste undefined clipboard")
 		return ""
 	context, text = pre.command_vars["clipboard"][clipboard]
 	if not arguments.verbatim:
@@ -505,7 +522,7 @@ def cmd_include(preprocessor: Preprocessor, args: str) -> str:
 	try:
 		arguments = include_parser.parse_args(split)
 	except argparse.ArgumentError:
-		preprocessor.send_error("invalid argument.\nusage: include [-v|--verbatim] file_path")
+		preprocessor.send_error("invalid-argument", "invalid argument.\nusage: include [-v|--verbatim] file_path")
 	filepath = arguments.file_path
 	if not isfile(filepath):
 		for include in preprocessor.include_path:
@@ -513,16 +530,16 @@ def cmd_include(preprocessor: Preprocessor, args: str) -> str:
 				filepath = join(include, filepath)
 				break
 		else:
-			preprocessor.send_error('file not found "{}"'.format(arguments.file_path))
+			preprocessor.send_error("file-error",'file not found "{}"'.format(arguments.file_path))
 	try:
 		with open(arguments.file_path, "r") as file:
 			contents = file.read()
 	except FileNotFoundError:
-		preprocessor.send_error('file not found "{}"'.format(arguments.file_path))
+		preprocessor.send_error("file-error",'file not found "{}"'.format(arguments.file_path))
 	except PermissionError:
-		preprocessor.send_error('can\'t open file "{}", permission denied'.format(arguments.file_path))
+		preprocessor.send_error("file-error",'can\'t open file "{}", permission denied'.format(arguments.file_path))
 	except Exception:
-		preprocessor.send_error('can\'t open file "{}"'.format(arguments.file_path))
+		preprocessor.send_error("file-error",'can\'t open file "{}"'.format(arguments.file_path))
 	if not arguments.verbatim:
 		begin = preprocessor.token_begin
 		end = preprocessor.token_end

@@ -21,7 +21,7 @@ def cmd_strip_empty_lines(preprocessor: Preprocessor, args: str) -> str:
 	"""the strip_empty_lines command
 	queues fnl_strip_empty_lines to preprocessor final actions"""
 	if args.strip() != "":
-		preprocessor.send_warning("strip_empty_line takes no arguments")
+		preprocessor.send_warning("extra-arguments", "strip_empty_line takes no arguments")
 	preprocessor.add_finalaction(fnl_strip_empty_lines)
 	return ""
 
@@ -39,7 +39,7 @@ def cmd_strip_leading_whitespace(preprocessor: Preprocessor, args: str) -> str:
 	"""the strip_leading_whitespace command
 	queues fnl_strip_leading_whitespace to preprocessor final actions"""
 	if args.strip() != "":
-		preprocessor.send_warning("strip_leading_whitespace takes no arguments")
+		preprocessor.send_warning("extra-arguments", "strip_leading_whitespace takes no arguments")
 	preprocessor.add_finalaction(fnl_strip_leading_whitespace)
 	return ""
 
@@ -57,7 +57,7 @@ def cmd_strip_trailing_whitespace(preprocessor: Preprocessor, args: str) -> str:
 	"""the strip_trailing_whitespace command
 	queues fnl_strip_trailing_whitespace to preprocessor final actions"""
 	if args.strip() != "":
-		preprocessor.send_warning("strip_trailing_whitespace takes no arguments")
+		preprocessor.send_warning("extra-arguments", "strip_trailing_whitespace takes no arguments")
 	preprocessor.add_finalaction(fnl_strip_trailing_whitespace)
 	return ""
 
@@ -83,7 +83,7 @@ def cmd_fix_last_line(preprocessor: Preprocessor, args: str) -> str:
 	"""the fix_last_line command
 	queues fnl_fix_last_line to preprocessor final actions"""
 	if args.strip() != "":
-		preprocessor.send_warning("fix_last_line takes no arguments")
+		preprocessor.send_warning("extra-arguments", "fix_last_line takes no arguments")
 	preprocessor.add_finalaction(fnl_fix_last_line)
 	return ""
 
@@ -112,7 +112,7 @@ def cmd_fix_first_line(preprocessor: Preprocessor, args: str) -> str:
 	"""the fix_first_line command
 	queues fnl_fix_first_line to preprocessor final actions"""
 	if args.strip() != "":
-		preprocessor.send_warning("fix_last_line takes no arguments")
+		preprocessor.send_warning("extra-arguments", "fix_last_line takes no arguments")
 	preprocessor.add_finalaction(fnl_fix_first_line)
 	return ""
 
@@ -150,7 +150,7 @@ def cmd_replace(preprocessor: Preprocessor, args: str) -> str:
 	try:
 		arguments = replace_parser.parse_args(split)
 	except argparse.ArgumentError:
-		preprocessor.send_error(
+		preprocessor.send_error("invalid-argument",
 			"invalid argument.\n"
 			"usage: replace [-r|--regex] [-i|--ignore-case] [-w|--whole-word]\n"
 			"               [-c|--count <number>] pattern replacement [text]")
@@ -161,7 +161,7 @@ def cmd_replace(preprocessor: Preprocessor, args: str) -> str:
 		flags |= re.IGNORECASE
 	if arguments.regex:
 		if arguments.whole_word:
-			preprocessor.send_error("incompatible arguments : --regex and --whole-word")
+			preprocessor.send_error("invalid-argument","incompatible arguments : --regex and --whole-word")
 	else:
 		pattern = re.escape(pattern)
 		if arguments.whole_word:
@@ -169,13 +169,15 @@ def cmd_replace(preprocessor: Preprocessor, args: str) -> str:
 			repl = "\\1{}\\3".format(repl)
 	count = arguments.count
 	if count < 0:
-		preprocessor.send_error("invalid argument.\nthe replace --count argument must be positive")
+		preprocessor.send_error("invalid-argument",
+			"invalid argument.\nthe replace --count argument must be positive"
+		)
 	pos = preprocessor.current_position.cmd_begin
 	if arguments.text is not None:
 		try:
 			return re.sub(pattern, repl, arguments.text, count=count, flags = flags)
 		except re.error as err:
-			preprocessor.send_error("replace regex error: {}".format(err.msg))
+			preprocessor.send_error("invalid-argument","replace regex error: {}".format(err.msg))
 			return ""
 	# no text, queue post action
 	def fnl_replace(preprocessor: Preprocessor, string: str) -> str:
@@ -183,7 +185,7 @@ def cmd_replace(preprocessor: Preprocessor, args: str) -> str:
 			return re.sub(pattern, repl, string, count=count, flags = flags)
 		except re.error as err:
 			preprocessor.context.update(pos)
-			preprocessor.send_error("replace regex error: {}".format(err.msg))
+			preprocessor.send_error("invalid-argument","replace regex error: {}".format(err.msg))
 			preprocessor.context.pop()
 			return ""
 	fnl_replace.__name__ = "fnl_replace_lambda"

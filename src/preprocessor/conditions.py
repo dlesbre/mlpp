@@ -78,7 +78,7 @@ def condition_evaluator(preproc: Preprocessor, tokens: List[str]) -> bool:
 		if tok == "(":
 			j = find_matching_close_parenthese(tokens, i)
 			if j == len_tok:
-				preproc.send_error(
+				preproc.send_error("invalid-condition",
 					"invalid condition syntax.\n"
 					"Unmatched \"(\". (missing closing parenthese?)"
 				)
@@ -86,7 +86,7 @@ def condition_evaluator(preproc: Preprocessor, tokens: List[str]) -> bool:
 				return condition_evaluator(preproc, tokens[1:-1])
 			i = j
 		elif tok == ")":
-			preproc.send_error(
+			preproc.send_error("invalid-condition",
 				"invalid condition syntax.\n"
 				"Unmatched \")\". (missing openning parenthese?)"
 			)
@@ -100,7 +100,7 @@ def condition_evaluator(preproc: Preprocessor, tokens: List[str]) -> bool:
 				or condition_evaluator(preproc, tokens[i+1:])
 		elif tok == "not":
 			if i != 0:
-				preproc.send_error(
+				preproc.send_error("invalid-condition",
 					'invalid condition syntax.\n'
 					'"not" must be preceeded by "and", "or" or "("\n'
 					'got "{} not"'.format(tokens[i-1])
@@ -126,7 +126,7 @@ def simple_condition_evaluator(preproc: Preprocessor, tokens: List[str]) -> bool
 			return tokens[0] == tokens[2]
 		if tokens[1] == "!=":
 			return tokens[0] != tokens[2]
-	preproc.send_error(
+	preproc.send_error("invalid-condition",
 		"invalid condition syntax.\n"
 		"simple conditions are: \n"
 		"  | true | false | 1 | 0 | <string>\n"
