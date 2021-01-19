@@ -109,9 +109,9 @@ class PreprocessorErrorWarningBase:
 		msg = self.message.split("\n")
 		if ansi:
 			if self.is_error:
-				msg[0] += " [{}{}{}]".format(self.format_name(), ANSI_ERROR, ANSI_RESET)
+				msg[0] += " [{}{}{}]".format(ANSI_ERROR, self.format_name(), ANSI_RESET)
 			else:
-				msg[0] += " [{}{}{}]".format(self.format_name(), ANSI_WARNING, ANSI_RESET)
+				msg[0] += " [{}{}{}]".format(ANSI_WARNING, self.format_name(), ANSI_RESET)
 		else:
 			msg[0] += " [{}]".format(self.format_name())
 		return "\n".join(msg)

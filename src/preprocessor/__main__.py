@@ -5,11 +5,12 @@ and when run as main, executes the preprocessor using arguments from sys.argv
 
 import argparse
 from os.path import abspath, dirname
-from sys import stdin, stdout
+from sys import stderr, stdin, stdout
 from typing import List, Optional
 
 from .defaults import FileDescriptor, Preprocessor
-from .defs import PREPROCESSOR_NAME, PREPROCESSOR_VERSION, WarningMode
+from .defs import PREPROCESSOR_NAME, PREPROCESSOR_VERSION
+from .errors import ErrorMode, WarningMode
 
 parser = argparse.ArgumentParser(prog=PREPROCESSOR_NAME, add_help=False)
 parser.add_argument("--begin", "-b", nargs="?", default=None)
@@ -96,10 +97,16 @@ def preprocessor_main(argv: Optional[List[str]] = None) -> None:
 	argv defaults to sys.argv
 	"""
 	preprocessor = Preprocessor()
+	preprocessor.warning_mode = WarningMode.PRINT
+	preprocessor.error_mode = ErrorMode.PRINT_AND_EXIT
+
 	if argv is None:
 		args = parser.parse_args()
 	else:
 		args = parser.parse_args(argv)
+
+	if stderr.isatty():
+		preprocessor.use_color = True
 
 	process_options(preprocessor, args)
 

@@ -39,6 +39,8 @@ class Preprocessor:
       | PRINT -> print to stderr
       | RAISE -> raise python warning
       | AS_ERROR -> passes to self.send_error()
+	- use_color: bool (default False)
+	    if True, uses ansi color when priting errors
 	"""
 
 	# constants
@@ -49,10 +51,7 @@ class Preprocessor:
 	re_flags: int = re.MULTILINE
 	exit_code: int = 2
 	safe_calls: bool = True
-
-	# change to warnings and error to remove ansi sequences
-	warning_str: str = "\033[35mwarning\033[39m"
-	error_str: str   = "\033[31merror\033[39m"
+	use_color: bool = False
 
 	# warning and error modes
 	error_mode: ErrorMode = ErrorMode.RAISE
@@ -98,10 +97,10 @@ class Preprocessor:
 		"""
 		error = PreprocessorError(name, error_msg, self.context)
 		if self.error_mode == ErrorMode.PRINT_AND_EXIT:
-			print(error.pretty_message(), file = stderr)
+			print(error.pretty_message(self.use_color), file = stderr)
 			exit(self.exit_code)
 		if self.error_mode == ErrorMode.PRINT_AND_RAISE:
-			print(error.pretty_message(), file = stderr)
+			print(error.pretty_message(self.use_color), file = stderr)
 		raise error
 
 	def send_warning(self: "Preprocessor", name: str, warning_msg: str) -> None:
@@ -120,7 +119,7 @@ class Preprocessor:
 		"""
 		warning = PreprocessorWarning(name, warning_msg, self.context)
 		if self.warning_mode == WarningMode.PRINT or self.warning_mode == WarningMode.PRINT_AND_RAISE:
-			print(warning.pretty_message(), file = stderr)
+			print(warning.pretty_message(self.use_color), file = stderr)
 		if self.warning_mode == WarningMode.RAISE or self.warning_mode == WarningMode.PRINT_AND_RAISE:
 			raise warning
 		if self.warning_mode == WarningMode.AS_ERROR:
