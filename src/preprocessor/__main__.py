@@ -19,10 +19,11 @@ parser.add_argument("--warnings", "-w", nargs="?", default=None, choices=("hide"
 parser.add_argument("--version", "-v", action="store_true")
 parser.add_argument("--output", "-o", nargs="?", type=argparse.FileType("w"), default=stdout)
 parser.add_argument("--help", "-h", nargs="?", const="", default=None)
-parser.add_argument("--define", "-d", "-D", nargs=1, action="append", default=[])
+parser.add_argument("--define", "-d", "-D", nargs="?", action="append", default=[])
 parser.add_argument(
 	"--include", "-i", "-I", nargs=1, action="append", default=[], type=abspath# type: ignore
 )
+parser.add_argument("--recursion-depth", "-r", nargs=1, type=int)
 parser.add_argument("input", nargs="?", type=argparse.FileType("r"), default=stdin)
 
 
@@ -41,8 +42,8 @@ def process_defines(preproc: Preprocessor, defines: List[str]) -> None:
 			name = define[:i]
 			value = define[i+1:]
 		if not name.isidentifier():
-			print("{}: error: argument --define/-d/-D: invalid define name \"{}\"".format(
-				PREPROCESSOR_NAME, name
+			parser.error("argument --define/-d/-D: invalid define name \"{}\"".format(
+				name
 			))
 			exit(1)
 		command = lambda *args: value
@@ -69,6 +70,13 @@ def process_options(preproc: Preprocessor, arguments: argparse.Namespace) -> Non
 		dirname(abspath(arguments.input.name)),
 		dirname(abspath(arguments.output.name)),
 	] + arguments.include
+
+	if arguments.recursion_depth is not None:
+		rec_depth = arguments.recursion_depth[0]
+		if rec_depth < -1:
+			parser.error("argument --recusion-depth/-r: number must be greater than -1")
+			exit(1)
+		preproc.max_recursion_depth = rec_depth
 
 	# version and help
 	if arguments.version:

@@ -49,7 +49,7 @@ class Preprocessor:
 	token_end: str = " %}"
 	token_endblock: str = "end"
 	re_flags: int = re.MULTILINE
-	exit_code: int = 2
+	exit_code: int = 4
 	safe_calls: bool = True
 	use_color: bool = False
 
