@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from os import remove
 
-from preprocessor import FileDescriptor, Preprocessor
-from preprocessor.blocks import find_elifs_and_else
+from preproc import FileDescriptor, Preprocessor
+from preproc.blocks import find_elifs_and_else
 
 
 class TestCommands:

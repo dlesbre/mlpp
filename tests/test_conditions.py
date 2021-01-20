@@ -1,5 +1,5 @@
-import preprocessor.defaults
-from preprocessor.conditions import *
+from preproc.conditions import *
+from preproc.defaults import Preprocessor
 
 
 def test_lexer():
@@ -12,7 +12,7 @@ def test_lexer():
 		assert condition_lexer(string) == tokenlist
 
 def test_conditions():
-	preproc = preprocessor.defaults.Preprocessor()
+	preproc = Preprocessor()
 	test = [
 		("true", True),	("1", True),
 		("\"\"", False), ("false", False), ("0", False),

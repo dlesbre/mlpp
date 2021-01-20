@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-from preprocessor import FileDescriptor, Preprocessor
-from preprocessor.defs import TokenMatch, get_identifier_name
+from preproc import FileDescriptor, Preprocessor
+from preproc.defs import TokenMatch, get_identifier_name
 
 
 def test_context():

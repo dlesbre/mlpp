@@ -1,20 +1,19 @@
 # -*- coding: utf-8 -*-
-from setuptools import find_packages, setup  # type: ignore
+from setuptools import setup  # type: ignore
 
 with open("README.md", "r", encoding="utf-8") as fh:
 	long_description = fh.read()
 
 setup(
-	name = "preprocessor",
-	version = "0.0.1",
+	name = "preproc",
+	version = "1.0.0",
 	author = "Dorian Lesbre",
 	url = "https://github.com/Lesbre/preprocessor/",
 	description = "Preprocessor for text files (code/html/tex/...) inspired by the C preprocessor",
 	long_description = long_description,
 	long_description_content_type = "text/markdown",
-	package_dir = {"": "src"},
-	packages = find_packages(), # ["src/preprocessor"]
-	# scripts = ["preprocessor"],
+	packages = ["preproc"],
+	scripts = ["pproc"],
 	install_requires = [],
 	extras_require = {
 		"dev": ["pytest", "mypy"],
