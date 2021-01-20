@@ -11,16 +11,17 @@ setup(
 	url = "https://github.com/Lesbre/preprocessor/",
 	description = "Preprocessor for text files (code/html/tex/...) inspired by the C preprocessor",
 	long_description = long_description,
-	long_description_content_type="text/markdown",
+	long_description_content_type = "text/markdown",
 	package_dir = {"": "src"},
-	packages = find_packages(),
-	install_requires=[],
-	extras_require={
+	packages = find_packages(), # ["src/preprocessor"]
+	# scripts = ["preprocessor"],
+	install_requires = [],
+	extras_require = {
 		"dev": ["pytest", "mypy"],
 	},
-	python_requires=">=3.6",
-	license="MIT",
-	classifiers=[
+	python_requires = ">=3.6",
+	license = "MIT",
+	classifiers = [
 		"Programming Language :: Python :: 3",
 		"License :: OSI Approved :: MIT License",
 		"Operating System :: OS Independent",
