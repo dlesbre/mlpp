@@ -19,7 +19,7 @@ Simple program to preprocess text files. It is inspired by the C preprocessor an
 	You can install it globaly or in a virtual environment. You may have to run as `sudo` when installing globaly.
 
 3. You're done ! You can now call the preprocessor from a command line with `pproc` or `python3 -m preproc` (see [command line usage](https://github.com/Lesbre/preprocessor#command-line-usage) for arguments). You can also import it in python3 with `import preproc`
-4. You can uninstall with `pip uninstall preproc`
+4. You can uninstall with `pip3 uninstall preproc`
 
 ## Preprocessor syntax
 

@@ -1,4 +1,6 @@
-# -*- coding: utf-8 -*-
+"""
+setup file. run 'python3 setup.py install' to install.
+"""
 from setuptools import setup  # type: ignore
 
 with open("README.md", "r", encoding="utf-8") as fh:
@@ -22,7 +24,12 @@ setup(
 	license = "MIT",
 	classifiers = [
 		"Programming Language :: Python :: 3",
+		"Programming Language :: Python :: 3.6",
+		"Programming Language :: Python :: 3.7",
+		"Programming Language :: Python :: 3.8",
+		"Programming Language :: Python :: 3.9",
 		"License :: OSI Approved :: MIT License",
 		"Operating System :: OS Independent",
+		"Topic :: Utilities",
 	],
 )
