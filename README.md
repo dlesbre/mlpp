@@ -16,9 +16,9 @@ Simple program to preprocess text files. It is inspired by the C preprocessor an
 1. Clone or download this repository
 2. Run `python3 setup.py install` in the repository folder
 
-	You can install it globaly or in a virtual environment
+	You can install it globaly or in a virtual environment. You may have to run as `sudo` when installing globaly.
 
-3. You're done ! You can now call the preprocessor from a command line with `pproc` or `python3 -m preproc` (see [Command line usage](https://github.com/Lesbre/preprocessor#command-line-usage) for arguments). You can also import it in python3 with `import preproc`
+3. You're done ! You can now call the preprocessor from a command line with `pproc` or `python3 -m preproc` (see [command line usage](https://github.com/Lesbre/preprocessor#command-line-usage) for arguments). You can also import it in python3 with `import preproc`
 4. You can uninstall with `pip uninstall preproc`
 
 ## Preprocessor syntax
@@ -122,7 +122,7 @@ You can configure the preprocessor directly via it's public attributes:
 
 ## Command and block reference
 
-Here follows a list of predefined commands and blocks.
+Here follows a list of predefined commands and blocks. An up to date list can be found by running `pproc -h commands` and detailed descriptions obtained by running `pproc -h <command_name>`.
 
 ### Commands
 
