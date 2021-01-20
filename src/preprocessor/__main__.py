@@ -23,6 +23,7 @@ parser.add_argument("--define", "-d", "-D", nargs="?", action="append", default=
 parser.add_argument(
 	"--include", "-i", "-I", nargs=1, action="append", default=[], type=abspath# type: ignore
 )
+parser.add_argument("--silent", "-s", nargs=1, default=[], action="append")
 parser.add_argument("--recursion-depth", "-r", nargs=1, type=int)
 parser.add_argument("input", nargs="?", type=argparse.FileType("r"), default=stdin)
 
@@ -71,12 +72,30 @@ def process_options(preproc: Preprocessor, arguments: argparse.Namespace) -> Non
 		dirname(abspath(arguments.output.name)),
 	] + arguments.include
 
+	# recursion depth
 	if arguments.recursion_depth is not None:
 		rec_depth = arguments.recursion_depth[0]
 		if rec_depth < -1:
 			parser.error("argument --recusion-depth/-r: number must be greater than -1")
 			exit(1)
 		preproc.max_recursion_depth = rec_depth
+
+	# tokens
+	if arguments.begin is not None:
+		preproc.token_begin = arguments.begin
+	if arguments.end is not None:
+		preproc.token_end = arguments.end
+
+	# warning mode
+	if arguments.warnings == "hide":
+		preproc.warning_mode = WarningMode.HIDE
+	elif arguments.warnings == "error":
+		preproc.warning_mode = WarningMode.AS_ERROR
+	else:
+		preproc.warning_mode = WarningMode.PRINT
+
+	# silent warnings
+	preproc.silent_warnings.extend([x[0] for x in arguments.silent])
 
 	# version and help
 	if arguments.version:
@@ -85,18 +104,6 @@ def process_options(preproc: Preprocessor, arguments: argparse.Namespace) -> Non
 	if arguments.help is not None:
 		print(preproc.get_help(arguments.help))
 		exit(0)
-
-	if arguments.begin is not None:
-		preproc.token_begin = arguments.begin
-	if arguments.end is not None:
-		preproc.token_end = arguments.end
-
-	if arguments.warnings == "hide":
-		preproc.warning_mode = WarningMode.HIDE
-	elif arguments.warnings == "error":
-		preproc.warning_mode = WarningMode.AS_ERROR
-	else:
-		preproc.warning_mode = WarningMode.PRINT
 
 def preprocessor_main(argv: Optional[List[str]] = None) -> None:
 	"""main function for the preprocessor

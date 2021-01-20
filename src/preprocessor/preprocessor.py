@@ -56,6 +56,7 @@ class Preprocessor:
 	# warning and error modes
 	error_mode: ErrorMode = ErrorMode.RAISE
 	warning_mode: WarningMode = WarningMode.RAISE
+	silent_warnings: List[str] = []
 
 	# private attributes
 	_recursion_depth: int
@@ -83,6 +84,7 @@ class Preprocessor:
 		self.labels = LabelStack()
 		self._recursion_depth = -1
 		self.include_path = list()
+		self.silent_warnings = Preprocessor.silent_warnings.copy()
 
 
 	def send_error(self: "Preprocessor", name: str, error_msg: str) -> None:
@@ -117,6 +119,8 @@ class Preprocessor:
 		  | RAISE -> raise python warning
 		  | AS_ERROR -> passes to self.send_error()
 		"""
+		if name in self.silent_warnings:
+			return
 		warning = PreprocessorWarning(name, warning_msg, self.context)
 		if self.warning_mode == WarningMode.PRINT or self.warning_mode == WarningMode.PRINT_AND_RAISE:
 			print(warning.pretty_message(self.use_color), file = stderr)
@@ -471,23 +475,28 @@ class Preprocessor:
 				Options:
 				  -o --output <file>   specifies a file to write output to
 				                       default is stdout
-				  -w --warnings <hide|error> choose whether to hide warnings
-				                       or have them raise an error. default is display
 				  -b --begin <string>  change the begin token (default is "{begin}")
 				  -e --end <string>    change the end token (default is "{end}")
+				  -r --recursion_depth <number> set the max recursion depth (default {rec}).
+				                       use -1 for no maximum recursion (dangerous)
 				  -d -D --define <name>[=<value>] defines a simple command
 				                       with name <name> which prints <value> (nothing if no value)
 				                       Can be used multiple times on command line
 				  -i -I --include <path> Adds paths to the INCLUDE_PATH.
 					                     default INCLUDE_PATH is [".", dir(input_file), dir(output_file)]
 				                       Can be used multiple times on command line
+
+				  -w --warnings <hide|error> choose whether to hide warnings
+				                       or have them raise an error. default is display.
+				  -s --silent <warning_name> silence a specific warning (ex: extra-arguments)
+
 				  -v --version         show version and exit
 				  -h --help            show this help and exit
-				  -h --help "commands" show a list of commands and blocks and exit
+				  -h --help commands   show a list of commands and blocks and exit
 				  -h --help <cmd_name> show help for a specific command of block
 				""".format(
 					name = PREPROCESSOR_NAME, version = PREPROCESSOR_VERSION,
-					begin = "{% ", end = " %}"))
+					begin = "{% ", end = " %}", rec = self.max_recursion_depth))
 		if help_msg == "commands":
 			return "Commands:\n  " + "\n  ".join(sorted(self.commands.keys())) +\
 				"\n\nBlocks:\n  " + "\n  ".join(sorted(self.blocks.keys()))
