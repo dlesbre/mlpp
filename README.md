@@ -2,6 +2,23 @@
 
 Simple program to preprocess text files. It is inspired by the C preprocessor and should work with any language.
 
+## Contents
+
+1. [Installation](##Installation)
+2. [Preprocessor syntax](##preprocessor-syntax)
+3. [Command line usage](##command-line-usage)
+4. [Command and block reference](##command-and-block-reference)
+
+## Installation
+
+1. Clone or download this repository
+2. Run `python3 setup.py install` in the repository folder
+
+	You can install it globaly or in a virtual environment
+
+3. You're done ! You can now call the preprocessor from a command line with `pproc` or `python3 -m preproc` (see [Command line usage](##command-line-usage) for arguments). You can also import it in python3 with `import preproc`
+4. You can uninstall with `pip uninstall preproc`
+
 ## Preprocessor syntax
 
 ### Basic syntax
@@ -19,7 +36,7 @@ Preprocessor instructions are split in three categories :
 
 	Blocks work very similarily to commands: they wrap around some text and alter it in some way. For instance the `{% verbatim %}` block prints all text in itself verbatim, without rendering any of the commands.
 
-- **post_actions**: post action can be queued by special commands. They occur once every command and block in the current block has been rendered and affect the whole current block. For instance `{% replace foo bar %}` will replace all instances of "foo" with "bar" in the current block (including occurences before the command is called) but not occurences in higher blocks:
+- **final actions**: some actions can be queued by special commands. They occur once every command and block in the current block has been rendered and affect the whole current block. For instance `{% replace foo bar %}` will replace all instances of "foo" with "bar" in the current block (including occurences before the command is called) but not occurences in higher blocks:
 
 		some text... foo here is not replaced
 		{% begin block %}
@@ -33,17 +50,45 @@ Preprocessor instructions are split in three categories :
 			{% command that prints foo %} will be replaced
 		{% endblock %}
 
+For a list of command run `pproc -h commands` or see the [Command and block reference](##command-and-block-reference).
+
 ### Nesting and resolution order
 
 Commands can be nested within one another : `{% foo {% bar %} %}`. The most innermost command is called first. So here `{% bar %}` is called, then `{% foo bar_output %}` is called. You can even do `{% {% foo %} %}` which will call `{% foo %}` first, then call `{% foo_output %}`. Note that this will fail if `foo_output` isn't a valid command, just like the previous command will fail is `bar_output` isn't a valid argument for `foo`.
 
 Nesting can also be used for block arguments, but *it can NOT be used for block names and endblock*. This will likely fail block resolution and result in matching the wrong endblock or no endblock.
 
-### Command and block reference
+---
 
-Here follows a list of predefined commands, blocks and post_actions:
+## Command line usage
 
-#### Commands
+The preprocessor can be called from the command line with:
+
+	pproc [--flags] [input_file]
+	python3 -m preproc [--flags] [input_file]
+
+The default input file is `stdin`. Command line options are:
+
+- `-o --output <file>` specifies a file to write output to. Default is stdout
+- `-b --begin <string>` change the begin token (default is `"{% "`)
+- `-e --end <string>` change the end token (default is `" %}"`)
+- `-r --recursion_depth <number>` set the max recursion depth (default {rec}). Use -1 for no maximum recursion (dangerous)
+- `-d -D --define <name>[=<value>]` defines a simple command with name `<name>` which prints `<value>` (nothing if no value). Can be used multiple times on command line
+- `-i -I --include <path>` Adds paths to the INCLUDE_PATH. default INCLUDE_PATH is `[".", dir(input_file), dir(output_file)]`. Can be used multiple times on command line
+- `w --warnings <hide|error>` choose whether to hide warnings or have them raise an error. default is display.
+- `s --silent <warning_name>` silence a specific warning (ex: `"extra-arguments"`)
+- `v --version` show version and exit
+- `h --help` show this help and exit
+- `h --help commands` show a list of commands and blocks and exit
+- `h --help <cmd_name>` show help for a specific command of block
+
+---
+
+## Command and block reference
+
+Here follows a list of predefined commands and blocks.
+
+### Commands
 
 - `{% date [format] %}` prints the current date and time. The default format is "YYYY-MM-DD". In the format string Y is replace by year, M by month, D by day, h by hour, m by minute and s by second. The number of letters (between 1-4) indicates leading zeros, except for Y. YY indicates to use only the last two digits of the year.
 - `{% begin <number = 0> %}` - prints the command begin token ("{% " by default). If number is not 0, prints `{% begin <number - 1> %}` for recursion purposes.
@@ -83,17 +128,7 @@ Here follows a list of predefined commands, blocks and post_actions:
 - `{% file %}` - prints the current file name
 - `{% line %}` - prints the line number of the command in the original file. It can differ in the render dus to commands adding/removing line breaks
 
-#### Blocks
-
-- `{% block %}...{% endblock %}` - basic block, used to restrict post actions scope
-- `{% verbatim %}...{% endverbatim %}` - copies its contents without parsing them. Stops at first `{% endverbatim %}` not matching a `{% verbatim %}`
-- `{% void %}...{% endvoid %}` - run all commands/blocks inside it but prints nothing. Can be used for comments of many definitions without adding linebreaks.
-- `{% repeat <number>0> %}...{% endrepeat %}` - renders its contents once and copies it *number* times.
-- `{% atlabel <label> %}...{% endatlabel %}` - renders its contents but doesn't print them. As a post action, places a copy of the render at each occurence of *label*.
-
-#### Post actions
-
-These commands print nothing and trigger post actions
+These commands print nothing and trigger final actions
 
 - `{% strip_empty_lines %}` - removes all empty lines (containing only whitespace) from current block
 - `{% strip_trailing_whitespace %}` - removes all trailing whitespace (space, tabs,...) from the current block
@@ -107,6 +142,14 @@ These commands print nothing and trigger post actions
 	If the whole-word flag is present, only replace occurrences which aren't part of a larger identifier (no letter/underscore before, no letter/underscore/number after).
 
 	The count argument specifies how many occurrences of pattern to replace, from the start. Defaults to 0, replace all occurrences.
+
+### Blocks
+
+- `{% block %}...{% endblock %}` - basic block, used to restrict post actions scope
+- `{% verbatim %}...{% endverbatim %}` - copies its contents without parsing them. Stops at first `{% endverbatim %}` not matching a `{% verbatim %}`
+- `{% void %}...{% endvoid %}` - run all commands/blocks inside it but prints nothing. Can be used for comments of many definitions without adding linebreaks.
+- `{% repeat <number>0> %}...{% endrepeat %}` - renders its contents once and copies it *number* times.
+- `{% atlabel <label> %}...{% endatlabel %}` - renders its contents but doesn't print them. As a post action, places a copy of the render at each occurence of *label*.
 
 ---
 
