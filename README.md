@@ -4,10 +4,10 @@ Simple program to preprocess text files. It is inspired by the C preprocessor an
 
 ## Contents
 
-1. [Installation](##Installation)
-2. [Preprocessor syntax](##preprocessor-syntax)
-3. [Command line usage](##command-line-usage)
-4. [Command and block reference](##command-and-block-reference)
+1. [Installation](./README.md##Installation)
+2. [Preprocessor syntax](./README.md##preprocessor-syntax)
+3. [Command line usage](./README.md##command-line-usage)
+4. [Command and block reference](./README.md##command-and-block-reference)
 
 ## Installation
 
@@ -16,7 +16,7 @@ Simple program to preprocess text files. It is inspired by the C preprocessor an
 
 	You can install it globaly or in a virtual environment
 
-3. You're done ! You can now call the preprocessor from a command line with `pproc` or `python3 -m preproc` (see [Command line usage](##command-line-usage) for arguments). You can also import it in python3 with `import preproc`
+3. You're done ! You can now call the preprocessor from a command line with `pproc` or `python3 -m preproc` (see [Command line usage](./README.md##command-line-usage) for arguments). You can also import it in python3 with `import preproc`
 4. You can uninstall with `pip uninstall preproc`
 
 ## Preprocessor syntax
@@ -50,7 +50,7 @@ Preprocessor instructions are split in three categories :
 			{% command that prints foo %} will be replaced
 		{% endblock %}
 
-For a list of command run `pproc -h commands` or see the [Command and block reference](##command-and-block-reference).
+For a list of command run `pproc -h commands` or see the [Command and block reference](./README.md##command-and-block-reference).
 
 ### Nesting and resolution order
 
