@@ -4,10 +4,12 @@ Simple program to preprocess text files. It is inspired by the C preprocessor an
 
 ## Contents
 
-1. [Installation](./README.md##Installation)
-2. [Preprocessor syntax](./README.md##preprocessor-syntax)
-3. [Command line usage](./README.md##command-line-usage)
-4. [Command and block reference](./README.md##command-and-block-reference)
+1. [Installation](https://github.com/Lesbre/preprocessor#installation)
+2. [Preprocessor syntax](https://github.com/Lesbre/preprocessor#preprocessor-syntax)
+3. [Command line usage](https://github.com/Lesbre/preprocessor#command-line-usage)
+4. [Python usage](https://github.com/Lesbre/preprocessor#python-usage)
+5. [Command and block reference](https://github.com/Lesbre/preprocessor#command-and-block-reference)
+6. [Defining custom commands and blocks](https://github.com/Lesbre/preprocessor#defining-custom-commands-and-blocks)
 
 ## Installation
 
@@ -16,7 +18,7 @@ Simple program to preprocess text files. It is inspired by the C preprocessor an
 
 	You can install it globaly or in a virtual environment
 
-3. You're done ! You can now call the preprocessor from a command line with `pproc` or `python3 -m preproc` (see [Command line usage](./README.md##command-line-usage) for arguments). You can also import it in python3 with `import preproc`
+3. You're done ! You can now call the preprocessor from a command line with `pproc` or `python3 -m preproc` (see [Command line usage](https://github.com/Lesbre/preprocessor#command-line-usage) for arguments). You can also import it in python3 with `import preproc`
 4. You can uninstall with `pip uninstall preproc`
 
 ## Preprocessor syntax
@@ -50,7 +52,7 @@ Preprocessor instructions are split in three categories :
 			{% command that prints foo %} will be replaced
 		{% endblock %}
 
-For a list of command run `pproc -h commands` or see the [Command and block reference](./README.md##command-and-block-reference).
+For a list of command run `pproc -h commands` or see the [command and block reference](https://github.com/Lesbre/preprocessor#command-and-block-reference).
 
 ### Nesting and resolution order
 
@@ -81,6 +83,40 @@ The default input file is `stdin`. Command line options are:
 - `h --help` show this help and exit
 - `h --help commands` show a list of commands and blocks and exit
 - `h --help <cmd_name>` show help for a specific command of block
+
+## Python usage
+
+The package can be imported in python 3 with `import preproc`. This imports a `Preprocessor` class with all default commands included (see [list](https://github.com/Lesbre/preprocessor#command-and-block-reference)). The simplest way to use the preprocessor is then:
+
+```Python
+import preproc
+
+preprocessor = preproc.Preprocessor()
+
+preprocessor.context.new(preproc.FileDescriptor(filename, file_contents), 0)
+parsed_contents = preprocessor.parse(file_contents)
+preprocessor.context.pop()
+```
+
+The two context lines are optionnal but they help with error tracebacks. The first one tells the preprocessor the filename and the position of line break to indicate errors, the other just cleans up afterwards.
+
+You can configure the preprocessor directly via it's public attributes:
+- `max_recursion_depth: int` (default 20) - raises an error past this depth
+- `token_begin: str` and `token_end: str` (default "{% " and " %}") - tokens wrapping preprocessor calls in the document. They should not be equal or be a simple double quote `"` or paranthese `(` or `)`.
+- `token_endblock: str` (default "end") - specifies what form the endblock command takes with the regex `<token_begin>s*<token_endblock><block_name>s*<token_end>`
+- `safe_calls: bool` (default True) - if True, catches exceptions raised by command or blocks
+- `error_mode: preproc.ErrorMode` (default RAISE), how errors are handled:
+	- PRINT_AND_EXIT -> print to stderr and exit
+	- PRINT_AND_RAISE -> print to stderr and raise exception
+	- RAISE -> raise exception
+- `warning_mode: preproc.WarningMode` (default RAISE)
+	- HIDE -> do nothing
+	- PRINT -> print to stderr
+	- RAISE -> raise python warning
+	- AS_ERROR -> passes to self.send_error()
+- `use_color: bool` (default False) if True, uses ansi color when priting errors
+
+
 
 ---
 
@@ -153,9 +189,7 @@ These commands print nothing and trigger final actions
 
 ---
 
-## Custom commands from python
-
-### Defining commands, blocks and post action
+## Defining commands, blocks and final actions
 
 This package is designed to simply add new commands and blocks:
 
@@ -192,22 +226,22 @@ This package is designed to simply add new commands and blocks:
 	Preprocessor.blocks["block_name"] = block_func
 	```
 
-- **post actions**: they have the same signature as commands:
+- **final actions**: they have the same signature as commands:
 	```Python
-	def post_action_function(p: Preprocessor, text: str) -> str
+	def final_action_function(p: Preprocessor, text: str) -> str
 	```
 
 	Here the `text` arg is the whole text (with all commands rendered).
 
-	The post action returns the transformed text.
+	The action returns the transformed text.
 
-	Post action are stored in the preprocessor's `post_actions` list. The list's order determines the order in which post actions are executed.
+	Actions are added via methods:
 
 	```Python
-	# adds a post action that executes after all previous post_action
-	Preprocessor.post_actions.append(post_action_function)
-	# adds a post action which happens first
-	Preprocessor.post_actions.insert(0, post_action_function)
+	# adds a post action to the whole class
+	Preprocessor.static_add_finalaction(post_action_function, [RunActionAt=CurrentLevel])
+	# adds a post action to a specific object
+	preprocessor_obj.add_finalaction(post_action_function, [RunActionAt=CurrentLevel])
 	```
 
 	Adding block actions with commands to run in the current block is pretty simple:
@@ -219,7 +253,7 @@ This package is designed to simply add new commands and blocks:
 
 	def my_post_action_command(p: Preprocessor, args: str) -> str:
 		# will run in the current block and it's sublocks only
-		p.post_actions.append(my_post_action)
+		p.add_finalaction.append(my_post_action)
 		return ""
 
 	Preprocessor.commands["run_my_post_action"] = my_post_action_command
@@ -235,35 +269,8 @@ Some useful functions and attribute that are usefull when defining commands or b
 	class ArgumentParserNoExit(argparse.ArgumentParser):
 	```
 	which raises `argparse.ArgumentError` instead of exiting, allowing errors to be caught and passed to the preprocessor error handling system.
-- `Preprocessor.send_error(self, msg: str)` - sends an error (and exits). Errors should be only fatal problems. Non-fatal problems should be warnings.
-- `Preprocessor.send_warning(self, msg: str)` - sends a warning.
+- `Preprocessor.send_error(self, name: str, msg: str)` - sends an error (and exits). Errors should be only fatal problems. Non-fatal problems should be warnings.
+- `Preprocessor.send_warning(self, name: str, msg: str)` - sends a warning.
 - `Preprocessor.current_position: Position` - variable containing all position info.
 - `Preprocessor.parse(self, string: str) -> str` - processed the string commands and blocks and returns the parsed version
 	It can be used for block contents, recursive defines, or any text which has preprocessor syntax.
-
----
-
-## Developpement install
-
-To install the package for developpement
-
-1. Create a virtual environment
-
-		python3 -m venv venv
-
-2. Lauch the virtual env
-
-		source venv/bin/activate
-
-3. upgrade pip and install requirements
-
-		python -m pip install --upgrade pip
-		pip install -r requirements-devel.txt
-
-4. Install the package
-
-		pip install -e .
-
-5. You're done! You import `Preprocessor` from python. You can also run tests with
-
-		pytest
