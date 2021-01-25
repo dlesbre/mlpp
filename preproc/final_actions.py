@@ -122,6 +122,30 @@ cmd_fix_first_line.doc = ( # type: ignore
 	line (unless the block is empty)
 	""")
 
+def cmd_strip(preprocessor: Preprocessor, args: str) -> str:
+	"""the strip command
+	queues:
+	- fnl_strip_empty_lines
+	- fnl_strip_leading_whitespace
+	- fnl_strip_trailing_whitespace
+	- fnl_fix_last_line
+	- fnl_fix_first_line
+	to preprocessor final actions"""
+	if args.strip() != "":
+		preprocessor.send_warning("extra-arguments", "strip takes no arguments")
+	preprocessor.add_finalaction(fnl_strip_empty_lines)
+	preprocessor.add_finalaction(fnl_strip_leading_whitespace)
+	preprocessor.add_finalaction(fnl_strip_trailing_whitespace)
+	preprocessor.add_finalaction(fnl_fix_first_line)
+	preprocessor.add_finalaction(fnl_fix_first_line)
+	return ""
+
+cmd_strip.doc = ( # type: ignore
+	"""
+	Removes empty lines as well as trailing/leading whitespace.
+	Ensures file ends on a single empty line
+	""")
+
 # ============================================================
 # replace command
 # ============================================================
