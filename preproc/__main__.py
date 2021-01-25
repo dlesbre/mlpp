@@ -33,6 +33,7 @@ def process_defines(preproc: Preprocessor, defines: List[str]) -> None:
 	"""process command line defines
 	defines should be a list of strings like "<ident>" or "<ident>=<value>"
 	"""
+	print(defines)
 	for define in defines:
 		if isinstance(define, list):
 			define = define[0] # argparse creates nested list for some reason
@@ -48,7 +49,7 @@ def process_defines(preproc: Preprocessor, defines: List[str]) -> None:
 				name
 			))
 			exit(1)
-		command = lambda *args: value
+		command = lambda pre, args, val=value: val
 		command.doc = "Command line defined command {}={}".format(name, value) # type: ignore
 		preproc.commands[name] = command
 
