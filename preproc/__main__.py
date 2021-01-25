@@ -34,7 +34,8 @@ def process_defines(preproc: Preprocessor, defines: List[str]) -> None:
 	defines should be a list of strings like "<ident>" or "<ident>=<value>"
 	"""
 	for define in defines:
-		define = define[0] # argparse creates nested list for some reason
+		if isinstance(define, list):
+			define = define[0] # argparse creates nested list for some reason
 		i = define.find("=")
 		if i == -1:
 			name = define
