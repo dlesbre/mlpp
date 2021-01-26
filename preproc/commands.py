@@ -532,7 +532,7 @@ def cmd_include(preprocessor: Preprocessor, args: str) -> str:
 		else:
 			preprocessor.send_error("file-error",'file not found "{}"'.format(arguments.file_path))
 	try:
-		with open(arguments.file_path, "r") as file:
+		with open(filepath, "r") as file:
 			contents = file.read()
 	except FileNotFoundError:
 		preprocessor.send_error("file-error",'file not found "{}"'.format(arguments.file_path))
