@@ -141,7 +141,18 @@ class RunActionAt(enum.IntFlag):
 def process_string(string: str) -> str:
 	"""Change escape sequences to the chars they match
 	ex: process_string("\\\\n") -> "\\n\""""
-	return string.encode().decode("unicode-escape")
+	replacements = [
+		("\\\\", "\x00"),
+		("\\n", "\n"),
+		("\\t", "\t"),
+		("\\r", "\r"),
+		('\\"', '\"'),
+		("\\'", "'"),
+		("\x00", "\\"),
+	]
+	for search, replace in replacements:
+		string = string.replace(search, replace)
+	return string
 
 
 class ArgumentParserNoExit(argparse.ArgumentParser):
