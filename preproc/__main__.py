@@ -8,7 +8,7 @@ from os.path import abspath, dirname
 from sys import stderr, stdin, stdout
 from typing import List, Optional
 
-from .defaults import FileDescriptor, Preprocessor
+from .defaults import FileDescriptor, Preprocessor, define_macro
 from .defs import PREPROCESSOR_NAME, PREPROCESSOR_VERSION
 from .errors import ErrorMode, WarningMode
 
@@ -48,9 +48,7 @@ def process_defines(preproc: Preprocessor, defines: List[str]) -> None:
 				name
 			))
 			exit(1)
-		command = lambda pre, args, val=value: val
-		command.doc = "Command line defined command {}={}".format(name, value) # type: ignore
-		preproc.commands[name] = command
+		define_macro(preproc, name, [], value)
 
 def process_options(preproc: Preprocessor, arguments: argparse.Namespace) -> None:
 	"""process the preprocessor options

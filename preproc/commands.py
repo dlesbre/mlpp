@@ -5,6 +5,7 @@ import argparse
 import re
 from datetime import datetime
 from os.path import abspath, dirname, isfile, join
+from typing import List
 
 from .context import FileDescriptor
 from .defs import *
@@ -95,6 +96,89 @@ cmd_file.doc = ( # type: ignore
 macro_parser = ArgumentParserNoExit(prog="macro", add_help=False)
 macro_parser.add_argument('vars', nargs='*') # arbitrary number of arguments
 
+def rreplace(string, old, new, occurrence = 1):
+	"""replace <occurence> number of old by new in string
+	starting with the right"""
+	split = string.rsplit(old, occurrence)
+	return new.join(split)
+
+def define_macro(preprocessor: Preprocessor, name: str, args: List[str], text: str) -> None:
+	"""Defines a macro.
+	Inputs:
+	- preprocessor - the object to which the macro is added
+	- name: str - the name of the new macro
+	- args: List[str] - List or arguments name
+	- text: str - the text the command prints. Occurences of args will
+	  be replaced by the corresponding value during the call.
+	  will only replace occurence that aren't part of a larger word
+	"""
+	# replace arg occurences with placeholder
+	for i, arg in enumerate(args):
+		text = re.sub(
+			REGEX_IDENTIFIER_WRAPPED.format(re.escape(arg)), # pattern
+			"\\1{}\\3".format("\000(arg {})\000".format(i)), # placeholder
+			text,
+			flags = re.MULTILINE
+		)
+	# define the command
+	def cmd(pre: Preprocessor, cmd_args: List[str], text: str = text, ident: str = name) -> str:
+		"""a defined macro command"""
+		for i, arg in enumerate(cmd_args):
+			pattern = re.escape("\000(arg {})\000".format(i))
+			text = re.sub(pattern, arg, text, flags=re.MULTILINE)
+
+		pre.context.update(
+			pre.current_position.cmd_argbegin,
+			'in expansion of defined command {}'.format(ident)
+		)
+		parsed = pre.parse(text)
+		pre.context.pop()
+		return parsed
+
+	cmd.doc = "{} {}".format(name, " ".join(args)) # type: ignore
+	# place it in command_vars
+	if "def" not in preprocessor.command_vars:
+		preprocessor.command_vars["def"] = dict()
+	preprocessor.command_vars["def"]["{}<{}>".format(name, len(args))] = cmd
+
+	overloads = []
+	usages = []
+	for key, val in preprocessor.command_vars["def"].items():
+		if key.startswith(name):
+
+			overloads.append(int(key[key.find('<') + 1 : -1]))
+			usages.append(val.doc)
+	usage = "usage: " + "\n       ".join(usages)
+	overload_nb = rreplace(", ".join(str(x) for x in overloads), ", ", " or ")
+
+	# overwrite defined command
+	def defined_cmd(pre: Preprocessor, args_string: str) -> str:
+		"""This is the actual command, parses arguments
+		and calls the correct overload"""
+		split = pre.split_args(args_string)
+		try:
+			arguments = macro_parser.parse_args(split)
+		except argparse.ArgumentError:
+			pre.send_error("invalid-argument",
+				"invalid argument for macro.\n{}".format(usage)
+			)
+		if len(arguments.vars) not in overloads:
+			pre.send_error("invalid-argument",(
+				"invalid number of arguments for macro.\nexpected {} got {}.\n"
+				"{}").format(overload_nb, len(arguments.vars), usage)
+			)
+		return pre.command_vars["def"]["{}<{}>".format(name, len(arguments.vars))](
+			pre, arguments.vars
+		)
+
+	defined_cmd.__doc__ = "Defined command for {} (expects {} arguments)\n{}".format(
+		name, overload_nb, usage
+	)
+	defined_cmd.doc = defined_cmd.__doc__ # type: ignore
+	defined_cmd.__name__ = """def_cmd_{}""".format(name)
+
+	preprocessor.commands[name] = defined_cmd
+
 def cmd_def(preprocessor: Preprocessor, args_string : str) -> str:
 	"""the define command - inspired by the C preprocessor's define
 	usage:
@@ -111,11 +195,9 @@ def cmd_def(preprocessor: Preprocessor, args_string : str) -> str:
 
 	# removed trailing\leading whitespace
 	text = text.strip()
-	is_macro = False
 	args = []
 
 	if text and text[0] == "(":
-		is_macro = True
 		end = text.find(")")
 		if end == -1:
 			preprocessor.send_error("unmatched-open-parenthese",
@@ -141,45 +223,7 @@ def cmd_def(preprocessor: Preprocessor, args_string : str) -> str:
 	if len(text) >= 2 and text[0] == '"' and text[-1] == '"':
 		text = process_string(text[1:-1])
 
-	def defined_command(pre: Preprocessor, args_string: str) -> str:
-		string = text
-		if is_macro:
-			split = pre.split_args(args_string)
-			try:
-				arguments = macro_parser.parse_args(split)
-			except argparse.ArgumentError:
-				pre.send_error("invalid-argument",
-					"invalid argument for macro.\nusage: {} {}".format(ident, " ".join(args))
-				)
-			if len(arguments.vars) != len(args):
-				pre.send_error("invalid-argument",(
-					"invalid number of arguments for macro (expected {} got {}).\n"
-					"usage: {} {}").format(
-						len(args), len(arguments.vars), ident, " ".join(args)
-				))
-			# first subsitution : placeholder to avoid conflits
-			# with multiple replaces
-			for i, arg in enumerate(args):
-				pattern = REGEX_IDENTIFIER_WRAPPED.format(re.escape(arg))
-				placeholder = "\000{}".format(i)
-				repl = "\\1{}\\3".format(placeholder)
-				string = re.sub(pattern, repl, string, flags=re.MULTILINE)
-			for i in range(len(args)):
-				pattern = re.escape("\000{}".format(i))
-				repl = arguments.vars[i]
-				string = re.sub(pattern, repl, string, flags=re.MULTILINE)
-
-		pre.context.update(
-			pre.current_position.cmd_argbegin,
-			'in expansion of defined command {}'.format(ident)
-		)
-		parsed = pre.parse(string)
-		pre.context.pop()
-		return parsed
-	defined_command.__doc__ = """Defined command for {}""".format(ident)
-	defined_command.doc = defined_command.__doc__ # type: ignore
-	defined_command.__name__ = """def_cmd_{}""".format(ident)
-	preprocessor.commands[ident] = defined_command
+	define_macro(preprocessor, ident, args, text)
 	return ""
 
 cmd_def.doc = ( # type: ignore
@@ -216,6 +260,13 @@ cmd_def.doc = ( # type: ignore
 	  {% rec1 %} -> prints john
 	  {% rec2 %} -> prints alice
 	  {% rec3 %} -> prints {% name %}
+
+	defs can be overloaded on the number of arguments
+
+	  {% def sum(a,b) a+b %}
+	  {% def sum(a)   {% sum a 0 %} %}
+	  {% sum 5 10 %} -> prints 5+10
+	  {% sum 5 %}    -> prints 5+0
 	""")
 
 def cmd_undef(preprocessor: Preprocessor, args_string: str) -> str:

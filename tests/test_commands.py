@@ -37,6 +37,7 @@ class TestCommands:
 			("{% def nom jean %}{% def prenom {% nom %} %}\nbonjour je suis {% prenom %}","\nbonjour je suis jean"),
 			("{% def add(a,b,c) (a+b+2c) %}hello{% add 1 2 3 %}", "hello(1+2+2c)"),
 			("{% def add(pha,alpha,lpha) (pha,alpha)lpha %}hello{% add 1 2 3 %}", "hello(1,2)3"),
+			("{% def f(a,b) a+b %}{% def f(a) {% f a 0 %} %}{% f 1 2 %}; {% f 1 %}", "1+2; 1+0"),
 		]
 		self.runtests(test)
 
