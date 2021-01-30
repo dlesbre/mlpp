@@ -372,16 +372,16 @@ def cmd_begin(preprocessor: Preprocessor, args_string: str) -> str:
 			preprocessor.send_error("invalid-argument","invalid argument: usage begin [uint]")
 	if level == 0:
 		return preprocessor.token_begin
-	return preprocessor.token_begin + "begin " + str(level-1) + preprocessor.token_end
+	return preprocessor.token_begin + " begin " + str(level-1) + " " + preprocessor.token_end
 
 cmd_begin.doc = ( # type: ignore
 	"""
-	Prints the current begin token (default "{% ")
+	Prints the current begin token (default "{%")
 
 	Usage: begin [<number>]
 	The optional number is used for recursion calls
-	  begin     -> "{% "
-		begin 0   -> "{% "
+	  begin     -> "{%"
+		begin 0   -> "{%"
 		begin <n> -> "{% begin <n-1> %}"
 	""")
 
@@ -403,17 +403,17 @@ def cmd_end(preprocessor: Preprocessor, args_string: str) -> str:
 	if level == 0:
 		return preprocessor.token_end
 	else:
-		return preprocessor.token_begin + "end " + str(level-1) + preprocessor.token_end
+		return preprocessor.token_begin + " end " + str(level-1) + " " + preprocessor.token_end
 
 cmd_end.doc = ( # type: ignore
 	"""
-	Prints the current end token (default " %}")
+	Prints the current end token (default "%}")
 
-	Usage: begin [<number>]
+	Usage: end [<number>]
 	The optional number is used for recursion calls
-	  begin     -> " %}"
-		begin 0   -> " %}"
-		begin <n> -> "{% end <n-1> %}"
+	  end     -> "%}"
+		end 0   -> "%}"
+		end <n> -> "{% end <n-1> %}"
 	""")
 
 def cmd_call(preprocessor: Preprocessor, args_string: str) -> str:
@@ -422,7 +422,7 @@ def cmd_call(preprocessor: Preprocessor, args_string: str) -> str:
 	args_string = args_string.strip()
 	if len(args_string) >= 2 and args_string[0] == '"' and args_string[-1] == '"':
 		args_string = args_string[1:-1]
-	return preprocessor.token_begin + args_string  + preprocessor.token_end
+	return preprocessor.token_begin + " " + args_string + " " + preprocessor.token_end
 
 cmd_call.doc = ( # type: ignore
 	"""
@@ -616,9 +616,9 @@ cmd_include.doc = ( # type: ignore
 	  paths can be added to include_path with the --include/-i/-I preprocessor option
 
 	Options:
-	  -b --begin <string> specify the begin token ("{% ")
+	  -b --begin <string> specify the begin token ("{%")
 	                      defaults to the same as current file
-		-e --end   <string> specify the end token (" %}")
+		-e --end   <string> specify the end token ("%}")
 	                      defaults to the same as current file
 		-v --verbatim       when present, includes files as is, without parsing.
 	""")

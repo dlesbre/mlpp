@@ -21,7 +21,7 @@ class Preprocessor:
 
 	Useful attributes that can be configured:
 	- max_recursion_depth: int (default 20) - raises an error past this depth
-	- token_begin and token_end: str (default "{% " and " %}")
+	- token_begin and token_end: str (default "{%" and "%}")
 	    use these to change the token used around preprocessor calls
 	    in the document.
 	    They should not be equal or be a simple double quote " or paranthese ( or )
@@ -45,8 +45,8 @@ class Preprocessor:
 
 	# constants
 	max_recursion_depth: int = 20
-	token_begin: str = "{% "
-	token_end: str = " %}"
+	token_begin: str = "{%"
+	token_end: str = "%}"
 	token_endblock: str = "end"
 	re_flags: int = re.MULTILINE
 	exit_code: int = 4

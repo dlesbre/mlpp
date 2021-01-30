@@ -43,11 +43,11 @@ class TestCommands:
 
 	def test_begin_end(self):
 		test = [
-			("{% begin %}", "{% "),
-			("{% end %}", " %}"),
+			("{% begin %}", "{%"),
+			("{% end %}", "%}"),
 			("{% begin 12 %}", "{% begin 11 %}"),
 			("{% call foo bar ...\t %}", "{% foo bar ... %}"),
-			("{% def hello {% begin 1 %} %}{% hello %}", "{% "),
+			("{% def hello {% begin 1 %} %}{% hello %}", "{%"),
 			("{% def foo bar %}{% def hello {% begin %}foo{% end %} %}{% hello %}", "bar"),
 			("{% def foo bar %}{% def foo2 {% call foo %} %}{% foo2 %}{% def foo yoyo %}{% foo2 %}", "baryoyo"),
 		]
@@ -167,7 +167,7 @@ class TestCommands:
 			("abcd{%  else\t\n %}defg", (4, 17, None)),
 			("{% if something %}blad{%  else\t\n %}defg{% endif %}", (-1, -1, None)),
 			("{% if something %}{% else %}{% endif %}{% else %}", (39, 49, None)),
-			("{% elif something %}", (0, 20, " something")),
+			("{% elif something %}", (0, 20, " something ")),
 		]
 		for string, result in test_match:
 			print("====== TEST ======")

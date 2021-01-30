@@ -25,7 +25,7 @@ Simple program to preprocess text files. It is inspired by the C preprocessor an
 
 ### Basic syntax
 
-The preprocessor instructions are wrapped between "{% " and " %}" (note the space). These tokens can be changed if they conflict with the syntax of the file's langage.
+The preprocessor instructions are wrapped between "{%" and "%}". These tokens can be changed if they conflict with the syntax of the file's langage.
 
 Preprocessor instructions are split in three categories :
 
