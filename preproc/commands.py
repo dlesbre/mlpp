@@ -145,11 +145,10 @@ def define_macro(preprocessor: Preprocessor, name: str, args: List[str], text: s
 	usages = []
 	for key, val in preprocessor.command_vars["def"].items():
 		if key.startswith(name):
-
 			overloads.append(int(key[key.find('<') + 1 : -1]))
 			usages.append(val.doc)
 	usage = "usage: " + "\n       ".join(usages)
-	overload_nb = rreplace(", ".join(str(x) for x in overloads), ", ", " or ")
+	overload_nb = rreplace(", ".join(str(x) for x in sorted(overloads)), ", ", " or ")
 
 	# overwrite defined command
 	def defined_cmd(pre: Preprocessor, args_string: str) -> str:
@@ -573,7 +572,9 @@ def cmd_include(preprocessor: Preprocessor, args: str) -> str:
 	try:
 		arguments = include_parser.parse_args(split)
 	except argparse.ArgumentError:
-		preprocessor.send_error("invalid-argument", "invalid argument.\nusage: include [-v|--verbatim] file_path")
+		preprocessor.send_error("invalid-argument",
+			"invalid argument.\nusage: include [-v|--verbatim] file_path"
+		)
 	filepath = arguments.file_path
 	if not isfile(filepath):
 		for include in preprocessor.include_path:
