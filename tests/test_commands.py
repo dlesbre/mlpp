@@ -7,16 +7,16 @@ from preproc.blocks import find_elifs_and_else
 
 class TestCommands:
 
-	pre = Preprocessor()
 	file_name = "test_commands"
 
 	def runtests(self, test):
-		for i, x in enumerate(test):
+		for i, j in enumerate(test):
+			pre = Preprocessor()
 			print("============= test {} ==============".format(i))
-			in_str, out_str = x
-			self.pre.context.new(FileDescriptor(self.file_name, in_str), 0)
-			assert self.pre.parse(in_str) == out_str
-			self.pre.context.pop()
+			in_str, out_str = j
+			pre.context.new(FileDescriptor(self.file_name, in_str), 0)
+			assert pre.parse(in_str) == out_str
+			pre.context.pop()
 
 	def test_commands(self):
 		test = [
@@ -76,11 +76,12 @@ class TestCommands:
 			("<def a b><c>", "bonjour{% def c d %}:{% include -b < -e > test.out %}:{% a %}", "bonjour:d:b"),
 		]
 		for content, in_str, out_str in test:
+			pre = Preprocessor()
 			with open(path, "w") as file:
 				file.write(content)
-			self.pre.context.new(FileDescriptor("test_include", in_str), 0)
-			assert self.pre.parse(in_str) == out_str
-			self.pre.context.pop()
+			pre.context.new(FileDescriptor("test_include", in_str), 0)
+			assert pre.parse(in_str) == out_str
+			pre.context.pop()
 		remove(path)
 
 	def test_replace(self):
@@ -169,7 +170,8 @@ class TestCommands:
 		]
 		for string, result in test_match:
 			print("====== TEST ======")
-			assert find_elifs_and_else(self.pre, string) == result
+			pre = Preprocessor()
+			assert find_elifs_and_else(pre, string) == result
 
 	def test_if(self):
 		test = [
