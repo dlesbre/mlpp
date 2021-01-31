@@ -160,6 +160,7 @@ def fnl_atlabel(preprocessor: Preprocessor, string: str) -> str:
 					'No matching label for atlabel block "{}"'.format(lbl)
 				)
 			for i in range(nb_labels):
+				# use references to labels because of offsets
 				index = preprocessor.labels.get_label(lbl)[i]
 				string = preprocessor.replace_string(
 					index, index, string, preprocessor.command_vars["atlabel"][lbl], []

@@ -5,7 +5,6 @@ namely:
   which raises an error rather than exit.
 - class Position to represent position to command
 - enum WarningMode to configure the Preprocessor
-- enum RunActionAt to configure final_actions
 - function trim to pretty-print docstrings
 - function process_string to process read string ("\\n" into newline)
 - functions is_integer or to_integer to get ints from strings
@@ -123,19 +122,6 @@ class TokenMatch(enum.IntEnum):
 	"""Used to represent Open/Closed tokens"""
 	OPEN = 0
 	CLOSE = 1
-
-
-class RunActionAt(enum.IntFlag):
-	"""Used to determine where to queue post actions
-	(at current, sublevels and/or parent levels)"""
-	NO_LEVEL = 0
-	CURRENT_LEVEL = enum.auto()
-	STRICT_SUB_LEVELS = enum.auto()
-	STRICT_PARENT_LEVELS = enum.auto()
-	PARRALLEL_CHILDREN = enum.auto()
-	CURRENT_AND_SUB_LEVELS = CURRENT_LEVEL | STRICT_SUB_LEVELS
-	CURRENT_AND_PARENT_LEVELS = CURRENT_LEVEL | STRICT_PARENT_LEVELS
-	ALL_LEVELS = CURRENT_LEVEL | STRICT_PARENT_LEVELS | STRICT_SUB_LEVELS
 
 
 def process_string(string: str) -> str:

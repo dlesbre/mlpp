@@ -129,6 +129,7 @@ def preprocessor_main(argv: Optional[List[str]] = None) -> None:
 
 	if isinstance(args.input, Path):
 		try:
+			input_name = str(args.input)
 			with open(args.input, "r") as file:
 				contents = file.read()
 		except FileNotFoundError:
@@ -137,11 +138,10 @@ def preprocessor_main(argv: Optional[List[str]] = None) -> None:
 			parser.error("argument input: permission denied \"{}\"".format(args.input))
 	else:
 		# read from stdin
+		input_name = "<stdin>"
 		contents = args.input.read()
 
-	preprocessor.context.new(FileDescriptor(args.input.name, contents), 0)
-	result = preprocessor.parse(contents)
-	preprocessor.context.pop()
+	result = preprocessor.process(contents, input_name)
 
 	if isinstance(args.output, Path):
 		try:

@@ -60,7 +60,7 @@ class Preprocessor:
 
 	# private attributes
 	_recursion_depth: int
-	_final_actions: List[Tuple[int, RunActionAt, TypeFinalAction]] = []
+	_final_actions: List[TypeFinalAction] = []
 
 	# commands and blocks
 	commands: Dict[str, TypeCommand] = dict()
@@ -82,7 +82,7 @@ class Preprocessor:
 		self.current_position = Position()
 		self.context = ContextStack()
 		self.labels = LabelStack()
-		self._recursion_depth = -1
+		self._recursion_depth = 0
 		self.include_path = list()
 		self.silent_warnings = Preprocessor.silent_warnings.copy()
 
@@ -329,18 +329,9 @@ class Preprocessor:
 		if self.labels.height <= self._recursion_depth:
 			self.labels.new_level()
 		# context init
-		empty_context = False
-		if self.context.is_empty():
-			self.context.new(FileDescriptor("NO FILE", ""), 0)
-			self.current_position.offset = 0
-			empty_context = True
-		else:
-			self.current_position.offset = self.context.top.position
+		self.current_position.offset = self.context.top.position
 
 		tokens: TokenList = self._find_tokens(string)
-
-		# save original length to avoid deleting preexisting actions
-		nb_actions = len(self._final_actions.copy())
 
 		while len(tokens) > 1:  # needs two tokens to make a pair
 
@@ -403,53 +394,41 @@ class Preprocessor:
 					self.token_begin, self.token_end, self.token_begin, self.token_end
 				)
 			)
-
-		string = self._handle_final_actions(nb_actions, string)
-
 		self._recursion_depth -= 1
-		if self._recursion_depth == -1:
-			self.labels = LabelStack()
-		if empty_context:
-			self.context = ContextStack()
 		return string
 
-	def _handle_final_actions(self: "Preprocessor", nb_preserved_actions: int, string: str) -> str:
-		"""handles final actions: run those at current level
-		and then removes those that shouldn't propagate upwards
-		nb_preserved action is the number of action to keep (inherited from parent)"""
+	def run_final_actions(self: "Preprocessor", string: str) -> str:
+		"""Runs all final actions"""
 		self.context.update(self.current_position.from_relative(0), "in final actions")
-		new_actions = []
-		for i, (level, run_at, action) in enumerate(self._final_actions):
-			# run action
-			if self._runs_at_current_level(level, run_at):
-				string = self.safe_call(action, self, string)
-			# keep relevant action only
-			if i < nb_preserved_actions or bool(run_at & RunActionAt.PARRALLEL_CHILDREN):
-				new_actions.append((level, run_at, action))
-			elif bool(run_at & RunActionAt.STRICT_PARENT_LEVELS):
-				new_actions.append((level - 1, run_at, action))
-		self._final_actions = new_actions
+		for action in self._final_actions:
+			# run actions
+			string = self.safe_call(action, self, string)
 		self.context.pop()
 		return string
 
-	def _runs_at_current_level(self: "Preprocessor", level: int, run_at: RunActionAt) -> bool:
-		"""return True if this action should be run at the current recursion level"""
-		return (level == self._recursion_depth and bool(run_at & RunActionAt.CURRENT_LEVEL)) \
-		  or (level < self._recursion_depth and bool(run_at & RunActionAt.STRICT_SUB_LEVELS)) \
-		  or (level > self._recursion_depth and bool(run_at & RunActionAt.STRICT_PARENT_LEVELS))
+	def process(self: "Preprocessor", string: str, filename: str) -> str:
+		"""parses the string and returns the result
+		Inputs:
+		- string: str -> the string to process
+		- filename: str -> the name of the file (used for error display)
+		Returns the processed string"""
+		self.context.new(FileDescriptor(filename, string), 0)
+		self.labels.new_level()
+		string = self.parse(string)
+		self.labels.pop_level(0)
+		print(self.labels.top_level.items())
+		string = self.run_final_actions(string)
+		self.context.pop()
+		return string
 
 	@staticmethod
-	def static_add_finalaction(
-		action: TypeFinalAction, run_at: RunActionAt = RunActionAt.CURRENT_LEVEL
-	) -> None:
+	def static_add_finalaction(action: TypeFinalAction) -> None:
 		"""adds a final action to the base class, will be a part of all new objects"""
-		Preprocessor._final_actions.append((0, run_at, action))
+		Preprocessor._final_actions.append(action)
 
-	def add_finalaction(self: "Preprocessor", action: TypeFinalAction,
-		run_at: RunActionAt = RunActionAt.CURRENT_LEVEL
-	) -> None:
+	def add_finalaction(self: "Preprocessor", action: TypeFinalAction) -> None:
 		"""adds a final action at the current level"""
-		self._final_actions.append((self._recursion_depth, run_at, action))
+		self._final_actions.append(action)
 
 	def get_help(self: "Preprocessor", help_msg: str) -> str:
 		"""used to get and display help on the command line
@@ -465,8 +444,8 @@ class Preprocessor:
 				Simple program to preprocess files inspired by the C preprocessor
 
 				Files to process can contain:
-				 - preprocessor commands "{begin}command_name [args]{end}"
-				 - preprocessor blocks "{begin}block_name [args]{end}... {begin}endblock_name{end}"
+				 - preprocessor commands "{begin} command_name [args] {end}"
+				 - preprocessor blocks "{begin} block_name [args] {end}... {begin} endblock_name {end}"
 				A list of commands and blocks can be obtained with "--help commands"
 
 				Usage: {name} [--flags] [input_file]
@@ -496,7 +475,7 @@ class Preprocessor:
 				  -h --help <cmd_name> show help for a specific command of block
 				""".format(
 					name = PREPROCESSOR_NAME, version = PREPROCESSOR_VERSION,
-					begin = "{% ", end = " %}", rec = self.max_recursion_depth))
+					begin = "{%", end = "%}", rec = self.max_recursion_depth))
 		if help_msg == "commands":
 			return "Commands:\n  " + "\n  ".join(sorted(self.commands.keys())) +\
 				"\n\nBlocks:\n  " + "\n  ".join(sorted(self.blocks.keys()))
