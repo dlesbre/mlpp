@@ -39,7 +39,7 @@ Preprocessor.commands["capitalize"] = cmd_capitalize
 
 # default post action
 
-Preprocessor.static_add_finalaction(fnl_atlabel)
+Preprocessor.final_actions.append(fnl_atlabel)
 
 # default blocks
 

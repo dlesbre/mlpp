@@ -38,10 +38,10 @@ Preprocessor instructions are split in three categories :
 
 	Blocks work very similarily to commands: they wrap around some text and alter it in some way. For instance the `{% verbatim %}` block prints all text in itself verbatim, without rendering any of the commands.
 
-- **final actions**: some actions can be queued by special commands. They occur once every command and block in the current block has been rendered and affect the whole current block. For instance `{% replace foo bar %}` will replace all instances of "foo" with "bar" in the current block (including occurences before the command is called) but not occurences in higher blocks:
+- **final actions**: some actions can be queued by special commands. They occur once every command and block in the file has been rendered and affect the whole current file. For instance `{% replace foo bar %}` will replace all instances of "foo" with "bar" in the whole rendered file (including occurences before the command is called). Final actions can be restricted to a smaller part of the document with `{% block -a %}...{% endblock %}` :
 
 		some text... foo here is not replaced
-		{% begin block %}
+		{% begin block -a %}
 			foo here is replaced
 			{% replace foo bar %}
 			foo here is replaced

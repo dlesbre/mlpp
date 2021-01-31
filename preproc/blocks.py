@@ -29,19 +29,96 @@ blck_void.doc = ( # type: ignore
 	Use it to place comments or a bunch of def
 	without adding whitespace""")
 
+block_parser = ArgumentParserNoExit(prog="block", add_help=False)
+block_parser.add_argument("--begin", "-b", nargs="?", default=None)
+block_parser.add_argument("--end", "-e", nargs="?", default=None)
+block_parser.add_argument("--local-defs", "-d", action="store_true")
+block_parser.add_argument("--local-actions", "-a", action="store_true")
+block_parser.add_argument("--local-clipboard", "-c", action="store_true")
+block_parser.add_argument("--local-labels", "-l", action="store_true")
+
 def blck_block(preprocessor: Preprocessor, args: str, contents: str) -> str:
-	"""The block block. It does nothing but ensure post action
-	declared in this block don't affect the rest of the file"""
-	if args.strip() != "":
-		preprocessor.send_warning("extra-arguments", "the block block takes no arguments")
+	"""The block block. allows restriction of final actions, defs and clipboard to local block"""
+	split = preprocessor.split_args(args)
+	try:
+		arguments = block_parser.parse_args(split)
+	except argparse.ArgumentError:
+		preprocessor.send_error("invalid-argument",
+			"invalid argument.\n"
+			"usage: block [--begin|-b <str>] [--end|-e <str>]\n"
+			"             [--local-actions|-a] [--local-defs|-d] [--local-clipboard|-c]"
+		)
+	begin = preprocessor.token_begin
+	end = preprocessor.token_end
+	if arguments.begin is not None:
+		preprocessor.token_begin = arguments.begin
+	if arguments.end is not None:
+		preprocessor.token_end = arguments.end
+	if arguments.local_defs:
+		commands = preprocessor.commands.copy()
+		blocks = preprocessor.blocks.copy()
+		if "def" in preprocessor.command_vars:
+			defs = preprocessor.command_vars["def"].copy()
+		else:
+			defs = dict()
+	if arguments.local_clipboard:
+		if "clipboard" in preprocessor.command_vars:
+			clipboard = preprocessor.command_vars["clipboard"].copy()
+		else:
+			clipboard = dict()
+	if arguments.local_actions:
+		action = preprocessor.final_actions.copy()
+		preprocessor.final_actions = Preprocessor.final_actions.copy()
+	if arguments.local_labels:
+		labels = preprocessor.labels.copy()
+
 	preprocessor.context.update(preprocessor.current_position.end, "in block block")
 	contents = preprocessor.parse(contents)
 	preprocessor.context.pop()
+
+	if arguments.local_actions:
+		contents = preprocessor.run_final_actions(contents)
+		preprocessor.final_actions = action
+	if arguments.local_labels:
+		preprocessor.labels = labels
+		preprocessor.labels.new_level() # add empty level to pop
+	if arguments.local_defs:
+		preprocessor.commands = commands
+		preprocessor.blocks = blocks
+		preprocessor.command_vars["def"] = defs
+	if arguments.local_clipboard:
+		preprocessor.command_vars["clipboard"] = clipboard
+
+
+	preprocessor.token_begin = begin
+	preprocessor.token_end = end
 	return contents
 
 blck_block.doc = ( # type: ignore
 	"""
-	Simple block used to restrict scope of final action commands
+	Block used to restrict action/defs/labels... to a local part of the files
+	Can be very useful to wrap an include
+
+	usage: block [--options]
+
+	options:
+	  -b --begin <string>  change the begin token (default is same as current)
+	  -e --end <string>    change the end token (default is same as current)
+	  -d --local-defs      commands defined and undefined in the block are local
+	  -a --local-actions   final actions called in the block will only affect the block
+	                       use this to restrict replace, upper, ... to a section
+	  -c --local-clipboard the clipboard defined by cut in the block are local
+    -l --local-labels    labels defined in the block are local, so they can
+	                       only be written to by local atlabel blocks
+
+	Just like the verbatim block, changing begin and end means that the block will
+	end at the first {% endblock %} not matching a {% block %}:
+
+	  {% block -b < -e > %}
+	    {% block blabla %}
+	    ...
+	    {% endblock %} // this endblock is ignored
+	  {% endblock %} // block ends here
 	""")
 
 def blck_verbatim(preprocessor: Preprocessor, args: str, contents: str) -> str:

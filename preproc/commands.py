@@ -144,8 +144,8 @@ def define_macro(preprocessor: Preprocessor, name: str, args: List[str], text: s
 	overloads = []
 	usages = []
 	for key, val in preprocessor.command_vars["def"].items():
-		if key.startswith(name):
-			overloads.append(int(key[key.find('<') + 1 : -1]))
+		if key.startswith(name+"<"):
+			overloads.append(int(key[key.find("<") + 1 : -1]))
 			usages.append(val.doc)
 	usage = "usage: " + "\n       ".join(usages)
 	overload_nb = rreplace(", ".join(str(x) for x in sorted(overloads)), ", ", " or ")
@@ -288,6 +288,13 @@ def cmd_undef(preprocessor: Preprocessor, args_string: str) -> str:
 		preprocessor.send_warning("aldready-undefined",
 			"canno't undef \"{}\", identifier is aldready undefined.".format(ident)
 		)
+	if "def" in preprocessor.command_vars:
+		del_keys = []
+		for key in preprocessor.command_vars:
+			if key.startswith(ident+"<"):
+				del_keys.append(key)
+		for key in del_keys:
+			del preprocessor.command_vars["def"][key]
 	return ""
 
 cmd_undef.doc = ( # type: ignore

@@ -60,12 +60,12 @@ class Preprocessor:
 
 	# private attributes
 	_recursion_depth: int
-	_final_actions: List[TypeFinalAction] = []
 
 	# commands and blocks
 	commands: Dict[str, TypeCommand] = dict()
 	blocks: Dict[str, TypeBlock] = dict()
 	command_vars: Dict[str, Any] = dict()
+	final_actions: List[TypeFinalAction] = []
 
 	# useful variables
 	labels: LabelStack
@@ -77,7 +77,7 @@ class Preprocessor:
 	def __init__(self):
 		self.commands = Preprocessor.commands.copy()
 		self.blocks = Preprocessor.blocks.copy()
-		self._final_actions = Preprocessor._final_actions.copy()
+		self.final_actions = Preprocessor.final_actions.copy()
 		self.command_vars = Preprocessor.command_vars.copy()
 		self.current_position = Position()
 		self.context = ContextStack()
@@ -253,7 +253,7 @@ class Preprocessor:
 			match_end = re.search(endblock_regex, string[pos:], self.re_flags)
 
 	def replace_string(self: "Preprocessor",
-		start: int, end: int, string: str, replacement: str, tokens: TokenList,
+		start: int, end: int, string: str, replacement: str, tokens: TokenList, pop_labels: bool = False
 	) -> str:
 		"""replaces string[start:end] with replacement
 		also add offset to token requiring them
@@ -285,7 +285,7 @@ class Preprocessor:
 		self.context.add_dilatation(start, dilat)
 		self.labels.dilate_level(self._recursion_depth, end, dilat)
 		# only remove level if it wasn't explicitly removed
-		if self.labels.height > self._recursion_depth + 1:
+		if pop_labels and self.labels.height > self._recursion_depth + 1:
 			self.labels.pop_level(start)
 		return string[:start] + replacement + string[end:]
 
@@ -384,7 +384,7 @@ class Preprocessor:
 			self.current_position = position
 			self.context.pop()
 			string = self.replace_string(
-				self.current_position.relative_begin, end_pos, string, new_str, tokens
+				self.current_position.relative_begin, end_pos, string, new_str, tokens, True
 			)
 			self._remove_leading_close_tokens(tokens)
 		# end while
@@ -400,7 +400,7 @@ class Preprocessor:
 	def run_final_actions(self: "Preprocessor", string: str) -> str:
 		"""Runs all final actions"""
 		self.context.update(self.current_position.from_relative(0), "in final actions")
-		for action in self._final_actions:
+		for action in self.final_actions:
 			# run actions
 			string = self.safe_call(action, self, string)
 		self.context.pop()
@@ -416,19 +416,9 @@ class Preprocessor:
 		self.labels.new_level()
 		string = self.parse(string)
 		self.labels.pop_level(0)
-		print(self.labels.top_level.items())
 		string = self.run_final_actions(string)
 		self.context.pop()
 		return string
-
-	@staticmethod
-	def static_add_finalaction(action: TypeFinalAction) -> None:
-		"""adds a final action to the base class, will be a part of all new objects"""
-		Preprocessor._final_actions.append(action)
-
-	def add_finalaction(self: "Preprocessor", action: TypeFinalAction) -> None:
-		"""adds a final action at the current level"""
-		self._final_actions.append(action)
 
 	def get_help(self: "Preprocessor", help_msg: str) -> str:
 		"""used to get and display help on the command line

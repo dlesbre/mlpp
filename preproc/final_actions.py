@@ -20,7 +20,7 @@ def final_action_command(function: Callable[[Preprocessor, str], str], name: Opt
 		"""Command queuing function as post action"""
 		if args_str.strip() != "":
 			preprocessor.send_warning("extra-arguments", "{} takes no arguments".format(true_name))
-		preprocessor.add_finalaction(function)
+		preprocessor.final_actions.append(function)
 		return ""
 
 	command.__doc__ = function.doc if hasattr(function, "doc") else function.__doc__ # type: ignore
@@ -39,7 +39,6 @@ def fnl_strip_empty_lines(_: Preprocessor, string: str) -> str:
 fnl_strip_empty_lines.doc = ( # type: ignore
 	"""
 	Removes empty lines (lines containing only spaces)
-	from the current block and subblocks
 	""")
 
 def fnl_strip_leading_whitespace(_: Preprocessor, string: str) -> str:
@@ -49,7 +48,6 @@ def fnl_strip_leading_whitespace(_: Preprocessor, string: str) -> str:
 fnl_strip_leading_whitespace.doc = ( # type: ignore
 	"""
 	Removes leading whitespace (indent)
-	from the current block and subblocks
 	""")
 
 def fnl_strip_trailing_whitespace(_: Preprocessor, string: str) -> str:
@@ -59,7 +57,6 @@ def fnl_strip_trailing_whitespace(_: Preprocessor, string: str) -> str:
 fnl_strip_trailing_whitespace.doc = ( # type: ignore
 	"""
 	Removes trailing whitespace
-	from the current block and subblocks
 	""")
 
 def fnl_fix_last_line(_: Preprocessor, string: str) -> str:
@@ -76,8 +73,8 @@ def fnl_fix_last_line(_: Preprocessor, string: str) -> str:
 
 fnl_fix_last_line.doc = ( # type: ignore
 	"""
-	Ensurses the current blocks ends with a single empty
-	line (unless the block is empty)
+	Ensurses the file ends with a single empty
+	line (unless it is empty)
 	""")
 
 def fnl_fix_first_line(_: Preprocessor, string: str) -> str:
@@ -97,8 +94,8 @@ def fnl_fix_first_line(_: Preprocessor, string: str) -> str:
 
 fnl_fix_first_line.doc = ( # type: ignore
 	"""
-	Ensurses the current blocks starts with a non-empty
-	line (unless the block is empty)
+	Ensurses the document starts with a non-empty
+	line (unless it is empty)
 	""")
 
 def cmd_strip(preprocessor: Preprocessor, args: str) -> str:
@@ -112,11 +109,11 @@ def cmd_strip(preprocessor: Preprocessor, args: str) -> str:
 	to preprocessor final actions"""
 	if args.strip() != "":
 		preprocessor.send_warning("extra-arguments", "strip takes no arguments")
-	preprocessor.add_finalaction(fnl_strip_empty_lines)
-	preprocessor.add_finalaction(fnl_strip_leading_whitespace)
-	preprocessor.add_finalaction(fnl_strip_trailing_whitespace)
-	preprocessor.add_finalaction(fnl_fix_first_line)
-	preprocessor.add_finalaction(fnl_fix_first_line)
+	preprocessor.final_actions.append(fnl_strip_empty_lines)
+	preprocessor.final_actions.append(fnl_strip_leading_whitespace)
+	preprocessor.final_actions.append(fnl_strip_trailing_whitespace)
+	preprocessor.final_actions.append(fnl_fix_first_line)
+	preprocessor.final_actions.append(fnl_fix_first_line)
 	return ""
 
 cmd_strip.doc = ( # type: ignore
@@ -193,7 +190,7 @@ def cmd_replace(preprocessor: Preprocessor, args: str) -> str:
 			return ""
 	fnl_replace.__name__ = "fnl_replace_lambda"
 	fnl_replace.__doc__ = "final action for replace {}".format(args)
-	preprocessor.add_finalaction(fnl_replace)
+	preprocessor.final_actions.append(fnl_replace)
 	return ""
 
 cmd_replace.doc = ( # type: ignore
@@ -203,7 +200,7 @@ cmd_replace.doc = ( # type: ignore
 	Usage: replace [--options] pattern replacement [text]
 
 	If text is present, replacement takes place in text.
-	else it takes place in the current block
+	else it takes place in the whole document (can be restricted with block)
 
 	Options:
 	  -c --count <number> number of occurences to replace (default all)
@@ -235,17 +232,17 @@ def cmd_upper(preprocessor: Preprocessor, args: str) -> str:
 		if len(args) >= 2 and args[0] == '"' and args[-1] == '"':
 			args = args[0:-1]
 		return args.upper()
-	preprocessor.add_finalaction(fnl_upper)
+	preprocessor.final_actions.append(fnl_upper)
 	return ""
 
 cmd_upper.doc = ( # type: ignore
 	"""
 	Converts text to UPPER CASE
 
-	Usage: upper [text]
+	usage: upper [text]
 
 	If text is present, converts text
-	else converts everything in the current block.
+	else converts everything in the document (can be restricted with block).
 	""")
 
 def fnl_lower(_: Preprocessor, string: str) -> str:
@@ -264,17 +261,17 @@ def cmd_lower(preprocessor: Preprocessor, args: str) -> str:
 		if len(args) >= 2 and args[0] == '"' and args[-1] == '"':
 			args = args[0:-1]
 		return args.lower()
-	preprocessor.add_finalaction(fnl_lower)
+	preprocessor.final_actions.append(fnl_lower)
 	return ""
 
 cmd_lower.doc = ( # type: ignore
 	"""
 	Converts text to lower case
 
-	Usage: lower [text]
+	usage: lower [text]
 
 	If text is present, converts text
-	else converts everything in the current block.
+	else converts everything in the document (can be restricted with block).
 	""")
 
 def fnl_capitalize(_: Preprocessor, string: str) -> str:
@@ -286,22 +283,22 @@ def cmd_capitalize(preprocessor: Preprocessor, args: str) -> str:
 	"""The capitalize command, switches text to lower case
 	usage: capitalize [text]
 		with text -> returns Text (ignores trailing/leading spaces)
-		without   -> queues final action to transform all text in current block
-			to Capitalized Case"""
+		without   -> queues final action to transform all text in document
+	    (can be restricted with block) to Capitalized Case"""
 	args = args.strip()
 	if args:
 		if len(args) >= 2 and args[0] == '"' and args[-1] == '"':
 			args = args[0:-1]
 		return args.capitalize()
-	preprocessor.add_finalaction(fnl_capitalize)
+	preprocessor.final_actions.append(fnl_capitalize)
 	return ""
 
 cmd_capitalize.doc = ( # type: ignore
 	"""
 	Converts text to Capitalized case
 
-	Usage: capitalize [text]
+	usage: capitalize [text]
 
 	If text is present, converts text
-	else converts everything in the current block.
+	else converts everything in the document (can be restricted with block).
 	""")

@@ -112,3 +112,9 @@ class LabelStack:
 		for label in self._stack[level]:
 			new_level[label] = self._dilate_list(self._stack[level][label], pos, value)
 		self._stack[level] = new_level
+
+	def copy(self: "LabelStack") -> "LabelStack":
+		"""returns and independent copy of self"""
+		new = LabelStack()
+		new._stack = [level.copy() for level in self._stack]
+		return new

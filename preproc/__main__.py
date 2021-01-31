@@ -9,7 +9,7 @@ from pathlib import Path
 from sys import stderr, stdin, stdout
 from typing import List, Optional
 
-from .defaults import FileDescriptor, Preprocessor, define_macro
+from .defaults import Preprocessor, define_macro
 from .defs import PREPROCESSOR_NAME, PREPROCESSOR_VERSION
 from .errors import ErrorMode, WarningMode
 

@@ -85,7 +85,7 @@ class TestCommands:
 	def test_replace(self):
 		test = [
 			("foofoobjf{% replace foo bar %}oofbifooj", "barbarbjbarfbibarj"),
-			#("foo{% block %}{% replace foo bar %}foo yfoo{% endblock %}foo", "foobar ybarfoo"),
+			("foo{% block -a %}{% replace foo bar %}foo yfoo{% endblock %}foo", "foobar ybarfoo"),
 			("afoo{% replace foo bar %}{% replace aba yo %}fooabr", "yorbarabr"),
 			("afoo{% replace --ignore-case foo bar %}FoOfOo FOO", "abarbarbar bar"),
 			("{% replace -w foo bar %}foo(afoo1foo+foo foo foo", "bar(afoo1foo+bar bar bar"),
@@ -101,7 +101,7 @@ class TestCommands:
 			("{% upper hello world %}", "HELLO WORLD"),
 			("{% lower Hello WOrld %}", "hello world"),
 			("{% capitalize hello world %}", "Hello world"),
-			#("{% block %}some{% upper %} text{% endblock %} hello", "SOME TEXT hello"),
+			("{% block -a %}some{% upper %} text{% endblock %} hello", "SOME TEXT hello"),
 		]
 		self.runtests(test, "test_upper")
 
@@ -153,7 +153,11 @@ class TestCommands:
 			("{% atlabel yo %}bjrst{% endatlabel %}{% block %}hi{% label yo %}yy{% endblock %}", "hibjrstyy"),
 			("{% atlabel yo %}bonjour{% endatlabel %}{% label yo %}***\n\n{% block %}nested:{% label yo %}{% endblock %}\n{% repeat 2 %}{% label yo %}{% endrepeat %}***{% label yo %}",
 			 "bonjour***\n\nnested:bonjour\nbonjour***bonjour"
-			)
+			),
+			("{% def f bar %}{% def g hi %}{% block -d %}{% def f foo %}{% f %}{% undef g %}{% endblock %}{% f %}{% g %}", "foobarhi"),
+			("{% label a %}({% block -a %}{% label a %}{% atlabel a %}yo{% endatlabel %}{% endblock %})", "(yo)"),
+			("{% label a %}({% block -a %}{% label a %}{% atlabel a %}yo{% endatlabel %}{% endblock %}){% atlabel a %}boo{% endatlabel %}", "boo(booyo)"),
+			("{% label a %}({% block -al %}{% label a %}{% atlabel a %}yo{% endatlabel %}{% endblock %}){% atlabel a %}boo{% endatlabel %}", "boo(yo)"),
 		]
 		self.runtests(test, "test_block")
 
