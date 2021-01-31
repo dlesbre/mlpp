@@ -26,11 +26,11 @@ Preprocessor.commands["file"] = cmd_file
 Preprocessor.commands["line"] = cmd_line
 Preprocessor.commands["paste"] = cmd_paste
 
-Preprocessor.commands["strip_empty_lines"] = cmd_strip_empty_lines
-Preprocessor.commands["strip_leading_whitespace"] = cmd_strip_leading_whitespace
-Preprocessor.commands["strip_trailing_whitespace"] = cmd_strip_trailing_whitespace
-Preprocessor.commands["fix_last_line"] = cmd_fix_last_line
-Preprocessor.commands["fix_first_line"] = cmd_fix_first_line
+Preprocessor.commands["strip_empty_lines"] = final_action_command(fnl_strip_empty_lines)
+Preprocessor.commands["strip_leading_whitespace"] = final_action_command(fnl_strip_leading_whitespace)
+Preprocessor.commands["strip_trailing_whitespace"] = final_action_command(fnl_strip_trailing_whitespace)
+Preprocessor.commands["fix_last_line"] = final_action_command(fnl_fix_last_line)
+Preprocessor.commands["fix_first_line"] = final_action_command(fnl_fix_first_line)
 Preprocessor.commands["strip"] = cmd_strip
 Preprocessor.commands["replace"] = cmd_replace
 Preprocessor.commands["upper"] = cmd_upper
