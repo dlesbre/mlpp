@@ -108,7 +108,7 @@ blck_block.doc = ( # type: ignore
 	  -a --local-actions   final actions called in the block will only affect the block
 	                       use this to restrict replace, upper, ... to a section
 	  -c --local-clipboard the clipboard defined by cut in the block are local
-    -l --local-labels    labels defined in the block are local, so they can
+	  -l --local-labels    labels defined in the block are local, so they can
 	                       only be written to by local atlabel blocks
 
 	Just like the verbatim block, changing begin and end means that the block will
