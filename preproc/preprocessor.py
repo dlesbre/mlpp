@@ -353,9 +353,7 @@ class Preprocessor:
 			self.context.update(self.current_position.begin)
 			new_str = ""
 			position = self.current_position.copy()
-			if ident == "":
-				self.send_error("invalid-command", "invalid command name: \"{}\".".format(substring))
-			elif ident in self.commands:
+			if ident in self.commands:
 				self.context.update(self.current_position.cmd_begin, "in command {}".format(ident))
 				command = self.commands[ident]
 				new_str = self.safe_call(command, self, arg_string)
@@ -380,7 +378,17 @@ class Preprocessor:
 
 				self.context.pop()
 			else:
-				self.send_error("undefined-command", "undefined command or block: \"{}\".".format(ident))
+				if ident == "":
+					self.send_warning("invalid-command",
+						"invalid command name: \"{}\".\nIt was ignored and left unchanged in output.".format(
+							substring
+					))
+				else:
+					self.send_warning("undefined-command",
+						"undefined command or block: \"{}\".\nIt was ignored and left unchanged in output.".format(
+							ident
+					))
+				new_str = string[self.current_position.begin : self.current_position.end]
 			self.current_position = position
 			self.context.pop()
 			string = self.replace_string(
