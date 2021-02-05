@@ -3,18 +3,22 @@ from os import remove
 
 from preproc import Preprocessor
 from preproc.blocks import find_elifs_and_else
+from preproc.errors import ErrorMode, WarningMode
 
 
 class TestCommands:
 
 	file_name = "test_commands"
 
+	def single_runtest(self, test_in, name, test_out):
+		pre = Preprocessor()
+		pre.warning_mode = WarningMode.PRINT
+		assert pre.process(test_in, name) == test_out
+
 	def runtests(self, test, name):
 		for i, j in enumerate(test):
-			pre = Preprocessor()
 			print("============= test {} ==============".format(i))
-			in_str, out_str = j
-			assert pre.process(in_str, name) == out_str
+			self.single_runtest(j[0], name, j[1])
 
 	def test_commands(self):
 		name = "test_commands"
@@ -76,10 +80,9 @@ class TestCommands:
 			("<def a b><c>", "bonjour{% def c d %}:{% include -b < -e > test.out %}:{% a %}", "bonjour:d:b"),
 		]
 		for content, in_str, out_str in test:
-			pre = Preprocessor()
 			with open(path, "w") as file:
 				file.write(content)
-			assert pre.process(in_str, "test_include") == out_str
+			self.single_runtest(in_str, "test_include", out_str)
 		remove(path)
 
 	def test_replace(self):
