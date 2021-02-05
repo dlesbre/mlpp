@@ -303,6 +303,10 @@ class Preprocessor:
 			string = ""
 			try:
 				string = function(*args, **kwargs)
+			except PreprocessorWarning as warn:
+				raise warn
+			except PreprocessorError as error:
+				raise error
 			except Warning as warn:
 				self.send_warning("internal-warning", "unexpected warning in command or block.\n" + str(warn))
 			except Exception as error:
