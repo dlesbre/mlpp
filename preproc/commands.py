@@ -219,7 +219,7 @@ def cmd_def(preprocessor: Preprocessor, args_string : str) -> str:
 		text = text[end+1:].strip()
 
 	# if its a string - use escapes and remove external quotes
-	if len(text) >= 2 and text[0] == '"' and text[-1] == '"':
+	if len(text) >= 2 and text[0] in preprocessor.string_delimiters and text[-1] == text[0]:
 		text = process_string(text[1:-1])
 
 	define_macro(preprocessor, ident, args, text)
@@ -426,7 +426,9 @@ def cmd_call(preprocessor: Preprocessor, args_string: str) -> str:
 	"""The call command: used to print begin and end tokens
 	usage: {% call foo bar ... %} -> {% foo bar ... %}"""
 	args_string = args_string.strip()
-	if len(args_string) >= 2 and args_string[0] == '"' and args_string[-1] == '"':
+	if (len(args_string) >= 2 and
+			args_string[0] in preprocessor.string_delimiters and
+			args_string[-1] == args_string[0]):
 		args_string = args_string[1:-1]
 	return preprocessor.token_begin + " " + args_string + " " + preprocessor.token_end
 

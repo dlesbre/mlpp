@@ -93,6 +93,7 @@ class TestPreProcMethods:
 		test = [
 			(" foo -bar\t \"some string\" escaped\\ space", ["foo", "-bar", "some string", "escaped space"]),
       ("\nfoo \"string\\twith\\n\\\"escaped chars\"", ["foo", "string\twith\n\"escaped chars"]),
+			("foo hello 'another string\\\"\\\''", ["foo", "hello", "another string\"\'"]),
 		]
 		for arg, rep in test:
 			assert self.pre.split_args(arg) == rep

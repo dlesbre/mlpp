@@ -52,6 +52,7 @@ class Preprocessor:
 	exit_code: int = 4
 	safe_calls: bool = True
 	use_color: bool = False
+	string_delimiters: str = "\"'"
 
 	# warning and error modes
 	error_mode: ErrorMode = ErrorMode.RAISE
@@ -132,13 +133,14 @@ class Preprocessor:
 	def split_args(self: "Preprocessor", args: str) -> List[str]:
 		"""Splits args along space like on the command line
 		preserves strings
-		ex: self.split_args(" foo -bar\\t "some string" escaped\\ space")
-		    returns ["foo", "-bar", "some string", "escaped space"]"""
+		ex: self.split_args(''' foo -bar\\t "some string" escaped\\ space 'another " string' ''')
+		    returns ["foo", "-bar", "some string", "escaped space" 'another " string']"""
 		arg_list: List[str] = []
 		ii = 0
 		last_blank = 0
 		len_args = len(args)
 		in_string = False
+		string_begin = ""
 		while ii < len_args:
 			if args[ii] == "\\":
 				ii += 1
@@ -146,10 +148,9 @@ class Preprocessor:
 					# skip escaped character
 					ii += 1
 					continue
-				else:
-					break
+				break
 			if in_string:
-				if args[ii] == '"':
+				if args[ii] == string_begin:
 					in_string = False
 					arg_list.append(process_string(args[last_blank + 1 : ii]))
 					last_blank = ii + 1
@@ -157,12 +158,13 @@ class Preprocessor:
 				if last_blank != ii:
 					arg_list.append(args[last_blank:ii].replace("\\ ", " "))
 				last_blank = ii + 1
-			elif args[ii] == '"':
+			elif args[ii] in self.string_delimiters:
+				string_begin = args[ii]
 				in_string = True
 			ii += 1
 		# end while
 		if in_string:
-			self.send_error("unmatched-open-quote", "Unterminated string \"... in arguments")
+			self.send_error("unmatched-open-quote", "Unterminated string {}... in arguments".format(string_begin))
 		if last_blank != ii:
 			arg_list.append(args[last_blank:ii].replace("\\ ", " "))
 		return arg_list
