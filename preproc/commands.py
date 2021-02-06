@@ -139,13 +139,13 @@ def define_macro(preprocessor: Preprocessor, name: str, args: List[str], text: s
 	# place it in command_vars
 	if "def" not in preprocessor.command_vars:
 		preprocessor.command_vars["def"] = dict()
-	preprocessor.command_vars["def"]["{}<{}>".format(name, len(args))] = cmd
+	preprocessor.command_vars["def"]["{}:{}".format(name, len(args))] = cmd
 
 	overloads = []
 	usages = []
 	for key, val in preprocessor.command_vars["def"].items():
-		if key.startswith(name+"<"):
-			overloads.append(int(key[key.find("<") + 1 : -1]))
+		if key.startswith(name+":"):
+			overloads.append(int(key[key.find(":") + 1]))
 			usages.append(val.doc)
 	usage = "usage: " + "\n       ".join(usages)
 	overload_nb = rreplace(", ".join(str(x) for x in sorted(overloads)), ", ", " or ")
@@ -166,7 +166,7 @@ def define_macro(preprocessor: Preprocessor, name: str, args: List[str], text: s
 				"invalid number of arguments for macro.\nexpected {} got {}.\n"
 				"{}").format(overload_nb, len(arguments.vars), usage)
 			)
-		return pre.command_vars["def"]["{}<{}>".format(name, len(arguments.vars))](
+		return pre.command_vars["def"]["{}:{}".format(name, len(arguments.vars))](
 			pre, arguments.vars
 		)
 
