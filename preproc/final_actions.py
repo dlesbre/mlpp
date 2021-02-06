@@ -28,16 +28,20 @@ def final_action_command(function: Callable[[Preprocessor, str], str], name: Opt
 	return command
 
 def final_action_replace(preprocessor: Preprocessor, string: str,
-	pattern: str, replacement: str, flags: re.RegexFlag) -> str:
+	pattern: str, replacement: str, flags: re.RegexFlag, count:int = 0) -> str:
 	"""same as string = re.sub(pattern, replacement, string)
 	but uses preprocessor string_replace to offset labels correctly"""
 	matches = []
 	for re_match in re.finditer(pattern, string, flags=flags):
 		matches.append((re_match.start(), re_match.end(), re_match.group()))
+	replaced_nb = 0
 	while matches:
 		match = matches[0]
-		local_repl = re.sub(pattern, replacement, match[2])
+		local_repl = re.sub(pattern, replacement, match[2], flags=flags)
 		string = preprocessor.replace_string(match[0], match[1], string, local_repl, matches)
+		replaced_nb += 1
+		if replaced_nb == count:
+			return string
 		if matches and match == matches[0]:
 			del matches[0]
 	return string
@@ -74,7 +78,7 @@ fnl_strip_trailing_whitespace.doc = ( # type: ignore
 	Removes trailing whitespace
 	""")
 
-def fnl_fix_last_line(_: Preprocessor, string: str) -> str:
+def fnl_fix_last_line(preprocessor: Preprocessor, string: str) -> str:
 	"""final action to ensures file ends with an empty line if
 	it is not empty"""
 	if string and string[-1] != "\n":
@@ -83,7 +87,7 @@ def fnl_fix_last_line(_: Preprocessor, string: str) -> str:
 		ii = len(string) - 2
 		while ii >= 0 and string[ii] == "\n":
 			ii -= 1
-		string = string[:ii+2]
+		string = preprocessor.replace_string(ii+2, len(string), string, "", [])
 	return string
 
 fnl_fix_last_line.doc = ( # type: ignore
@@ -92,17 +96,17 @@ fnl_fix_last_line.doc = ( # type: ignore
 	line (unless it is empty)
 	""")
 
-def fnl_fix_first_line(_: Preprocessor, string: str) -> str:
+def fnl_fix_first_line(preprocessor: Preprocessor, string: str) -> str:
 	"""final action to ensures file starts with a non-empty
 	non-whitespace line (if it is not empty)"""
 	while string != "":
 		pos = string.find("\n")
 		if pos == -1:
 			if string.isspace():
-				return ""
+				return preprocessor.replace_string(0, len(string), string, "", [])
 			return string
-		elif string[:pos+1].isspace():
-			string = string[pos+1:]
+		if string[:pos+1].isspace():
+			string = preprocessor.replace_string(0, pos+1, string, "", [])
 		else:
 			break
 	return string
@@ -197,7 +201,7 @@ def cmd_replace(preprocessor: Preprocessor, args: str) -> str:
 	# no text, queue post action
 	def fnl_replace(preprocessor: Preprocessor, string: str) -> str:
 		try:
-			return re.sub(pattern, repl, string, count=count, flags = flags)
+			return final_action_replace(preprocessor, string, pattern, repl, flags, count=count)
 		except re.error as err:
 			preprocessor.context.update(pos)
 			preprocessor.send_error("invalid-argument","replace regex error: {}".format(err.msg))
