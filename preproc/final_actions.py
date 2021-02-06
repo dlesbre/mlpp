@@ -27,32 +27,47 @@ def final_action_command(function: Callable[[Preprocessor, str], str], name: Opt
 	command.doc = command.__doc__ # type: ignore
 	return command
 
+def final_action_replace(preprocessor: Preprocessor, string: str,
+	pattern: str, replacement: str, flags: re.RegexFlag) -> str:
+	"""same as string = re.sub(pattern, replacement, string)
+	but uses preprocessor string_replace to offset labels correctly"""
+	matches = []
+	for re_match in re.finditer(pattern, string, flags=flags):
+		matches.append((re_match.start(), re_match.end(), re_match.group()))
+	while matches:
+		match = matches[0]
+		local_repl = re.sub(pattern, replacement, match[2])
+		string = preprocessor.replace_string(match[0], match[1], string, local_repl, matches)
+		if matches and match == matches[0]:
+			del matches[0]
+	return string
+
 # ============================================================
 # strip commands
 # ============================================================
 
 
-def fnl_strip_empty_lines(_: Preprocessor, string: str) -> str:
+def fnl_strip_empty_lines(preprocessor: Preprocessor, string: str) -> str:
 	"""final action to remove empty lines (containing whitespace only) from the text"""
-	return re.sub(r"\n\s*\n", "\n", string)
+	return final_action_replace(preprocessor, string, r"\n\s*\n", "\n", preprocessor.re_flags)
 
 fnl_strip_empty_lines.doc = ( # type: ignore
 	"""
 	Removes empty lines (lines containing only spaces)
 	""")
 
-def fnl_strip_leading_whitespace(_: Preprocessor, string: str) -> str:
+def fnl_strip_leading_whitespace(preprocessor: Preprocessor, string: str) -> str:
 	"""final action to remove leading whitespace (indent) from string"""
-	return re.sub("^[ \t]*", "", string, flags = re.MULTILINE)
+	return final_action_replace(preprocessor, string, "^[ \t]+", "", re.MULTILINE)
 
 fnl_strip_leading_whitespace.doc = ( # type: ignore
 	"""
 	Removes leading whitespace (indent)
 	""")
 
-def fnl_strip_trailing_whitespace(_: Preprocessor, string: str) -> str:
+def fnl_strip_trailing_whitespace(preprocessor: Preprocessor, string: str) -> str:
 	"""final action to remove trailing whitespace (indent) from string"""
-	return re.sub("[ \t]*$", "", string, flags = re.MULTILINE)
+	return final_action_replace(preprocessor, string, "[ \t]+$", "", re.MULTILINE)
 
 fnl_strip_trailing_whitespace.doc = ( # type: ignore
 	"""

@@ -48,7 +48,7 @@ class Preprocessor:
 	token_begin: str = "{%"
 	token_end: str = "%}"
 	token_endblock: str = "end"
-	re_flags: int = re.MULTILINE
+	re_flags: re.RegexFlag = re.MULTILINE
 	exit_code: int = 4
 	safe_calls: bool = True
 	use_color: bool = False
@@ -164,7 +164,9 @@ class Preprocessor:
 			ii += 1
 		# end while
 		if in_string:
-			self.send_error("unmatched-open-quote", "Unterminated string {}... in arguments".format(string_begin))
+			self.send_error("unmatched-open-quote",
+				"Unterminated string {}... in arguments".format(string_begin)
+			)
 		if last_blank != ii:
 			arg_list.append(args[last_blank:ii].replace("\\ ", " "))
 		return arg_list
@@ -255,7 +257,8 @@ class Preprocessor:
 			match_end = re.search(endblock_regex, string[pos:], self.re_flags)
 
 	def replace_string(self: "Preprocessor",
-		start: int, end: int, string: str, replacement: str, tokens: TokenList, pop_labels: bool = False
+		start: int, end: int, string: str, replacement: str, tokens: List[Tuple[int, int, Any]],
+		pop_labels: bool = False
 	) -> str:
 		"""replaces string[start:end] with replacement
 		also add offset to token requiring them
@@ -278,11 +281,7 @@ class Preprocessor:
 				del tokens[i]
 			else:
 				if tokens[i][0] >= end:
-					tokens[i] = (
-						tokens[i][0] + dilat,
-						tokens[i][1] + dilat,
-						tokens[i][2],
-					)
+					tokens[i] = (tokens[i][0] + dilat, tokens[i][1] + dilat) + tokens[i][2:]
 				i += 1
 		self.context.add_dilatation(start, dilat)
 		self.labels.dilate_level(self._recursion_depth, end, dilat)
