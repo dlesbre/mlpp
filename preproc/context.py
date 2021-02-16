@@ -102,11 +102,11 @@ class ContextElement:
 		if value != 0:
 			self._dilatations.append((pos, value))
 
-	def copy(self: "ContextElement", pos: int, desc: Optional[str] = None) -> "ContextElement":
+	def copy(self: "ContextElement", position: int, desc: Optional[str] = None) -> "ContextElement":
 		"""returns a copy of self"""
 		if desc is None:
 			desc = self.description
-		copy = ContextElement(self.file, desc, pos, False)
+		copy = ContextElement(self.file, desc, position, False)
 		for pos, value in self._dilatations:
 			copy.add_dilatation(pos, value)
 		return copy

@@ -283,7 +283,7 @@ class Preprocessor:
 				if tokens[i][0] >= end:
 					tokens[i] = (tokens[i][0] + dilat, tokens[i][1] + dilat) + tokens[i][2:]
 				i += 1
-		self.context.add_dilatation(start, dilat)
+		self.context.add_dilatation(start+self.current_position.offset, dilat)
 		self.labels.dilate_level(self._recursion_depth, end, dilat)
 		# only remove level if it wasn't explicitly removed
 		if pop_labels and self.labels.height > self._recursion_depth + 1:
@@ -343,7 +343,10 @@ class Preprocessor:
 			# find innermost (nested pair)
 			token_index = self._find_matching_pair(tokens)
 			if token_index == -1:
+				self.current_position.relative_begin = tokens[0][0]
+				self.context.update(self.current_position.begin)
 				self.send_error("no-valid-token-pair", "no matching open/close pair found")
+				self.context.pop()
 
 			self.current_position.relative_begin = tokens[token_index][0]
 			self.current_position.relative_cmd_begin = tokens[token_index][1]
@@ -393,7 +396,7 @@ class Preprocessor:
 						"undefined command or block: \"{}\".\nIt was ignored and left unchanged in output.".format(
 							ident
 					))
-				new_str = string[self.current_position.begin : self.current_position.end]
+				new_str = string[self.current_position.relative_begin : self.current_position.relative_end]
 			self.current_position = position
 			self.context.pop()
 			string = self.replace_string(
@@ -402,11 +405,14 @@ class Preprocessor:
 			self._remove_leading_close_tokens(tokens)
 		# end while
 		if len(tokens) == 1:
+			self.current_position.relative_begin = tokens[0][0]
+			self.context.update(self.current_position.begin)
 			self.send_error("unmatched-open-token",
 				'Unmatched "{}" token.\nAdd matching "{}" or use "{}begin{}" to place it.'.format(
 					self.token_begin, self.token_end, self.token_begin, self.token_end
 				)
 			)
+			self.context.pop()
 		self._recursion_depth -= 1
 		return string
 
