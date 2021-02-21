@@ -93,17 +93,15 @@ import preproc
 
 preprocessor = preproc.Preprocessor()
 
-preprocessor.context.new(preproc.FileDescriptor(filename, file_contents), 0)
-parsed_contents = preprocessor.parse(file_contents)
-preprocessor.context.pop()
+parsed_contents = preprocessor.process(file_contents, filename)
 ```
 
-The two context lines are optionnal but they help with error tracebacks. The first one tells the preprocessor the filename and the position of line break to indicate errors, the other just cleans up afterwards.
+The filename is only needed for pretty error reports, and can be
 
 You can configure the preprocessor directly via it's public attributes:
 - `max_recursion_depth: int` (default 20) - raises an error past this depth
-- `token_begin: str` and `token_end: str` (default "{% " and " %}") - tokens wrapping preprocessor calls in the document. They should not be equal or be a simple double quote `"` or paranthese `(` or `)`.
-- `token_endblock: str` (default "end") - specifies what form the endblock command takes with the regex `<token_begin>s*<token_endblock><block_name>s*<token_end>`
+- `token_begin: str` and `token_end: str` (default "{% " and " %}") - tokens wrapping preprocessor calls in the document. They should not be equal or be a simgle or double quote (`'` and `"`) or paranthese `(` or `)`.
+- `token_endblock: str` (default "end") - specifies what form the endblock command takes with the regex `<token_begin>\s*<token_endblock><block_name>\s*<token_end>`
 - `safe_calls: bool` (default True) - if True, catches exceptions raised by command or blocks
 - `error_mode: preproc.ErrorMode` (default RAISE), how errors are handled:
 	- PRINT_AND_EXIT -> print to stderr and exit
@@ -122,7 +120,7 @@ You can configure the preprocessor directly via it's public attributes:
 
 ## Command and block reference
 
-Here follows a list of predefined commands and blocks. An up to date list can be found by running `pproc -h commands` and detailed descriptions obtained by running `pproc -h <command_name>`.
+Here follows a list of predefined commands and blocks. An up-to-date list can be found by running `pproc -h commands` and detailed descriptions obtained by running `pproc -h <command_name>`.
 
 ### Commands
 
