@@ -292,7 +292,7 @@ Here follows a list of predefined commands and blocks. An up-to-date list can be
 
 ```
   Prints name of input file
-	(only defined when called via pproc or preproc.__main__.preprocessor_main())
+  (on	ly defined when called via pproc or preproc.__main__.preprocessor_main())
 ```
 
 #### label
@@ -330,7 +330,7 @@ Here follows a list of predefined commands and blocks. An up-to-date list can be
 
 ```
   Prints name of output file
-	(only defined when called via pproc or preproc.__main__.preprocessor_main())
+  (only defined when called via pproc or preproc.__main__.preprocessor_main())
 ```
 
 #### paste
