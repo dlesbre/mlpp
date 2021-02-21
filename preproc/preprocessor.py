@@ -290,13 +290,6 @@ class Preprocessor:
 			self.labels.pop_level(start)
 		return string[:start] + replacement + string[end:]
 
-	def _remove_leading_close_tokens(self: "Preprocessor", tokens: TokenList) -> None:
-		"""removes leading close tokens from tokens
-		if self.warn_unmatch_close is true, issues a warning"""
-		while tokens and tokens[0][2] == TokenMatch.CLOSE:
-			del tokens[0]
-			self.send_warning("unmatched-close-token","unmatch closing token \"{}\".".format(self.token_end))
-
 	def safe_call(self: "Preprocessor", function, *args, **kwargs) -> str:
 		"""safely calls function (returning string)
 		catches exceptions and warnings"""
@@ -314,6 +307,23 @@ class Preprocessor:
 				self.send_error("internal-error", "unexpected error in command or block.\n" + str(error))
 			return string
 		return function(*args, **kwargs)
+
+	def token_error(self: "Preprocessor", tokens: TokenList) -> None:
+		"""Raises an error for unmatched token on the first token in list"""
+		self.current_position.relative_begin = tokens[0][0]
+		self.context.update(self.current_position.begin)
+		if tokens[0][2] == TokenMatch.OPEN:
+			self.send_error("unmatched-open-token",
+				'Unmatched "{}" token.\nAdd matching "{}" or use "{}begin{}" to place it.'.format(
+					self.token_begin, self.token_end, self.token_begin, self.token_end
+				)
+			)
+		else:
+			self.send_error("unmatched-close-token",
+				'unmatched "{}" token.\nAdd matching "{}" Use "{}end{}"" to place it.'.format(
+				self.token_end, self.token_begin, self.token_begin, self.token_end)
+			)
+		self.context.pop()
 
 	def parse(self: "Preprocessor", string: str) -> str:
 		"""parses the string, calling the command and blocks it contains
@@ -341,12 +351,11 @@ class Preprocessor:
 		while len(tokens) > 1:  # needs two tokens to make a pair
 
 			# find innermost (nested pair)
+			if tokens[0][2] == TokenMatch.CLOSE:
+				self.token_error(tokens)
 			token_index = self._find_matching_pair(tokens)
 			if token_index == -1:
-				self.current_position.relative_begin = tokens[0][0]
-				self.context.update(self.current_position.begin)
-				self.send_error("no-valid-token-pair", "no matching open/close pair found")
-				self.context.pop()
+				self.token_error(tokens)
 
 			self.current_position.relative_begin = tokens[token_index][0]
 			self.current_position.relative_cmd_begin = tokens[token_index][1]
@@ -402,17 +411,9 @@ class Preprocessor:
 			string = self.replace_string(
 				self.current_position.relative_begin, end_pos, string, new_str, tokens, True
 			)
-			self._remove_leading_close_tokens(tokens)
 		# end while
 		if len(tokens) == 1:
-			self.current_position.relative_begin = tokens[0][0]
-			self.context.update(self.current_position.begin)
-			self.send_error("unmatched-open-token",
-				'Unmatched "{}" token.\nAdd matching "{}" or use "{}begin{}" to place it.'.format(
-					self.token_begin, self.token_end, self.token_begin, self.token_end
-				)
-			)
-			self.context.pop()
+			self.token_error(tokens)
 		self._recursion_depth -= 1
 		return string
 
@@ -506,4 +507,4 @@ class Preprocessor:
 			return "{}: help on {} {}:\n{}".format(
 				PREPROCESSOR_NAME, cmd_type, help_msg, doc
 			)
-		return "{} help:\nUnknown command of block \"{}\"".format(PREPROCESSOR_NAME, help_msg)
+		return "{} help:\nUnknown command or block \"{}\"".format(PREPROCESSOR_NAME, help_msg)

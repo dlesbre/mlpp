@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from os import remove
 
 from preproc import Preprocessor
@@ -67,6 +66,7 @@ class TestCommands:
 			("{% fix_first_line %}", ""),
 			("{% fix_first_line %}\nhello", "hello"),
 			("{% fix_first_line %}  \n\t\f\nhello\n\n\n", "hello\n\n\n"),
+			("{% strip %}  \n  \n\thello \t world !\n \n \t\t\nyouhou", "hello \t world !\nyouhou\n"),
 		]
 		self.runtests(test, "test_strips")
 

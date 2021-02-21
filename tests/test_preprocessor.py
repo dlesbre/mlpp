@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from preproc import FileDescriptor, Preprocessor
 from preproc.defs import TokenMatch, get_identifier_name
 
