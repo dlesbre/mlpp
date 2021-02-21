@@ -25,7 +25,7 @@ def blck_void(preprocessor: Preprocessor, args: str, contents: str) -> str:
 
 blck_void.doc = ( # type: ignore
 	"""
-	This block is pared but not printed.
+	This block is parsed but not printed.
 	Use it to place comments or a bunch of def
 	without adding whitespace""")
 

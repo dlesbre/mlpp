@@ -25,7 +25,7 @@ Simple program to preprocess text files. It is inspired by the C preprocessor an
 
 ### Basic syntax
 
-The preprocessor instructions are wrapped between "{%" and "%}". These tokens can be changed if they conflict with the syntax of the file's langage.
+The preprocessor instructions are wrapped between "{%" and "%}". These tokens can be changed if they conflict with the syntax of the file's langage. Instructions are case sensitive.
 
 Preprocessor instructions are split in three categories :
 
@@ -99,6 +99,7 @@ parsed_contents = preprocessor.process(file_contents, filename)
 The filename is only needed for pretty error reports, and can be
 
 You can configure the preprocessor directly via it's public attributes:
+
 - `max_recursion_depth: int` (default 20) - raises an error past this depth
 - `token_begin: str` and `token_end: str` (default "{% " and " %}") - tokens wrapping preprocessor calls in the document. They should not be equal or be a simgle or double quote (`'` and `"`) or paranthese `(` or `)`.
 - `token_endblock: str` (default "end") - specifies what form the endblock command takes with the regex `<token_begin>\s*<token_endblock><block_name>\s*<token_end>`
@@ -124,66 +125,470 @@ Here follows a list of predefined commands and blocks. An up-to-date list can be
 
 ### Commands
 
-- `{% date [format] %}` prints the current date and time. The default format is "YYYY-MM-DD". In the format string Y is replace by year, M by month, D by day, h by hour, m by minute and s by second. The number of letters (between 1-4) indicates leading zeros, except for Y. YY indicates to use only the last two digits of the year.
-- `{% begin <number = 0> %}` - prints the command begin token ("{% " by default). If number is not 0, prints `{% begin <number - 1> %}` for recursion purposes.
-- `{% end <number = 0> %}` - prints the command end token (" %}" by default). If number is not 0, prints `{% end <number - 1> %}` for recursion purposes.
-- `{% def <identifier> ... %}` - defines a new command:
+#### begin
 
-	- `{% def foo    some text  %}` defines `{% foo %}` which prints `some text` (strips leading/trailing spaces)
-	- `{% def foo  "  some "text "  %}` defines `{% foo %}` which prints `  some "text `. Notice that to define a string you only need to start and end with double quotes.
-	- `{% def foo(arg1, arg2) "  bar arg1+more_text_arg2" %}` defines `{% foo arg1 arg2 %}` which prints `  bar <arg1_contents>+more_text_arg2`. Argument names must be valid identifiers. Arguments are only replaced if they aren't part of a larger identifier.
+```
+  Prints the current begin token (default "{%")
 
-	Def overwrites old commands and blocks irreversibly.
+  Usage: begin [<number>]
+  The optional number is used for recursion calls
+    begin     -> "{%"
+    begin 0   -> "{%"
+    begin <n> -> "{% begin <n-1> %}"
+```
 
+#### call
 
-	Defs are recursive and can use nesting:
+```
+  Prints a call to its arguments.
 
-	- `{% def foo {% date %} %}` defines `{% foo %}` which prints the current date.
-	- `{% def foo {% begin %}date{% end %} %}` defines `{% foo %}` which prints the current date
-	- `{% def foo {% begin 1 %}date{% end 1 %} %}` defines `{% foo %}` which prints `{% date %}`
+  Ex: "{% call my_command my_args %}" -> "{% my_command my_args %}"
+  Useful in defs to use recursive calls.
+  For recursion you can stack calls:
+  "{% call call ... %}" -> "{% call ... %}"
+```
 
-	Note that in the first example, date is evaluated before def is called and in the second it is evaluated when foo is called:
+#### capitalize
 
-		{% def name john %}
-		{% def rec1 {% foo %}
-		{% def rec2 {% begin %}foo{% end %} %}
-		{% def name alice %}
-		{% rec1 %} -> prints john
-		{% rec2 %} -> prints alice
+```
+  Converts text to Capitalized case
 
-	There is no notion of local defs. All def are global, including those comming from subblocks and included files
+  usage: capitalize [text]
 
-- `{% undef <identifier> %}` - undefines commands and blocks named identifier. You can undefine anything, including builtin commands and blocks.
-- `{% label <label> %}` - prints no text and sets a label at current position
-- `{% include [-v|--verbatim] path %}` - inserts the content of the new file. parses them unless *verbatim* is set.
-- `{% error [msg] %}` - sends an error
-- `{% warning [msg] %}` - sends a warning
-- `{% version %}` - prints the preprocessor's version
-- `{% file %}` - prints the current file name
-- `{% line %}` - prints the line number of the command in the original file. It can differ in the render dus to commands adding/removing line breaks
+  If text is present, converts text
+  else converts everything in the document (can be restricted with block).
+```
 
-These commands print nothing and trigger final actions
+#### date
 
-- `{% strip_empty_lines %}` - removes all empty lines (containing only whitespace) from current block
-- `{% strip_trailing_whitespace %}` - removes all trailing whitespace (space, tabs,...) from the current block
-- `{% strip_leading_whitespace %}` - removes leading whitespace (indent) from the current block
-- `{% empty_last_line %}` - ensure the current block ends with a single empty (unless it is empty)
-- `{% replace [-r|--regex] [-i|--ignore-case] [-w|--whole-word] [-c|--count <number>] "pattern" "replacement" %}`
-	replaces all occurences of pattern with replacement in the current block.
+```
+  Prints the current date.
 
-	If the regex flag is present, pattern is a regex, replacement can contain `\1`, `\2` to place the groups captured by pattern
+  Usage: date [format=YYYY-MM-DD]
+    format specifies year with YYYY or YY, month with MM or M,
+    day with DD or D, hour with hh or h, minutes with mm or m
+    seconds with ss or s
+```
 
-	If the whole-word flag is present, only replace occurrences which aren't part of a larger identifier (no letter/underscore before, no letter/underscore/number after).
+#### def
 
-	The count argument specifies how many occurrences of pattern to replace, from the start. Defaults to 0, replace all occurrences.
+```
+  Defines a new command or macro.
+
+  Usage:
+   def foo               -> defines empty foo command (prints nothing)
+   def foo   some text   -> {% foo %} prints "some text"
+                            (strips trailing/leading space)
+   def foo " some text " -> {% foo %} prints " some text "
+   def foo(arg1, arg2) text with arg1 and arg2
+      -> {% foo bar "hi there" %} prints "text with bar and hi there"
+
+  def overwrites old commands and blocks irreversibly.
+  All defs are global, including those comming from subblocks and included files.
+
+  defs can use nesting and recursive calls using command like call, begin and end.
+
+    {% def name john %}
+
+    // name is evaluated before def
+    {% def rec1 {% name %} %}
+
+    // call evaluated before def, prints {% name %}
+    // which will be evaluated when define is called
+    {% def rec2 {% call name %} %}
+
+    // 1rst call evaluated in define, prints {% call name %}
+    // which will be evaluated when define is called
+    {% def rec3 {% call call name %} %}
+
+    {% def name alice %}
+    {% rec1 %} -> prints john
+    {% rec2 %} -> prints alice
+    {% rec3 %} -> prints {% name %}
+
+  defs can be overloaded on the number of arguments
+
+    {% def sum(a,b) a+b %}
+    {% def sum(a)   {% sum a 0 %} %}
+    {% sum 5 10 %} -> prints 5+10
+    {% sum 5 %}    -> prints 5+0
+```
+
+#### deflist
+
+```
+  Defines a new command.
+
+  Usage: deflist list_name space separated list " element with spaces "
+
+  Defines list_name such that:
+          list_name          prints the lists
+          list_name <number> prints the n-th element
+                             (number must be a between -length+1 and length+1)
+
+  Can be used in combination with the for block to iterate multiple lists in a loop.
+```
+
+#### end
+
+```
+  Prints the current end token (default "%}")
+
+  Usage: end [<number>]
+  The optional number is used for recursion calls
+    end     -> "%}"
+    end 0   -> "%}"
+    end <n> -> "{% end <n-1> %}"
+```
+
+#### error
+
+```
+  Raises an error.
+  Use with if block to raise errors if conditions are not met.
+
+  Usage: error [message]
+```
+
+#### filename
+
+```
+  Prints the name of the current file being parsed.
+```
+
+#### fix_first_line
+
+```
+  Ensurses the document starts with a non-empty
+  line (unless it is empty)
+```
+
+#### fix_last_line
+
+```
+  Ensurses the file ends with a single empty
+  line (unless it is empty)
+```
+
+#### include
+
+```
+  Includes the content of another file.
+
+  Usage: include [--options] path
+    path can be absolute or relative to
+    any path in include_path: [current_working_dir, input_file_dir, output_file_dir]
+    paths can be added to include_path with the --include/-i/-I preprocessor option
+
+  Options:
+    -b --begin <string> specify the begin token ("{%")
+                        defaults to the same as current file
+    -e --end   <string> specify the end token ("%}")
+                        defaults to the same as current file
+    -v --verbatim       when present, includes files as is, without parsing.
+```
+
+#### input_name
+
+```
+  Prints name of input file
+	(only defined when called via pproc or preproc.__main__.preprocessor_main())
+```
+
+#### label
+
+```
+  Adds a label at the current position
+
+  Usage: label <label_name>
+  Where label_name must be a valid identifier.
+
+  Can be used in combination with the atlabel block
+  to place text at all occurences of a label.
+```
+
+#### line
+
+```
+  Prints the current line number.
+  This is the line number of the command in the input file, the line
+  in the output file may differ due to insertions/deletions.
+```
+
+#### lower
+
+```
+  Converts text to lower case
+
+  usage: lower [text]
+
+  If text is present, converts text
+  else converts everything in the document (can be restricted with block).
+```
+
+#### output_name
+
+```
+  Prints name of output file
+	(only defined when called via pproc or preproc.__main__.preprocessor_main())
+```
+
+#### paste
+
+```
+  Pastes the contents of a clipboard (defined in a cut block)
+
+  Usage: paste [-v|--verbatim] [clipboard]
+    if --verbatim is set, paste the text as is, without rendering it
+    clipboard is a string identifiyng the clipboard (default "").
+    it must match a previous cut block's clipboard argument
+```
+
+#### replace
+
+```
+  Used to find and replace text
+
+  Usage: replace [--options] pattern replacement [text]
+
+  If text is present, replacement takes place in text.
+  else it takes place in the whole document (can be restricted with block)
+
+  Options:
+    -c --count <number> number of occurences to replace (default all)
+    -i --ignore-case    pattern search ignores case (foo will match foo,FoO,FOO...)
+    -w --whole-word     pattern only matches full words, i.e. occurences not directly
+                        preceded/followed by a letter/number/underscore.
+    -r --regex          pattern is a regular expression, capture groups can be placed
+                        in replacement with \1, \2,...
+                        incomptatible with --whole-word
+```
+
+#### strip
+
+```
+  Removes empty lines as well as trailing/leading whitespace.
+  Ensures file ends on a single empty line
+```
+
+#### strip_empty_lines
+
+```
+  Removes empty lines (lines containing only spaces)
+```
+
+#### strip_leading_whitespace
+
+```
+  Removes leading whitespace (indent)
+```
+
+#### strip_trailing_whitespace
+
+```
+  Removes trailing whitespace
+```
+
+#### undef
+
+```
+  Undefines a command or block.
+  This is irreversible and can undefine builtins commands and blocks.
+
+  Usage: undef name
+```
+
+#### version
+
+```
+  Prints the preprocessor version.
+```
+
+#### warning
+
+```
+  Raises a warning.
+  Use with if block to raise warnings if conditions are not met.
+
+  Usage: warning [message]
+```
 
 ### Blocks
 
-- `{% block %}...{% endblock %}` - basic block, used to restrict post actions scope
-- `{% verbatim %}...{% endverbatim %}` - copies its contents without parsing them. Stops at first `{% endverbatim %}` not matching a `{% verbatim %}`
-- `{% void %}...{% endvoid %}` - run all commands/blocks inside it but prints nothing. Can be used for comments of many definitions without adding linebreaks.
-- `{% repeat <number>0> %}...{% endrepeat %}` - renders its contents once and copies it *number* times.
-- `{% atlabel <label> %}...{% endatlabel %}` - renders its contents but doesn't print them. As a post action, places a copy of the render at each occurence of *label*.
+#### atlabel
+
+```
+  Renders a chunk of text and places it at all labels matching
+  its label when processing is done.
+
+  Usage: atlabel <label>
+
+  It differs from the cut block in that:
+  - it will also print its content to calls of {% label XXX %} preceding it
+  - it canno't be overwritting (at most one atlabel block per label)
+  - the text is rendered in the block (and not in where the text is pared)
+
+  ex:
+    "{% def foo bar %}
+    first label: {% label my_label %}
+    {% atlabel my_label %}foo is {% foo %}{% endatlabel %}
+          {% def foo notbar %}
+    second label: {% label my_label %}"
+  prints:
+    "
+    first label: foo is bar
+
+    second label: foo is bar"
+
+  Can be used in combination with include to create files inheriting
+  from a common base.
+```
+
+#### block
+
+```
+  Block used to restrict action/defs/labels... to a local part of the files
+  Can be very useful to wrap an include
+
+  usage: block [--options]
+
+  options:
+    -b --begin <string>  change the begin token (default is same as current)
+    -e --end <string>    change the end token (default is same as current)
+    -d --local-defs      commands defined and undefined in the block are local
+    -a --local-actions   final actions called in the block will only affect the block
+                         use this to restrict replace, upper, ... to a section
+    -c --local-clipboard the clipboard defined by cut in the block are local
+    -l --local-labels    labels defined in the block are local, so they can
+                         only be written to by local atlabel blocks
+
+  Just like the verbatim block, changing begin and end means that the block will
+  end at the first {% endblock %} not matching a {% block %}:
+
+    {% block -b < -e > %}
+      {% block blabla %}
+      ...
+      {% endblock %} // this endblock is ignored
+    {% endblock %} // block ends here
+```
+
+#### cut
+
+```
+  Used to cut a section of text to paste elsewhere.
+  The text is processed when pasted, not when cut
+
+  Usage: cut [--pre-render|-p] [<clipboard_name>]
+    if --pre-render - renders the block here
+      (will be rerendered at time of pasting, unless using paste -v|--verbatim)
+    clipboard is a string identifying the clipboard, default is ""
+
+  ex:
+    {% cut %}foo is {% foo %}{% endcut %}
+    {% def foo bar %}
+    first paste: {% paste %}
+    {% def foo notbar %}
+    second paste: {% paste %}"
+  prints:
+    "
+
+    first paste: foo is bar
+
+    second paste: foo is notbar"
+```
+
+#### for
+
+```
+  Simple for loop used to render a chunk of text multiple times.
+  ex: "{% for x in range(2) %}{% x %},{% endfor %}" -> "1,2,"
+
+  Usage: for <ident> in range(stop)
+                        range(start, stop)
+                        range(start, stop, step)
+         for <ident> in space separated list " argument with spaces"
+
+
+  range can be combined with the deflist command to iterate multiple lists:
+
+    "{% deflist names alice john frank %} {% deflist ages 23 31 19 %}
+    {% for i in range(3) %}{% names {% i %} %} (age {% ages {% i %} %})
+    {% endfor %}"
+
+  prints:
+
+    "
+    alice (age 23)
+    john (age 31)
+    frank (age 19)
+    "
+```
+
+#### if
+
+```
+  Used to select wether or not to render a chunk of text
+  based on simple conditions
+  ex :
+    {% if def identifier %}, {% if ndef identifier %}...
+    {% if {% var %}==str_value %}, {% if {% var %}!=str_value %}...
+
+  Usage: {% if <condition> %} ...
+         [{% elif <condition> %} ...]
+         [{% else %}...]
+         {% endif %}
+
+  Condition syntax is as follows
+    simple_condition =
+      | true | false | 1 | 0 | <string>
+      | def <identifier> | ndef <identifier>
+      | <str> == <str> | <str> != <str>
+
+    condition =
+      | <simple_condition> | not <simple_condition>
+      | <condition> and <condition>
+      | <condition> or <condition>
+      | (<condition>)
+```
+
+#### repeat
+
+```
+  Used to repeat a block of text a number of times
+
+  Usage: repeat <number>
+
+  Ex: "{% repeat 4 %}a{% endrepeat %}" prints "aaaa".
+
+  Unlike {% for x in range(3) %}, {% repeat 3 %} only
+    renders the block once and prints three copies.
+```
+
+#### verbatim
+
+```
+  Used to paste contents without parsing them
+  Stops at first {% endverbatim %} not matching a {% verbatim %}.
+
+  Ex:
+    "{% verbatim %}some text with symbols {% and %}{% endverbatim %}"
+  Prints:
+    "some text with symbols {% and %}"
+
+  Ex:
+    "{% verbatim %}some text with {% verbatim %}nested verbatim{% endverbatim %}{% endverbatim %}"
+  Prints:
+    "some text with {% verbatim %}nested verbatim{% endverbatim %}"
+```
+
+#### void
+
+```
+  This block is parsed but not printed.
+  Use it to place comments or a bunch of def
+  without adding whitespace
+```
+
 
 ---
 
@@ -196,7 +601,7 @@ This package is designed to simply add new commands and blocks:
 	def command_func(p: Preprocessor, args: str) -> str
 	```
 
-	The first argument is the preprocessor object, the second is the args string entered after the command. For example when calling `{% command_name some args %}` args will contain `" some args"` including leading/trailing spaces.
+	The first argument is the preprocessor object, the second is the args string entered after the command. For example when calling `{% command_name some args %}` args will contain `" some args "` including leading/trailing spaces.
 
 	The return value is the string to be inserted instead of the command call.
 
@@ -233,28 +638,23 @@ This package is designed to simply add new commands and blocks:
 
 	The action returns the transformed text.
 
-	Actions are added via methods:
+	Actions are stored in the preprocessor's `final_actions` list, in the order in which they are to be executed. They can be added with:
 
 	```Python
 	# adds a post action to the whole class
-	Preprocessor.static_add_finalaction(post_action_function, [RunActionAt=CurrentLevel])
+	Preprocessor.final_actions.append(post_action_function)
 	# adds a post action to a specific object
-	preprocessor_obj.add_finalaction(post_action_function, [RunActionAt=CurrentLevel])
+	preprocessor_obj.final_actions.append(post_action_function)
 	```
 
-	Adding block actions with commands to run in the current block is pretty simple:
+	Adding block actions with commands to run in the current block is pretty simple via the `final_action_command` decorator:
 
 	```Python
 	def my_post_action(p: Preprocessor, args: str) -> str:
 		# not added to Preprocessor.post_actions
 		...
 
-	def my_post_action_command(p: Preprocessor, args: str) -> str:
-		# will run in the current block and it's sublocks only
-		p.add_finalaction.append(my_post_action)
-		return ""
-
-	Preprocessor.commands["run_my_post_action"] = my_post_action_command
+	Preprocessor.commands["run_my_post_action"] = final_action_command(my_post_action_command)
 	```
 
 ### Useful functions

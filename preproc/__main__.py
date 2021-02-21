@@ -58,11 +58,11 @@ def process_options(preproc: Preprocessor, arguments: argparse.Namespace) -> Non
 	input_name = str(arguments.input) if isinstance(arguments.input, Path) else "<stdin>"
 	command = lambda *args: input_name
 	command.doc = "Prints name of input file" # type: ignore
-	preproc.commands["input"] = command
+	preproc.commands["input_name"] = command
 	output_name = str(arguments.output) if isinstance(arguments.output, Path) else "<stdout>"
 	command = lambda *args: output_name
 	command.doc = "Prints name of output file" # type: ignore
-	preproc.commands["output"] = command
+	preproc.commands["output_name"] = command
 
 	# adding defined commands
 	process_defines(preproc, arguments.define)

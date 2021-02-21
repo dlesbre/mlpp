@@ -22,7 +22,7 @@ Preprocessor.commands["include"] = cmd_include
 Preprocessor.commands["error"] = cmd_error
 Preprocessor.commands["warning"] = cmd_warning
 Preprocessor.commands["version"] = cmd_version
-Preprocessor.commands["file"] = cmd_file
+Preprocessor.commands["filename"] = cmd_filename
 Preprocessor.commands["line"] = cmd_line
 Preprocessor.commands["paste"] = cmd_paste
 

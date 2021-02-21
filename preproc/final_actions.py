@@ -123,8 +123,8 @@ def cmd_strip(preprocessor: Preprocessor, args: str) -> str:
 	- fnl_strip_empty_lines
 	- fnl_strip_leading_whitespace
 	- fnl_strip_trailing_whitespace
-	- fnl_fix_last_line
 	- fnl_fix_first_line
+	- fnl_fix_last_line
 	to preprocessor final actions"""
 	if args.strip() != "":
 		preprocessor.send_warning("extra-arguments", "strip takes no arguments")
@@ -132,7 +132,7 @@ def cmd_strip(preprocessor: Preprocessor, args: str) -> str:
 	preprocessor.final_actions.append(fnl_strip_leading_whitespace)
 	preprocessor.final_actions.append(fnl_strip_trailing_whitespace)
 	preprocessor.final_actions.append(fnl_fix_first_line)
-	preprocessor.final_actions.append(fnl_fix_first_line)
+	preprocessor.final_actions.append(fnl_fix_last_line)
 	return ""
 
 cmd_strip.doc = ( # type: ignore

@@ -62,13 +62,13 @@ cmd_version.doc = ( # type: ignore
 	Prints the preprocessor version.
 	""")
 
-def cmd_file(preprocessor: Preprocessor, args: str) -> str:
+def cmd_filename(preprocessor: Preprocessor, args: str) -> str:
 	"""the file command - prints the current file name"""
 	if args.strip() != "":
 		preprocessor.send_warning("extra-arguments", "the file command takes no arguments")
 	return preprocessor.context.top.file.filename
 
-cmd_file.doc = ( # type: ignore
+cmd_filename.doc = ( # type: ignore
 	"""
 	Prints the name of the current file being parsed.
 	""")
@@ -81,7 +81,7 @@ def cmd_line(preprocessor: Preprocessor, args: str) -> str:
 	pos = context.true_position(preprocessor.current_position.begin)
 	return str(context.file.line_number(pos)[0])
 
-cmd_file.doc = ( # type: ignore
+cmd_line.doc = ( # type: ignore
 	"""
 	Prints the current line number.
 	This is the line number of the command in the input file, the line
@@ -348,12 +348,12 @@ cmd_deflist.doc = ( # type: ignore
 
 	Usage: deflist list_name space separated list " element with spaces "
 
-	Defines list_name such that
+	Defines list_name such that:
 		list_name          prints the lists
 		list_name <number> prints the n-th element
-		                   (number must be a between -length+1,length+1)
+		                   (number must be a between -length+1 and length+1)
 
-	You can use this in combination to for block to iterate multiple lists in a loop.
+	Can be used in combination with the for block to iterate multiple lists in a loop.
 	""")
 
 # ============================================================
@@ -387,8 +387,8 @@ cmd_begin.doc = ( # type: ignore
 	Usage: begin [<number>]
 	The optional number is used for recursion calls
 	  begin     -> "{%"
-		begin 0   -> "{%"
-		begin <n> -> "{% begin <n-1> %}"
+	  begin 0   -> "{%"
+	  begin <n> -> "{% begin <n-1> %}"
 	""")
 
 def cmd_end(preprocessor: Preprocessor, args_string: str) -> str:
@@ -418,8 +418,8 @@ cmd_end.doc = ( # type: ignore
 	Usage: end [<number>]
 	The optional number is used for recursion calls
 	  end     -> "%}"
-		end 0   -> "%}"
-		end <n> -> "{% end <n-1> %}"
+	  end 0   -> "%}"
+	  end <n> -> "{% end <n-1> %}"
 	""")
 
 def cmd_call(preprocessor: Preprocessor, args_string: str) -> str:
@@ -505,7 +505,7 @@ cmd_paste.doc = ( # type: ignore
 	Usage: paste [-v|--verbatim] [clipboard]
 	  if --verbatim is set, paste the text as is, without rendering it
 	  clipboard is a string identifiyng the clipboard (default "").
-	  it must match a previous cut block clipboard argument
+	  it must match a previous cut block's clipboard argument
 	""")
 
 def cmd_date(_: Preprocessor, args: str) -> str:
@@ -628,7 +628,7 @@ cmd_include.doc = ( # type: ignore
 	Options:
 	  -b --begin <string> specify the begin token ("{%")
 	                      defaults to the same as current file
-		-e --end   <string> specify the end token ("%}")
+	  -e --end   <string> specify the end token ("%}")
 	                      defaults to the same as current file
-		-v --verbatim       when present, includes files as is, without parsing.
+	  -v --verbatim       when present, includes files as is, without parsing.
 	""")
