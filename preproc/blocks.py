@@ -11,8 +11,19 @@ from .defs import (REGEX_IDENTIFIER, REGEX_IDENTIFIER_END, REGEX_INTEGER,
 from .preprocessor import Preprocessor
 
 # ============================================================
-# simple blocks (void, block, verbatim)
+# simple blocks (comment, void, block, verbatim)
 # ============================================================
+
+def blck_comment(preprocessor: Preprocessor, args: str, contents: str) -> str:
+	"""The comment block, ignores its contents"""
+	if args.strip() != "":
+		preprocessor.send_warning("extra-arguments", "the void block takes no arguments")
+	return ""
+
+blck_comment.doc = ( # type: ignore
+	"""
+	This block is a comment.
+	All text until the next 'endcomment' is ignored""")
 
 def blck_void(preprocessor: Preprocessor, args: str, contents: str) -> str:
 	"""The void block, processes commands inside it but prints nothing"""

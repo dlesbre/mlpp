@@ -44,6 +44,7 @@ Preprocessor.final_actions.append(fnl_atlabel)
 # default blocks
 
 Preprocessor.blocks["void"] = blck_void
+Preprocessor.blocks["comment"] = blck_comment
 Preprocessor.blocks["block"] = blck_block
 Preprocessor.blocks["verbatim"] = blck_verbatim
 Preprocessor.blocks["repeat"] = blck_repeat

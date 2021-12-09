@@ -146,6 +146,7 @@ class TestCommands:
 
 	def test_block(self):
 		test = [
+			("hello{% def a c %}{% comment %} how are {% def a b %} you {% endcomment %} {% a %}", "hello c"),
 			("text{% void %}{% def name john %}hello this is a comment{% endvoid %}\n{% name %}", "text\njohn"),
 			("{% verbatim %}{% hello %}{% endverbatim %}", "{% hello %}"),
 			("{% verbatim %}some text with {% verbatim %}nested verbatim{% endverbatim %}{% endverbatim %}", "some text with {% verbatim %}nested verbatim{% endverbatim %}"),
