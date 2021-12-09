@@ -14,7 +14,7 @@ from .preprocessor import Preprocessor
 # simple blocks (comment, void, block, verbatim)
 # ============================================================
 
-def blck_comment(preprocessor: Preprocessor, args: str, contents: str) -> str:
+def blck_comment(preprocessor: Preprocessor, args: str, _contents: str) -> str:
 	"""The comment block, ignores its contents"""
 	if args.strip() != "":
 		preprocessor.send_warning("extra-arguments", "the void block takes no arguments")
