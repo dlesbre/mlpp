@@ -30,7 +30,11 @@ Simple program to preprocess text files. It is inspired by the C preprocessor an
 
 ## Development install
 
-Recommended using a virtual environement:
+**Quick install:** run
+
+	python3 -m venv venv & ./venv/bin/activate & make install-devel
+
+**Step-by-step:** (using a virtual environement)
 
 1. Clone or download this repository
 2. Run `python3 -m venv venv` to create a virtual environement named `venv` (in the repository folder)
