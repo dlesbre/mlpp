@@ -4,12 +4,19 @@ Simple program to preprocess text files. It is inspired by the C preprocessor an
 
 ## Contents
 
-1. [Installation](https://github.com/Lesbre/preprocessor#installation)
-2. [Preprocessor syntax](https://github.com/Lesbre/preprocessor#preprocessor-syntax)
-3. [Command line usage](https://github.com/Lesbre/preprocessor#command-line-usage)
-4. [Python usage](https://github.com/Lesbre/preprocessor#python-usage)
-5. [Command and block reference](https://github.com/Lesbre/preprocessor#command-and-block-reference)
-6. [Defining custom commands and blocks](https://github.com/Lesbre/preprocessor#defining-custom-commands-and-blocks)
+- [Contents](#contents)
+- [Installation](#installation)
+- [Development install](#development-install)
+- [Preprocessor syntax](#preprocessor-syntax)
+	- [Basic syntax](#basic-syntax)
+	- [Nesting and resolution order](#nesting-and-resolution-order)
+- [Command line usage](#command-line-usage)
+- [Python usage](#python-usage)
+- [Command and block reference](#command-and-block-reference)
+	- [Commands](#commands)
+	- [Blocks](#blocks)
+- [Defining commands, blocks and final actions](#defining-commands-blocks-and-final-actions)
+	- [Useful functions](#useful-functions)
 
 ## Installation
 
@@ -20,6 +27,26 @@ Simple program to preprocess text files. It is inspired by the C preprocessor an
 
 3. You're done ! You can now call the preprocessor from a command line with `pproc` or `python3 -m preproc` (see [command line usage](https://github.com/Lesbre/preprocessor#command-line-usage) for arguments). You can also import it in python3 with `import preproc`
 4. You can uninstall with `pip3 uninstall preproc`
+
+## Development install
+
+Recommended using a virtual environement:
+
+1. Clone or download this repository
+2. Run `python3 -m venv venv` to create a virtual environement named `venv` (in the repository folder)
+3. Activate the virtual environment with `./venv/bin/activate`
+4. Install dependencies and the package:
+
+		pip3 install -U pip
+		pip3 install -r requirements-devel.txt
+		pip3 install -e .
+
+	(Be sure to run these commands from the repository directory)
+
+5. Install precommit: `pre-commit install`
+6. You're done! You can now edit the files at wish. Usefull commands:
+	- Run tests with `pytest`
+	- Run mypy with `mypy -p preproc`
 
 ## Preprocessor syntax
 
@@ -470,6 +497,13 @@ Here follows a list of predefined commands and blocks. An up-to-date list can be
       ...
       {% endblock %} // this endblock is ignored
     {% endblock %} // block ends here
+```
+
+#### comment
+
+```
+  This block is a comment.
+  All text until the next 'endcomment' is ignored
 ```
 
 #### cut
