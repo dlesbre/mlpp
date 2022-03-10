@@ -8,22 +8,22 @@ Simple program to preprocess text files. It is inspired by the C preprocessor an
 - [Installation](#installation)
 - [Development install](#development-install)
 - [Preprocessor syntax](#preprocessor-syntax)
-	- [Basic syntax](#basic-syntax)
-	- [Nesting and resolution order](#nesting-and-resolution-order)
+  - [Basic syntax](#basic-syntax)
+  - [Nesting and resolution order](#nesting-and-resolution-order)
 - [Command line usage](#command-line-usage)
 - [Python usage](#python-usage)
 - [Command and block reference](#command-and-block-reference)
-	- [Commands](#commands)
-	- [Blocks](#blocks)
+  - [Commands](#commands)
+  - [Blocks](#blocks)
 - [Defining commands, blocks and final actions](#defining-commands-blocks-and-final-actions)
-	- [Useful functions](#useful-functions)
+  - [Useful functions](#useful-functions)
 
 ## Installation
 
 1. Clone or download this repository
 2. Run `python3 setup.py install` in the repository folder
 
-	You can install it globaly or in a virtual environment. You may have to run as `sudo` when installing globaly.
+	You can install it globally or in a virtual environment. You may have to run as `sudo` when installing globally.
 
 3. You're done ! You can now call the preprocessor from a command line with `pproc` or `python3 -m preproc` (see [command line usage](https://github.com/Lesbre/preprocessor#command-line-usage) for arguments). You can also import it in python3 with `import preproc`
 4. You can uninstall with `pip3 uninstall preproc`
@@ -34,10 +34,10 @@ Simple program to preprocess text files. It is inspired by the C preprocessor an
 
 	python3 -m venv venv & ./venv/bin/activate & make install-devel
 
-**Step-by-step:** (using a virtual environement)
+**Step-by-step:** (using a virtual environnement)
 
 1. Clone or download this repository
-2. Run `python3 -m venv venv` to create a virtual environement named `venv` (in the repository folder)
+2. Run `python3 -m venv venv` to create a virtual environnement named `venv` (in the repository folder)
 3. Activate the virtual environment with `./venv/bin/activate`
 4. Install dependencies and the package:
 
@@ -47,8 +47,8 @@ Simple program to preprocess text files. It is inspired by the C preprocessor an
 
 	(Be sure to run these commands from the repository directory)
 
-5. Install precommit: `pre-commit install`
-6. You're done! You can now edit the files at wish. Usefull commands:
+5. Install pre-commit: `pre-commit install`
+6. You're done! You can now edit the files at wish. Useful commands:
 	- Run tests with `pytest`
 	- Run mypy with `mypy -p preproc`
 
@@ -67,9 +67,9 @@ Preprocessor instructions are split in three categories :
 
 - **blocks**: `{% block_name [args] %} ... some text ... {% endblock_name %}`
 
-	Blocks work very similarily to commands: they wrap around some text and alter it in some way. For instance the `{% verbatim %}` block prints all text in itself verbatim, without rendering any of the commands.
+	Blocks work very similarly to commands: they wrap around some text and alter it in some way. For instance the `{% verbatim %}` block prints all text in itself verbatim, without rendering any of the commands.
 
-- **final actions**: some actions can be queued by special commands. They occur once every command and block in the file has been rendered and affect the whole current file. For instance `{% replace foo bar %}` will replace all instances of "foo" with "bar" in the whole rendered file (including occurences before the command is called). Final actions can be restricted to a smaller part of the document with `{% block -a %}...{% endblock %}` :
+- **final actions**: some actions can be queued by special commands. They occur once every command and block in the file has been rendered and affect the whole current file. For instance `{% replace foo bar %}` will replace all instances of "foo" with "bar" in the whole rendered file (including occurrences before the command is called). Final actions can be restricted to a smaller part of the document with `{% block -a %}...{% endblock %}` :
 
 		some text... foo here is not replaced
 		{% begin block -a %}
@@ -132,7 +132,7 @@ The filename is only needed for pretty error reports, and can be
 You can configure the preprocessor directly via it's public attributes:
 
 - `max_recursion_depth: int` (default 20) - raises an error past this depth
-- `token_begin: str` and `token_end: str` (default "{% " and " %}") - tokens wrapping preprocessor calls in the document. They should not be equal or be a simgle or double quote (`'` and `"`) or paranthese `(` or `)`.
+- `token_begin: str` and `token_end: str` (default "{% " and " %}") - tokens wrapping preprocessor calls in the document. They should not be equal or be a single or double quote (`'` and `"`) or parentheses `(` or `)`.
 - `token_endblock: str` (default "end") - specifies what form the endblock command takes with the regex `<token_begin>\s*<token_endblock><block_name>\s*<token_end>`
 - `safe_calls: bool` (default True) - if True, catches exceptions raised by command or blocks
 - `error_mode: preproc.ErrorMode` (default RAISE), how errors are handled:
@@ -144,7 +144,7 @@ You can configure the preprocessor directly via it's public attributes:
 	- PRINT -> print to stderr
 	- RAISE -> raise python warning
 	- AS_ERROR -> passes to self.send_error()
-- `use_color: bool` (default False) if True, uses ansi color when priting errors
+- `use_color: bool` (default False) if True, uses ansi color when printing errors
 
 
 
@@ -215,7 +215,7 @@ Here follows a list of predefined commands and blocks. An up-to-date list can be
       -> {% foo bar "hi there" %} prints "text with bar and hi there"
 
   def overwrites old commands and blocks irreversibly.
-  All defs are global, including those comming from subblocks and included files.
+  All defs are global, including those coming from sub-blocks and included files.
 
   defs can use nesting and recursive calls using command like call, begin and end.
 
@@ -290,14 +290,14 @@ Here follows a list of predefined commands and blocks. An up-to-date list can be
 #### fix_first_line
 
 ```
-  Ensurses the document starts with a non-empty
+  Ensures the document starts with a non-empty
   line (unless it is empty)
 ```
 
 #### fix_last_line
 
 ```
-  Ensurses the file ends with a single empty
+  Ensures the file ends with a single empty
   line (unless it is empty)
 ```
 
@@ -335,7 +335,7 @@ Here follows a list of predefined commands and blocks. An up-to-date list can be
   Where label_name must be a valid identifier.
 
   Can be used in combination with the atlabel block
-  to place text at all occurences of a label.
+  to place text at all occurrences of a label.
 ```
 
 #### line
@@ -371,7 +371,7 @@ Here follows a list of predefined commands and blocks. An up-to-date list can be
 
   Usage: paste [-v|--verbatim] [clipboard]
     if --verbatim is set, paste the text as is, without rendering it
-    clipboard is a string identifiyng the clipboard (default "").
+    clipboard is a string identifying the clipboard (default "").
     it must match a previous cut block's clipboard argument
 ```
 
@@ -386,13 +386,13 @@ Here follows a list of predefined commands and blocks. An up-to-date list can be
   else it takes place in the whole document (can be restricted with block)
 
   Options:
-    -c --count <number> number of occurences to replace (default all)
+    -c --count <number> number of occurrences to replace (default all)
     -i --ignore-case    pattern search ignores case (foo will match foo,FoO,FOO...)
-    -w --whole-word     pattern only matches full words, i.e. occurences not directly
+    -w --whole-word     pattern only matches full words, i.e. occurrences not directly
                         preceded/followed by a letter/number/underscore.
     -r --regex          pattern is a regular expression, capture groups can be placed
                         in replacement with \1, \2,...
-                        incomptatible with --whole-word
+                        incompatible with --whole-word
 ```
 
 #### strip
@@ -424,7 +424,7 @@ Here follows a list of predefined commands and blocks. An up-to-date list can be
 
 ```
   Undefines a command or block.
-  This is irreversible and can undefine builtins commands and blocks.
+  This is irreversible and can undefine built-in commands and blocks.
 
   Usage: undef name
 ```
@@ -456,7 +456,7 @@ Here follows a list of predefined commands and blocks. An up-to-date list can be
 
   It differs from the cut block in that:
   - it will also print its content to calls of {% label XXX %} preceding it
-  - it canno't be overwritting (at most one atlabel block per label)
+  - it can't be overwriting (at most one atlabel block per label)
   - the text is rendered in the block (and not in where the text is pared)
 
   ex:
@@ -697,7 +697,7 @@ This package is designed to simply add new commands and blocks:
 
 ### Useful functions
 
-Some useful functions and attribute that are usefull when defining commands or blocks
+Some useful functions and attribute that are useful when defining commands or blocks
 
 - `Preprocessor.split_args(self, args: str) -> List[str]` - use split a command or block arguments like the command line would.
 	You can then parse them with `argparse`. However, `argparse` exits on parsing errors, so the module provide

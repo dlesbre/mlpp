@@ -97,7 +97,7 @@ macro_parser = ArgumentParserNoExit(prog="macro", add_help=False)
 macro_parser.add_argument('vars', nargs='*') # arbitrary number of arguments
 
 def rreplace(string, old, new, occurrence = 1):
-	"""replace <occurence> number of old by new in string
+	"""replace <occurrence> number of old by new in string
 	starting with the right"""
 	split = string.rsplit(old, occurrence)
 	return new.join(split)
@@ -108,9 +108,9 @@ def define_macro(preprocessor: Preprocessor, name: str, args: List[str], text: s
 	- preprocessor - the object to which the macro is added
 	- name: str - the name of the new macro
 	- args: List[str] - List or arguments name
-	- text: str - the text the command prints. Occurences of args will
+	- text: str - the text the command prints. Occurrences of args will
 	  be replaced by the corresponding value during the call.
-	  will only replace occurence that aren't part of a larger word
+	  will only replace occurrence that aren't part of a larger word
 	"""
 	# replace arg occurences with placeholder
 	for i, arg in enumerate(args):
@@ -183,7 +183,7 @@ def cmd_def(preprocessor: Preprocessor, args_string : str) -> str:
 	usage:
 		def <ident> <replacement> -> defines ident with replacement
 			(strips leading/trailing space)
-		def <ident> " replacement with leading/trailin space  "
+		def <ident> " replacement with leading/trailing space  "
 		def <ident>(<ident1>, <ident2>) replacement
 			defines a macro"""
 	ident, text, _ = get_identifier_name(args_string)
@@ -286,7 +286,7 @@ def cmd_undef(preprocessor: Preprocessor, args_string: str) -> str:
 		undefined = True
 	if not undefined:
 		preprocessor.send_warning("aldready-undefined",
-			"canno't undef \"{}\", identifier is aldready undefined.".format(ident)
+			"can't undef \"{}\", identifier is aldready undefined.".format(ident)
 		)
 	if "def" in preprocessor.command_vars:
 		del_keys = []
@@ -300,7 +300,7 @@ def cmd_undef(preprocessor: Preprocessor, args_string: str) -> str:
 cmd_undef.doc = ( # type: ignore
 	"""
 	Undefines a command or block.
-	This is irreversible and can undefine builtins commands and blocks.
+	This is irreversible and can undefine built-in commands and blocks.
 
 	Usage: undef name
 	""")
@@ -467,7 +467,7 @@ cmd_label.doc = ( # type: ignore
 	Where label_name must be a valid identifier.
 
 	Can be used in combination with the atlabel block
-	to place text at all occurences of a label.
+	to place text at all occurrences of a label.
 	""")
 
 paste_parser = ArgumentParserNoExit(prog="cut", add_help=False)
@@ -504,7 +504,7 @@ cmd_paste.doc = ( # type: ignore
 
 	Usage: paste [-v|--verbatim] [clipboard]
 	  if --verbatim is set, paste the text as is, without rendering it
-	  clipboard is a string identifiyng the clipboard (default "").
+	  clipboard is a string identifying the clipboard (default "").
 	  it must match a previous cut block's clipboard argument
 	""")
 

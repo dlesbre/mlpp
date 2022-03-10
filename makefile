@@ -15,6 +15,7 @@ ifeq ($(color),on)
 	color_reset  = \033[38;22m
 else
 	color_yellow=
+	color_orange=
 	color_reset=
 endif
 

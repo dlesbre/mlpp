@@ -92,7 +92,7 @@ def fnl_fix_last_line(preprocessor: Preprocessor, string: str) -> str:
 
 fnl_fix_last_line.doc = ( # type: ignore
 	"""
-	Ensurses the file ends with a single empty
+	Ensures the file ends with a single empty
 	line (unless it is empty)
 	""")
 
@@ -113,7 +113,7 @@ def fnl_fix_first_line(preprocessor: Preprocessor, string: str) -> str:
 
 fnl_fix_first_line.doc = ( # type: ignore
 	"""
-	Ensurses the document starts with a non-empty
+	Ensures the document starts with a non-empty
 	line (unless it is empty)
 	""")
 
@@ -222,13 +222,13 @@ cmd_replace.doc = ( # type: ignore
 	else it takes place in the whole document (can be restricted with block)
 
 	Options:
-	  -c --count <number> number of occurences to replace (default all)
+	  -c --count <number> number of occurrences to replace (default all)
 	  -i --ignore-case    pattern search ignores case (foo will match foo,FoO,FOO...)
-	  -w --whole-word     pattern only matches full words, i.e. occurences not directly
+	  -w --whole-word     pattern only matches full words, i.e. occurrences not directly
 	                      preceded/followed by a letter/number/underscore.
 	  -r --regex          pattern is a regular expression, capture groups can be placed
 	                      in replacement with \\1, \\2,...
-	                      incomptatible with --whole-word
+	                      incompatible with --whole-word
 	""")
 
 # ============================================================
