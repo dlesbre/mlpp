@@ -1,14 +1,30 @@
+# See 'make help' for a list of useful targets
+
+# ==================================================
+# Constants
+# ===================================================
+
 PYTHON = python3
-PIP = pip3
+PIP = $(PYTHON) -m pip
 MYPY = mypy -p preproc
 TEST = pytest
 DIR = .
 
-color = on
+# set to ON/OFF to toggle ANSI escape sequences
+COLOR = ON
 
-REQUIREMENTS = ./requirements-devel.txt
+# Uncomment to show commands
+# VERBOSE = TRUE
 
-ifeq ($(color),on)
+# padding for help on targets
+# should be > than the longest target
+HELP_PADDING = 15
+
+# ==================================================
+# Make code and variable setting
+# ==================================================
+
+ifeq ($(COLOR),ON)
 	# Bold orange text
 	color_yellow = \033[33;1m
 	color_orange = \033[33m
@@ -19,11 +35,16 @@ else
 	color_reset=
 endif
 
+define print
+	@echo "$(color_yellow)$(1)$(color_reset)"
+endef
+
 # =============================
 # Default target
 # =============================
 
 default: ## default target
+.PHONY: default
 
 # =============================
 # Special Targets
@@ -32,32 +53,54 @@ default: ## default target
 # No display of executed commands.
 $(VERBOSE).SILENT:
 
-.PHONY: default install install-devel mypy test
+.PHONY: help
+help: ## Show this help
+	@echo "$(color_yellow)make:$(color_reset) list of useful targets :"
+	@egrep -h '\s##\s' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(color_blue)%-$(HELP_PADDING)s$(color_reset) %s\n", $$1, $$2}'
 
 default: mypy test
 
-install: ## install the package for use
-	echo "$(color_yellow)Installing package$(color_reset)"
+.PHONY: precommit
+precommit: ## run precommit
+	$(call print,Running precommit)
+	$(PRECOMMIT) run
+
+.PHONY: precommit-all
+precommit-all: ## run precommit on all files
+	$(call print,Running precommit on all files)
+	$(PRECOMMIT) run --all-files
+
+.PHONY: test
+test: ## Run all tests
+	$(call print,Running pytest)
+	$(PYTEST)
+
+.PHONY: mypy
+mypy: ## Typecheck all files
+	$(call print,Running mypy)
+	$(MYPY) ./bibtexautocomplete/ ./tests/
+
+# =================================================
+# Installation
+# =================================================
+
+.PHONY: setup
+setup: ## Install dependencies
+	$(call print,Upgrading pip)
+	$(PIP) install --upgrade pip
+	$(call print,Installing package and dependencies)
 	$(PIP) install $(DIR)
 
-install-devel: ## install and configure for development
-	echo "$(color_yellow)Installing tools$(color_reset)"
-	$(PIP) install -U $(PIP)
-	$(PIP) install -r $(REQUIREMENTS)
-	echo "$(color_yellow)Setting up pre-commit$(color_reset)"
-	pre-commit uninstall
-	pre-commit install
-	echo "$(color_yellow)Installing package$(color_reset)"
-	$(PIP) install -e $(DIR)
+.PHONY: setup-dev
+setup-dev: ## Install development dependencies
+	$(call print,Upgrading pip)
+	$(PIP) install --upgrade pip
+	$(call print,Installing package and development dependencies)
+	$(PIP) install -e $(DIR)[dev]
+	$(call print,Setting up pre-commit)
+	$(PRECOMMIT) install
 
-mypy: ## run mypy
-	echo "$(color_yellow)Running mypy$(color_reset)"
-	$(MYPY)
-
-test: ## run the test suite (requires prior install)
-	echo "$(color_yellow)Running pytest$(color_reset)"
-	$(TEST)
-
-help: ## Show this help
-	@echo "$(color_yellow)make:$(color_reset) usefull targets:"
-	@egrep -h '\s##\s' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(color_orange)%-14s$(color_reset) %s\n", $$1, $$2}'
+.PHONY: clean
+clean: ## Remove package
+	$(call print,Removing package)
+	rm -rf build dist preproc.egg-info

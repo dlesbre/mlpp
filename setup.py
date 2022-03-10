@@ -18,10 +18,11 @@ setup(
 	scripts = ["pproc"],
 	install_requires = [],
 	extras_require = {
-		"dev": ["pytest", "mypy"],
+		"dev": ["pytest", "mypy", "pre-commit"],
 	},
 	python_requires = ">=3.6",
 	license = "MIT",
+	platforms=["any"],
 	classifiers = [
 		"Programming Language :: Python :: 3",
 		"Programming Language :: Python :: 3.6",

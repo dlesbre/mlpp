@@ -6,7 +6,7 @@ Simple program to preprocess text files. It is inspired by the C preprocessor an
 
 - [Contents](#contents)
 - [Installation](#installation)
-- [Development install](#development-install)
+- [Manual installation](#manual-installation)
 - [Preprocessor syntax](#preprocessor-syntax)
   - [Basic syntax](#basic-syntax)
   - [Nesting and resolution order](#nesting-and-resolution-order)
@@ -20,37 +20,30 @@ Simple program to preprocess text files. It is inspired by the C preprocessor an
 
 ## Installation
 
-1. Clone or download this repository
-2. Run `python3 setup.py install` in the repository folder
+This package has no dependencies. To install simply run
+```
+pip install preproc
+```
 
-	You can install it globally or in a virtual environment. You may have to run as `sudo` when installing globally.
+Once installed you can call the preprocessor with
+```
+pproc --version
+python -m preproc --version
+```
 
-3. You're done ! You can now call the preprocessor from a command line with `pproc` or `python3 -m preproc` (see [command line usage](https://github.com/Lesbre/preprocessor#command-line-usage) for arguments). You can also import it in python3 with `import preproc`
-4. You can uninstall with `pip3 uninstall preproc`
+## Manual installation
 
-## Development install
+For a manual installation run
 
-**Quick install:** run
+```
+git clone https://github.com/dlesbre/preprocessor.git &&
+cd preprocessor &&
+python3 -m venv venv &&
+source venv/bin/activate &&
+make setup
+```
 
-	python3 -m venv venv & ./venv/bin/activate & make install-devel
-
-**Step-by-step:** (using a virtual environnement)
-
-1. Clone or download this repository
-2. Run `python3 -m venv venv` to create a virtual environnement named `venv` (in the repository folder)
-3. Activate the virtual environment with `./venv/bin/activate`
-4. Install dependencies and the package:
-
-		pip3 install -U pip
-		pip3 install -r requirements-devel.txt
-		pip3 install -e .
-
-	(Be sure to run these commands from the repository directory)
-
-5. Install pre-commit: `pre-commit install`
-6. You're done! You can now edit the files at wish. Useful commands:
-	- Run tests with `pytest`
-	- Run mypy with `mypy -p preproc`
+For development install, run `make setup-dev` to install extra dependencies and setup pre-commit.
 
 ## Preprocessor syntax
 
