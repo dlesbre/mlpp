@@ -36,8 +36,8 @@ python -m mlpp --version
 For a manual installation run
 
 ```
-git clone https://github.com/dlesbre/preprocessor.git &&
-cd preprocessor &&
+git clone https://github.com/dlesbre/mlpp.git &&
+cd mlpp &&
 python3 -m venv venv &&
 source venv/bin/activate &&
 make setup
@@ -76,7 +76,7 @@ Preprocessor instructions are split in three categories :
 			{% command that prints foo %} will be replaced
 		{% endblock %}
 
-For a list of command run `pproc -h commands` or see the [command and block reference](https://github.com/Lesbre/preprocessor#command-and-block-reference).
+For a list of command run `mlpp -h commands` or see the [command and block reference](#command-and-block-reference).
 
 ### Nesting and resolution order
 
@@ -90,8 +90,8 @@ Nesting can also be used for block arguments, but *it can NOT be used for block 
 
 The preprocessor can be called from the command line with:
 
-	pproc [--flags] [input_file]
-	python3 -m preproc [--flags] [input_file]
+	mlpp [--flags] [input_file]
+	python3 -m mlpp [--flags] [input_file]
 
 The default input file is `stdin`. Command line options are:
 
@@ -110,12 +110,12 @@ The default input file is `stdin`. Command line options are:
 
 ## Python usage
 
-The package can be imported in python 3 with `import preproc`. This imports a `Preprocessor` class with all default commands included (see [list](https://github.com/Lesbre/preprocessor#command-and-block-reference)). The simplest way to use the preprocessor is then:
+The package can be imported in python 3 with `import mlpp`. This imports a `Preprocessor` class with all default commands included (see [list](#command-and-block-reference)). The simplest way to use the preprocessor is then:
 
 ```Python
-import preproc
+import mlpp
 
-preprocessor = preproc.Preprocessor()
+preprocessor = mlpp.Preprocessor()
 
 parsed_contents = preprocessor.process(file_contents, filename)
 ```
@@ -128,11 +128,11 @@ You can configure the preprocessor directly via it's public attributes:
 - `token_begin: str` and `token_end: str` (default "{% " and " %}") - tokens wrapping preprocessor calls in the document. They should not be equal or be a single or double quote (`'` and `"`) or parentheses `(` or `)`.
 - `token_endblock: str` (default "end") - specifies what form the endblock command takes with the regex `<token_begin>\s*<token_endblock><block_name>\s*<token_end>`
 - `safe_calls: bool` (default True) - if True, catches exceptions raised by command or blocks
-- `error_mode: preproc.ErrorMode` (default RAISE), how errors are handled:
+- `error_mode: mlpp.ErrorMode` (default RAISE), how errors are handled:
 	- PRINT_AND_EXIT -> print to stderr and exit
 	- PRINT_AND_RAISE -> print to stderr and raise exception
 	- RAISE -> raise exception
-- `warning_mode: preproc.WarningMode` (default RAISE)
+- `warning_mode: mlpp.WarningMode` (default RAISE)
 	- HIDE -> do nothing
 	- PRINT -> print to stderr
 	- RAISE -> raise python warning
@@ -145,7 +145,7 @@ You can configure the preprocessor directly via it's public attributes:
 
 ## Command and block reference
 
-Here follows a list of predefined commands and blocks. An up-to-date list can be found by running `pproc -h commands` and detailed descriptions obtained by running `pproc -h <command_name>`.
+Here follows a list of predefined commands and blocks. An up-to-date list can be found by running `mlpp -h commands` and detailed descriptions obtained by running `mlpp -h <command_name>`.
 
 ### Commands
 
@@ -316,7 +316,7 @@ Here follows a list of predefined commands and blocks. An up-to-date list can be
 
 ```
   Prints name of input file
-  (on	ly defined when called via pproc or preproc.__main__.preprocessor_main())
+  (only defined when called via mlpp or mlpp.__main__.preprocessor_main())
 ```
 
 #### label
@@ -354,7 +354,7 @@ Here follows a list of predefined commands and blocks. An up-to-date list can be
 
 ```
   Prints name of output file
-  (only defined when called via pproc or preproc.__main__.preprocessor_main())
+  (only defined when called via mlpp or mlpp.__main__.preprocessor_main())
 ```
 
 #### paste
@@ -425,7 +425,7 @@ Here follows a list of predefined commands and blocks. An up-to-date list can be
 #### version
 
 ```
-  Prints the preprocessor version.
+  Prints the mlpp version.
 ```
 
 #### warning
