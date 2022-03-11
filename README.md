@@ -22,7 +22,7 @@ Simple program to preprocess text files. It is inspired by the C preprocessor an
 
 This package has no dependencies. To install simply run
 ```
-pip install mlpp
+pip install git+https://github.com/dlesbre/mlpp.git
 ```
 
 Once installed you can call the preprocessor with
