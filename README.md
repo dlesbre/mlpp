@@ -1,4 +1,4 @@
-# MLPP : Markup Language Pre-Preprocessor
+# MLPProc : Markup Language Pre-Preprocessor
 
 Simple program to preprocess text files. It is inspired by the C preprocessor and should work with any language.
 
@@ -22,13 +22,13 @@ Simple program to preprocess text files. It is inspired by the C preprocessor an
 
 This package has no dependencies. To install simply run
 ```
-pip install git+https://github.com/dlesbre/mlpp.git
+pip install git+https://github.com/dlesbre/mlpproc.git
 ```
 
 Once installed you can call the preprocessor with
 ```
 mlpp --version
-python -m mlpp --version
+python -m mlpproc --version
 ```
 
 ## Manual installation
@@ -36,8 +36,8 @@ python -m mlpp --version
 For a manual installation run
 
 ```
-git clone https://github.com/dlesbre/mlpp.git &&
-cd mlpp &&
+git clone https://github.com/dlesbre/mlpproc.git &&
+cd mlpproc &&
 python3 -m venv venv &&
 source venv/bin/activate &&
 make setup
@@ -91,7 +91,7 @@ Nesting can also be used for block arguments, but *it can NOT be used for block 
 The preprocessor can be called from the command line with:
 
 	mlpp [--flags] [input_file]
-	python3 -m mlpp [--flags] [input_file]
+	python3 -m mlpproc [--flags] [input_file]
 
 The default input file is `stdin`. Command line options are:
 
@@ -110,12 +110,12 @@ The default input file is `stdin`. Command line options are:
 
 ## Python usage
 
-The package can be imported in python 3 with `import mlpp`. This imports a `Preprocessor` class with all default commands included (see [list](#command-and-block-reference)). The simplest way to use the preprocessor is then:
+The package can be imported in python 3 with `import mlpproc`. This imports a `Preprocessor` class with all default commands included (see [list](#command-and-block-reference)). The simplest way to use the preprocessor is then:
 
 ```Python
-import mlpp
+import mlpproc
 
-preprocessor = mlpp.Preprocessor()
+preprocessor = mlpproc.Preprocessor()
 
 parsed_contents = preprocessor.process(file_contents, filename)
 ```
@@ -128,11 +128,11 @@ You can configure the preprocessor directly via it's public attributes:
 - `token_begin: str` and `token_end: str` (default "{% " and " %}") - tokens wrapping preprocessor calls in the document. They should not be equal or be a single or double quote (`'` and `"`) or parentheses `(` or `)`.
 - `token_endblock: str` (default "end") - specifies what form the endblock command takes with the regex `<token_begin>\s*<token_endblock><block_name>\s*<token_end>`
 - `safe_calls: bool` (default True) - if True, catches exceptions raised by command or blocks
-- `error_mode: mlpp.ErrorMode` (default RAISE), how errors are handled:
+- `error_mode: mlpproc.ErrorMode` (default RAISE), how errors are handled:
 	- PRINT_AND_EXIT -> print to stderr and exit
 	- PRINT_AND_RAISE -> print to stderr and raise exception
 	- RAISE -> raise exception
-- `warning_mode: mlpp.WarningMode` (default RAISE)
+- `warning_mode: mlpproc.WarningMode` (default RAISE)
 	- HIDE -> do nothing
 	- PRINT -> print to stderr
 	- RAISE -> raise python warning
@@ -316,7 +316,7 @@ Here follows a list of predefined commands and blocks. An up-to-date list can be
 
 ```
   Prints name of input file
-  (only defined when called via mlpp or mlpp.__main__.preprocessor_main())
+  (only defined when called via mlpp or mlpproc.__main__.preprocessor_main())
 ```
 
 #### label
@@ -354,7 +354,7 @@ Here follows a list of predefined commands and blocks. An up-to-date list can be
 
 ```
   Prints name of output file
-  (only defined when called via mlpp or mlpp.__main__.preprocessor_main())
+  (only defined when called via mlpp or mlpproc.__main__.preprocessor_main())
 ```
 
 #### paste

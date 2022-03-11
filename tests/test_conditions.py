@@ -1,5 +1,5 @@
-from mlpp.conditions import *
-from mlpp.defaults import Preprocessor
+from mlpproc.conditions import *
+from mlpproc.defaults import Preprocessor
 
 
 def test_lexer():
