@@ -1,5 +1,5 @@
-from preproc import FileDescriptor, Preprocessor
-from preproc.defs import TokenMatch, get_identifier_name
+from mlpp import FileDescriptor, Preprocessor
+from mlpp.defs import TokenMatch, get_identifier_name
 
 
 def test_context():

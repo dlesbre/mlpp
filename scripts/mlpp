@@ -1,0 +1,5 @@
+#!/usr/bin/env python3
+
+from mlpp.__main__ import preprocessor_main
+
+preprocessor_main()

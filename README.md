@@ -1,4 +1,4 @@
-# Preprocessor
+# MLPP : Markup Language Pre-Preprocessor
 
 Simple program to preprocess text files. It is inspired by the C preprocessor and should work with any language.
 
@@ -22,13 +22,13 @@ Simple program to preprocess text files. It is inspired by the C preprocessor an
 
 This package has no dependencies. To install simply run
 ```
-pip install preproc
+pip install mlpp
 ```
 
 Once installed you can call the preprocessor with
 ```
-pproc --version
-python -m preproc --version
+mlpp --version
+python -m mlpp --version
 ```
 
 ## Manual installation

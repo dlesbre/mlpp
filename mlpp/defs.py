@@ -15,7 +15,7 @@ import enum
 import re
 from typing import Tuple
 
-PREPROCESSOR_NAME = "preproc"
+PREPROCESSOR_NAME = "mlpp"
 PREPROCESSOR_VERSION = "1.0.0"
 
 REGEX_IDENTIFIER:       str = "[_a-zA-Z][_a-zA-Z0-9]*"

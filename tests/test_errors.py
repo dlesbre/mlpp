@@ -1,5 +1,5 @@
-from preproc import Preprocessor
-from preproc.errors import PreprocessorError, PreprocessorWarning
+from mlpp import Preprocessor
+from mlpp.errors import PreprocessorError, PreprocessorWarning
 
 
 def runtest_error(filename, in_text, error_name, error_line, error_char):

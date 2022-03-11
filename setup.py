@@ -3,30 +3,30 @@ setup file. run 'python3 setup.py install' to install.
 """
 from setuptools import setup  # type: ignore
 
-import preproc
+import mlpp
 
 with open("README.md", "r", encoding="utf-8") as fh:
 	long_description = fh.read()
 
 setup(
-	name = "preproc",
-	version = preproc.__version__,
-	author = preproc.__author__,
-	author_email = preproc.__email__,
-	url = preproc.__url__,
-	description = preproc.__description__,
+	name = "mlpp",
+	version = mlpp.__version__,
+	author = mlpp.__author__,
+	author_email = mlpp.__email__,
+	url = mlpp.__url__,
+	description = mlpp.__description__,
 	long_description = long_description,
 	long_description_content_type = "text/markdown",
-	packages = ["preproc"],
-	scripts = ["pproc"],
+	packages = ["mlpp"],
+	scripts = ["scripts/mlpp"],
 	install_requires = [],
 	extras_require = {
 		"dev": ["pytest", "mypy", "pre-commit"],
 	},
 	python_requires = ">=3.6",
-	license = preproc.__license__,
+	license = mlpp.__license__,
 	platforms=["any"],
-	keywords=["preprocessor preprocess markup language python terminal"],
+	keywords=["mlpp preprocessor preprocess markup language python terminal"],
 	classifiers = [
 		# How mature is this project? Common values are
 		#   3 - Alpha

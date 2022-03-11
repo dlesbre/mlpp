@@ -1,8 +1,8 @@
 from os import remove
 
-from preproc import Preprocessor
-from preproc.blocks import find_elifs_and_else
-from preproc.errors import ErrorMode, WarningMode
+from mlpp import Preprocessor
+from mlpp.blocks import find_elifs_and_else
+from mlpp.errors import ErrorMode, WarningMode
 
 
 class TestCommands:

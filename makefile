@@ -6,8 +6,8 @@
 
 PYTHON = python3
 PIP = $(PYTHON) -m pip
-MYPY = mypy -p preproc
-TEST = pytest
+MYPY = mypy -p mlpp
+PYTEST = pytest
 DIR = .
 
 # set to ON/OFF to toggle ANSI escape sequences
@@ -78,7 +78,7 @@ test: ## Run all tests
 .PHONY: mypy
 mypy: ## Typecheck all files
 	$(call print,Running mypy)
-	$(MYPY) ./bibtexautocomplete/ ./tests/
+	$(MYPY)
 
 # =================================================
 # Installation
