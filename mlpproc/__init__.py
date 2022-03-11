@@ -21,4 +21,4 @@ __email__ = "dorian.lesbre" + chr(64) + "gmail.com"
 __version__ = PREPROCESSOR_VERSION
 __description__ = "MLPP: Markup Language Pre-Processor for text files (code/html/tex/...) inspired by the C preprocessor"
 __license__ = "MIT"
-__url__ = "https://github.com/dlesbre/mlpp"
+__url__ = "https://github.com/dlesbre/mlpproc"
