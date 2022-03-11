@@ -104,3 +104,10 @@ setup-dev: ## Install development dependencies
 clean: ## Remove package
 	$(call print,Removing package)
 	rm -rf build dist preproc.egg-info
+
+.PHONY: deploy
+deploy: ## Build and deploys the package
+	$(call print,Building package)
+	$(PYTHON) setup.py sdist
+	$(call print,Deploying package)
+	twine upload dist/*
