@@ -10,6 +10,8 @@ MYPY = mypy -p mlpp
 PYTEST = pytest
 DIR = .
 
+PACKAGE = mlpproc
+
 # set to ON/OFF to toggle ANSI escape sequences
 COLOR = ON
 
@@ -103,7 +105,7 @@ setup-dev: ## Install development dependencies
 .PHONY: clean
 clean: ## Remove package
 	$(call print,Removing package)
-	rm -rf build dist preproc.egg-info
+	rm -rf build dist $(PACKAGE).egg-info .mypy_cache .pytest_cache
 
 .PHONY: deploy
 deploy: ## Build and deploys the package
