@@ -1,5 +1,12 @@
 # MLPProc : Markup Language Pre-Preprocessor
 
+[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-brightgreen.svg)](https://github.com/dlesbre/mlpproc/graphs/commit-activity)
+[![PyPI version](https://img.shields.io/pypi/v/mlpproc.svg)](https://pypi.python.org/pypi/mlpproc/)
+[![PyPI pyversions](https://img.shields.io/pypi/pyversions/mlpproc.svg)](https://pypi.python.org/pypi/mlpproc/)
+[![License](https://img.shields.io/pypi/l/mlpproc.svg)](https://github.com/dlesbre/mlpproc/blob/master/LICENSE)
+[![PyPI status](https://img.shields.io/pypi/status/mlpproc.svg)](https://pypi.python.org/pypi/mlpproc/)
+[![Downloads](https://pepy.tech/badge/mlpproc)](https://pepy.tech/project/mlpproc)
+
 Simple program to preprocess text files. It is inspired by the C preprocessor and should work with any language.
 
 ## Contents
