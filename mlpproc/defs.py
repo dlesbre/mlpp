@@ -16,7 +16,7 @@ import re
 from typing import Tuple
 
 PREPROCESSOR_NAME = "mlpp"
-PREPROCESSOR_VERSION = "1.0.1"
+PREPROCESSOR_VERSION = "1.0.2"
 
 REGEX_IDENTIFIER:       str = "[_a-zA-Z][_a-zA-Z0-9]*"
 REGEX_IDENTIFIER_WRAPPED: str = "(^|(?<=([^_a-zA-Z0-9]))){}((?=([^_a-zA-Z0-9]))|$)"

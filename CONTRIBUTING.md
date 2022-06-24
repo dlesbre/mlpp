@@ -1,6 +1,6 @@
 # Contributing
 
-ANy contributions are welcome !
+Any contributions are welcome !
 
 ## Issues
 

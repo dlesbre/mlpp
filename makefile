@@ -6,9 +6,10 @@
 
 PYTHON = python3
 PIP = $(PYTHON) -m pip
-MYPY = mypy -p mlpp
+MYPY = mypy -p mlpproc
 PYTEST = pytest
 DIR = .
+PRECOMMIT = pre-commit
 
 PACKAGE = mlpproc
 
@@ -110,8 +111,8 @@ clean: ## Remove package
 .PHONY: deploy
 deploy: ## Build and deploys the package
 	$(call print,Removing previous dist)
-	rm -rf dist
+	rm -rf dist/*
 	$(call print,Building package)
-	$(PYTHON) setup.py bdist
+	$(PYTHON) setup.py bdist_wheel
 	$(call print,Deploying package)
 	twine upload dist/*
