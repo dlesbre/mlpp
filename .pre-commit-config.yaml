@@ -7,12 +7,14 @@ repos:
   - id: trailing-whitespace
   - id: end-of-file-fixer
   - id: check-ast
-- repo: git://github.com/FalconSocial/pre-commit-python-sorter
-  rev: ""
-  hooks:
-  - id: python-import-sorter
 - repo: local
   hooks:
+  - id: isort
+    exclude: /migrations/
+    name: Python format (isort)
+    entry: isort
+    language: system
+    types: [python]
   - id: mypy
     name: mypy
     entry: venv/bin/mypy

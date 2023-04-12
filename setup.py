@@ -21,7 +21,7 @@ setup(
 	scripts = ["scripts/mlpp"],
 	install_requires = [],
 	extras_require = {
-		"dev": ["pytest", "mypy", "pre-commit"],
+		"dev": ["pytest", "mypy", "pre-commit", "isort"],
 	},
 	python_requires = ">=3.6",
 	license = mlpproc.__license__,
