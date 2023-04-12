@@ -4,7 +4,7 @@ Definitions of default preprocessor commands
 import argparse
 import re
 from datetime import datetime
-from os.path import abspath, dirname, isfile, join
+from os.path import abspath, dirname, getsize, isfile, join
 from typing import List
 
 from .context import FileDescriptor
@@ -631,4 +631,66 @@ cmd_include.doc = ( # type: ignore
 	  -e --end   <string> specify the end token ("%}")
 	                      defaults to the same as current file
 	  -v --verbatim       when present, includes files as is, without parsing.
+	""")
+
+
+# ============================================================
+# Filesize
+# ============================================================
+
+def cmd_filesize(preprocessor: Preprocessor, args: str) -> str:
+	"""the filesize command - prints the file size of its argument"""
+	file = args.strip()
+	if file == "":
+		preprocessor.send_error("missing-arguments", "the filesize command takes one mandatory arguement 'filename'")
+	try:
+		return str(getsize(file))
+	except FileNotFoundError:
+		preprocessor.send_error("file-error",'file not found "{}"'.format(file))
+	except PermissionError:
+		preprocessor.send_error("file-error",'can\'t open file "{}", permission denied'.format(file))
+	except Exception:
+		preprocessor.send_error("file-error",'can\'t open file "{}"'.format(file))
+	return ""
+
+
+cmd_filesize.doc = ( # type: ignore
+	"""
+	Prints the size of its argument file (in bytes)
+
+	Fails if file doesn't exists/can't be read
+	""")
+
+def pretty_size(value: int) -> str:
+    """Human readable file sizes: pretty_size(2654312) -> '2.6 Mio'"""
+    base = 1024
+    if value < base:
+        return f"{value} o"
+    size = float(value) / float(base)
+    for unit in ["Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi"]:
+        if abs(size) < base:
+            return f"{size:3.1f} {unit}o"
+        size /= float(base)
+    return f"{size:.1f} Yio"
+
+def cmd_fileprettysize(preprocessor: Preprocessor, args: str) -> str:
+	"""the fileprettysize command - pretty prints the file size of its argument"""
+	file = args.strip()
+	if file == "":
+		preprocessor.send_error("missing-arguments", "the fileprettysize command takes one mandatory arguement 'filename'")
+	try:
+		return pretty_size(getsize(file))
+	except FileNotFoundError:
+		preprocessor.send_error("file-error",'file not found "{}"'.format(file))
+	except PermissionError:
+		preprocessor.send_error("file-error",'can\'t open file "{}", permission denied'.format(file))
+	except Exception:
+		preprocessor.send_error("file-error",'can\'t open file "{}"'.format(file))
+	return ""
+
+cmd_fileprettysize.doc = ( # type: ignore
+	"""
+	Pretty prints the size of its argument file (ex: 12.5 ko)
+
+	Fails if file doesn't exists/can't be read
 	""")

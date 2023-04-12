@@ -25,6 +25,8 @@ Preprocessor.commands["version"] = cmd_version
 Preprocessor.commands["filename"] = cmd_filename
 Preprocessor.commands["line"] = cmd_line
 Preprocessor.commands["paste"] = cmd_paste
+Preprocessor.commands["filesize"] = cmd_filesize
+Preprocessor.commands["fileprettysize"] = cmd_fileprettysize
 
 Preprocessor.commands["strip_empty_lines"] = final_action_command(fnl_strip_empty_lines)
 Preprocessor.commands["strip_leading_whitespace"] = final_action_command(fnl_strip_leading_whitespace)
