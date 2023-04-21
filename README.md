@@ -28,12 +28,12 @@ Simple program to preprocess text files. It is inspired by the C preprocessor an
 ## Installation
 
 This package has no dependencies. To install simply run
-```
+```console
 pip install mlpproc
 ```
 
 Once installed you can call the preprocessor with
-```
+```console
 mlpp --version
 python -m mlpproc --version
 ```
@@ -42,7 +42,7 @@ python -m mlpproc --version
 
 For a manual installation run
 
-```
+```console
 git clone https://github.com/dlesbre/mlpproc.git &&
 cd mlpproc &&
 python3 -m venv venv &&
@@ -56,20 +56,20 @@ For development install, run `make setup-dev` to install extra dependencies and 
 
 ### Basic syntax
 
-The preprocessor instructions are wrapped between "{%" and "%}". These tokens can be changed if they conflict with the syntax of the file's langage. Instructions are case sensitive.
+The preprocessor instructions are wrapped between "{%" and "%}". These tokens can be changed if they conflict with the syntax of the file's langage. Instructions are case-sensitive.
 
 Preprocessor instructions are split in three categories :
 
-- **commands**: `{% command [args] %}`
+- **Commands**: `{% command [args] %}`
 
 	Commands print text where they are placed. For instance `{% date %}` prints the current date.
 	Some special commands print no text but perform actions. `{% def name my_name %}` prints nothing but defines a new command `{% name %}` which prints `my_name`.
 
-- **blocks**: `{% block_name [args] %} ... some text ... {% endblock_name %}`
+- **Blocks**: `{% block_name [args] %} ... some text ... {% endblock_name %}`
 
 	Blocks work very similarly to commands: they wrap around some text and alter it in some way. For instance the `{% verbatim %}` block prints all text in itself verbatim, without rendering any of the commands.
 
-- **final actions**: some actions can be queued by special commands. They occur once every command and block in the file has been rendered and affect the whole current file. For instance `{% replace foo bar %}` will replace all instances of "foo" with "bar" in the whole rendered file (including occurrences before the command is called). Final actions can be restricted to a smaller part of the document with `{% block -a %}...{% endblock %}` :
+- **Final actions**: some actions can be queued by special commands. They occur once every command and block in the file has been rendered and affect the whole current file. For instance `{% replace foo bar %}` will replace all instances of "foo" with "bar" in the whole rendered file (including occurrences before the command is called). Final actions can be restricted to a smaller part of the document with `{% block -a %}...{% endblock %}` :
 
 		some text... foo here is not replaced
 		{% begin block -a %}
@@ -97,8 +97,10 @@ Nesting can also be used for block arguments, but *it can NOT be used for block 
 
 The preprocessor can be called from the command line with:
 
-	mlpp [--flags] [input_file]
-	python3 -m mlpproc [--flags] [input_file]
+```console
+mlpp [--flags] [input_file]
+python3 -m mlpproc [--flags] [input_file]
+```
 
 The default input file is `stdin`. Command line options are:
 
@@ -634,9 +636,13 @@ Here follows a list of predefined commands and blocks. An up-to-date list can be
 
 This package is designed to simply add new commands and blocks:
 
-- **commands**: they are function with signature:
+- **commands**: they are classes inherinting from command, they should define `__call__` and doc signature:
 	```Python
-	def command_func(p: Preprocessor, args: str) -> str
+  class MyCommand(Command):
+	  def __call__(self, p: Preprocessor, args: str) -> str:
+      ...
+
+    doc = "documentation for my command"
 	```
 
 	The first argument is the preprocessor object, the second is the args string entered after the command. For example when calling `{% command_name some args %}` args will contain `" some args "` including leading/trailing spaces.
@@ -647,15 +653,20 @@ This package is designed to simply add new commands and blocks:
 
 	```Python
 	# adds the command to all new Preprocessor objects
-	Preprocessor.commands["command_name"] = command_function
+	Preprocessor.commands["command_name"] = MyCommand()
 	# adds the command to a specific Preprocessor object
-	my_preproc_obj.commands["command_name"] = command_function
+	my_preproc_obj.commands["command_name"] = MyCommand()
 	```
 
-- **blocks**: they are functions with signature:
-	```Python
-	def block_func(p: Preprocessor, args: str, block_contents: str) -> str
-	```
+- **blocks**: they are classes with signature:
+  ```Python
+  class MyBlock(Block):
+
+    def __call__(self, p: Preprocessor, args: str, block_contents: str) -> str:
+      ...
+
+    doc = "my block documentation"
+  ```
 
 	`args` is the blocks argument, just like in commands, and `block_contents` is everything between `{% block args %}` and `{% endblock %}`.
 
@@ -664,7 +675,7 @@ This package is designed to simply add new commands and blocks:
 	Blocks are stored in the preprocessor's `blocks` dict. They can be added with:
 
 	```Python
-	Preprocessor.blocks["block_name"] = block_func
+	Preprocessor.blocks["block_name"] = MyBlock()
 	```
 
 - **final actions**: they have the same signature as commands:
@@ -683,16 +694,6 @@ This package is designed to simply add new commands and blocks:
 	Preprocessor.final_actions.append(post_action_function)
 	# adds a post action to a specific object
 	preprocessor_obj.final_actions.append(post_action_function)
-	```
-
-	Adding block actions with commands to run in the current block is pretty simple via the `final_action_command` decorator:
-
-	```Python
-	def my_post_action(p: Preprocessor, args: str) -> str:
-		# not added to Preprocessor.post_actions
-		...
-
-	Preprocessor.commands["run_my_post_action"] = final_action_command(my_post_action_command)
 	```
 
 ### Useful functions
