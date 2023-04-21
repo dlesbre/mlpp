@@ -13,12 +13,25 @@ It contains:
 from .context import FileDescriptor
 from .defaults import Preprocessor
 from .defs import PREPROCESSOR_NAME, PREPROCESSOR_VERSION
-from .errors import (ErrorMode, PreprocessorError, PreprocessorWarning,
-                     WarningMode)
+from .errors import ErrorMode, PreprocessorError, PreprocessorWarning, WarningMode
 
 __author__ = "Dorian Lesbre"
 __email__ = "dorian.lesbre" + chr(64) + "gmail.com"
 __version__ = PREPROCESSOR_VERSION
-__description__ = "MLPP: Markup Language Pre-Processor for text files (code/html/tex/...) inspired by the C preprocessor"
+__description__ = (
+    "MLPP: Markup Language Pre-Processor for text files (code/html/tex/...)"
+    " inspired by the C preprocessor"
+)
 __license__ = "MIT"
 __url__ = "https://github.com/dlesbre/mlpproc"
+
+__all__ = (
+    "FileDescriptor",
+    "Preprocessor",
+    "PREPROCESSOR_NAME",
+    "PREPROCESSOR_VERSION",
+    "ErrorMode",
+    "PreprocessorError",
+    "PreprocessorWarning",
+    "WarningMode",
+)

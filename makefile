@@ -6,7 +6,7 @@
 
 PYTHON = python3
 PIP = $(PYTHON) -m pip
-MYPY = mypy -p mlpproc
+MYPY = mypy --strict -p mlpproc -p tests
 PYTEST = pytest
 DIR = .
 PRECOMMIT = pre-commit

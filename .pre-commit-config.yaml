@@ -1,27 +1,31 @@
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
-- repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v2.4.0
-  hooks:
-  - id: trailing-whitespace
-  - id: end-of-file-fixer
-  - id: check-ast
 - repo: local
   hooks:
+  - id: black
+    name: Python format (black)
+    entry: black
+    language: system
+    types: [python]
   - id: isort
-    exclude: /migrations/
     name: Python format (isort)
     entry: isort
     language: system
     types: [python]
   - id: mypy
-    name: mypy
-    entry: venv/bin/mypy
+    pass_filenames: false
+    name: Python typecheck (mypy)
+    entry: make mypy
+    language: system
+    types: [python]
+  - id: flake8
+    name: Python lint (flake8)
+    entry: flake8
     language: system
     types: [python]
   - id: pytest-check
-    name: pytest-check
+    name: Testing (pytest)
     entry: pytest
     language: system
     pass_filenames: false
