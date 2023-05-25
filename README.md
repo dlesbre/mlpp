@@ -219,6 +219,10 @@ Here follows a list of predefined commands and blocks. An up-to-date list can be
   def overwrites old commands and blocks irreversibly.
   All defs are global, including those coming from sub-blocks and included files.
 
+  The text in a def is effectively rendered twice:
+  - the text is rendered once at definition (due to nesting)
+  - when the new command is called argument substitution takes place first
+    and the text is re-rendered before printing
   defs can use nesting and recursive calls using command like call, begin and end.
 
     {% def name john %}
@@ -239,7 +243,7 @@ Here follows a list of predefined commands and blocks. An up-to-date list can be
     {% rec2 %} -> prints alice
     {% rec3 %} -> prints {% name %}
 
-  defs can be overloaded on the number of arguments
+  defs can be overloaded on the number of arguments:
 
     {% def sum(a,b) a+b %}
     {% def sum(a)   {% sum a 0 %} %}
@@ -250,7 +254,7 @@ Here follows a list of predefined commands and blocks. An up-to-date list can be
 #### deflist
 
 ```
-  Defines a new command.
+  Defines a new command for a list of objects.
 
   Usage: deflist list_name space separated list " element with spaces "
 
@@ -458,8 +462,9 @@ Here follows a list of predefined commands and blocks. An up-to-date list can be
 
   It differs from the cut block in that:
   - it will also print its content to calls of {% label XXX %} preceding it
-  - it can't be overwriting (at most one atlabel block per label)
-  - the text is rendered in the block (and not in where the text is pared)
+  - it can't be overwritten (at most one atlabel block per label)
+  - the text is rendered just once, at the atlabel block definition
+    (and not in where the text will be placed)
 
   ex:
     "{% def foo bar %}
@@ -520,7 +525,7 @@ Here follows a list of predefined commands and blocks. An up-to-date list can be
 
   Usage: cut [--pre-render|-p] [<clipboard_name>]
     if --pre-render - renders the block here
-      (will be rerendered at time of pasting, unless using paste -v|--verbatim)
+      (it will be re-rendered at time of pasting, unless using paste -v|--verbatim)
     clipboard is a string identifying the clipboard, default is ""
 
   ex:
@@ -638,11 +643,11 @@ This package is designed to simply add new commands and blocks:
 
 - **commands**: they are classes inherinting from command, they should define `__call__` and doc signature:
 	```Python
-  class MyCommand(Command):
-	  def __call__(self, p: Preprocessor, args: str) -> str:
-      ...
+	class MyCommand(Command):
+	    def __call__(self, p: Preprocessor, args: str) -> str:
+ 	        ...
 
-    doc = "documentation for my command"
+ 	    doc = "documentation for my command"
 	```
 
 	The first argument is the preprocessor object, the second is the args string entered after the command. For example when calling `{% command_name some args %}` args will contain `" some args "` including leading/trailing spaces.
@@ -659,14 +664,14 @@ This package is designed to simply add new commands and blocks:
 	```
 
 - **blocks**: they are classes with signature:
-  ```Python
-  class MyBlock(Block):
+ 	```Python
+ 	class MyBlock(Block):
 
-    def __call__(self, p: Preprocessor, args: str, block_contents: str) -> str:
-      ...
+ 	    def __call__(self, p: Preprocessor, args: str, block_contents: str) -> str:
+ 	        ...
 
-    doc = "my block documentation"
-  ```
+ 	    doc = "my block documentation"
+ 	```
 
 	`args` is the blocks argument, just like in commands, and `block_contents` is everything between `{% block args %}` and `{% endblock %}`.
 
