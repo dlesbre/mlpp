@@ -25,7 +25,7 @@ parser.add_argument("--output", "-o", nargs="?", type=Path, default=stdout)
 parser.add_argument("--help", "-h", nargs="?", const="", default=None)
 parser.add_argument("--define", "-d", "-D", nargs="?", action="append", default=[])
 parser.add_argument(
-    "--include", "-i", "-I", nargs=1, action="append", default=[], type=abspath  # type: ignore
+    "--include", "-i", "-I", nargs=1, action="append", default=[], type=abspath
 )
 parser.add_argument("--silent", "-s", nargs=1, default=[], action="append")
 parser.add_argument("--recursion-depth", "-r", nargs=1, type=int)

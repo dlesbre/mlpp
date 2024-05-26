@@ -10,13 +10,14 @@ namely:
 - functions is_integer or to_integer to get ints from strings
 - function get_identifier_name to find the first identifier in a string
 """
+
 import argparse
 import enum
 import re
 from typing import NoReturn, Tuple
 
 PREPROCESSOR_NAME = "mlpp"
-PREPROCESSOR_VERSION = "1.0.2"
+PREPROCESSOR_VERSION = "1.0.3"
 
 REGEX_IDENTIFIER: str = "[_a-zA-Z][_a-zA-Z0-9]*"
 REGEX_IDENTIFIER_WRAPPED: str = "(^|(?<=([^_a-zA-Z0-9]))){}((?=([^_a-zA-Z0-9]))|$)"
